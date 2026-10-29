@@ -1,0 +1,19 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+.env*
+!.env.example
+.vercel/
+.supabase/
+supabase/.temp/
+supabase/.branches/
+artifacts/
+.impeccable/review/
+*.log
+.DS_Store
+# Local agent installations and onboarding screen recordings are not site assets.
+.agents/
+/Recording *.mp4

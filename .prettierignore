@@ -1,0 +1,12 @@
+node_modules
+.agents/
+.next
+package-lock.json
+*.tsbuildinfo
+.env.local
+.env.*.local
+artifacts
+.vercel
+supabase/.temp
+course-website-requirements.md
+IMPLEMENTATION-PLAN.md

@@ -1,0 +1,412 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T13:55:55.310Z",
+  "title": "Design System: Market Method",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Background",
+        "tonalRamp": [
+          "oklch(15.00% 0.0089 224.11)",
+          "oklch(26.43% 0.0089 224.11)",
+          "oklch(37.86% 0.0089 224.11)",
+          "oklch(49.29% 0.0089 224.11)",
+          "oklch(60.71% 0.0089 224.11)",
+          "oklch(72.14% 0.0089 224.11)",
+          "oklch(83.57% 0.0089 224.11)",
+          "oklch(95.00% 0.0089 224.11)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.0143 220.29)",
+          "oklch(26.43% 0.0143 220.29)",
+          "oklch(37.86% 0.0143 220.29)",
+          "oklch(49.29% 0.0143 220.29)",
+          "oklch(60.71% 0.0143 220.29)",
+          "oklch(72.14% 0.0143 220.29)",
+          "oklch(83.57% 0.0143 220.29)",
+          "oklch(95.00% 0.0143 220.29)"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised",
+        "tonalRamp": [
+          "oklch(15.00% 0.0175 214.81)",
+          "oklch(26.43% 0.0175 214.81)",
+          "oklch(37.86% 0.0175 214.81)",
+          "oklch(49.29% 0.0175 214.81)",
+          "oklch(60.71% 0.0175 214.81)",
+          "oklch(72.14% 0.0175 214.81)",
+          "oklch(83.57% 0.0175 214.81)",
+          "oklch(95.00% 0.0175 214.81)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Foreground",
+        "tonalRamp": [
+          "oklch(15.00% 0.0108 95.16)",
+          "oklch(26.43% 0.0108 95.16)",
+          "oklch(37.86% 0.0108 95.16)",
+          "oklch(49.29% 0.0108 95.16)",
+          "oklch(60.71% 0.0108 95.16)",
+          "oklch(72.14% 0.0108 95.16)",
+          "oklch(83.57% 0.0108 95.16)",
+          "oklch(95.00% 0.0108 95.16)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.0127 209.80)",
+          "oklch(26.43% 0.0127 209.80)",
+          "oklch(37.86% 0.0127 209.80)",
+          "oklch(49.29% 0.0127 209.80)",
+          "oklch(60.71% 0.0127 209.80)",
+          "oklch(72.14% 0.0127 209.80)",
+          "oklch(83.57% 0.0127 209.80)",
+          "oklch(95.00% 0.0127 209.80)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.0884 176.53)",
+          "oklch(26.43% 0.0884 176.53)",
+          "oklch(37.86% 0.0884 176.53)",
+          "oklch(49.29% 0.0884 176.53)",
+          "oklch(60.71% 0.0884 176.53)",
+          "oklch(72.14% 0.0884 176.53)",
+          "oklch(83.57% 0.0884 176.53)",
+          "oklch(95.00% 0.0884 176.53)"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Accent Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.0343 179.29)",
+          "oklch(26.43% 0.0343 179.29)",
+          "oklch(37.86% 0.0343 179.29)",
+          "oklch(49.29% 0.0343 179.29)",
+          "oklch(60.71% 0.0343 179.29)",
+          "oklch(72.14% 0.0343 179.29)",
+          "oklch(83.57% 0.0343 179.29)",
+          "oklch(95.00% 0.0343 179.29)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15.00% 0.0175 207.85)",
+          "oklch(26.43% 0.0175 207.85)",
+          "oklch(37.86% 0.0175 207.85)",
+          "oklch(49.29% 0.0175 207.85)",
+          "oklch(60.71% 0.0175 207.85)",
+          "oklch(72.14% 0.0175 207.85)",
+          "oklch(83.57% 0.0175 207.85)",
+          "oklch(95.00% 0.0175 207.85)"
+        ]
+      },
+      "overlay": {
+        "role": "neutral",
+        "displayName": "Overlay",
+        "tonalRamp": [
+          "oklch(15.00% 0.0000 0.00)",
+          "oklch(26.43% 0.0000 0.00)",
+          "oklch(37.86% 0.0000 0.00)",
+          "oklch(49.29% 0.0000 0.00)",
+          "oklch(60.71% 0.0000 0.00)",
+          "oklch(72.14% 0.0000 0.00)",
+          "oklch(83.57% 0.0000 0.00)",
+          "oklch(95.00% 0.0000 0.00)"
+        ]
+      },
+      "light-background": {
+        "role": "neutral",
+        "displayName": "Light Background",
+        "tonalRamp": [
+          "oklch(15.00% 0.0079 106.55)",
+          "oklch(26.43% 0.0079 106.55)",
+          "oklch(37.86% 0.0079 106.55)",
+          "oklch(49.29% 0.0079 106.55)",
+          "oklch(60.71% 0.0079 106.55)",
+          "oklch(72.14% 0.0079 106.55)",
+          "oklch(83.57% 0.0079 106.55)",
+          "oklch(95.00% 0.0079 106.55)"
+        ]
+      },
+      "light-surface": {
+        "role": "neutral",
+        "displayName": "Light Surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.0115 128.60)",
+          "oklch(26.43% 0.0115 128.60)",
+          "oklch(37.86% 0.0115 128.60)",
+          "oklch(49.29% 0.0115 128.60)",
+          "oklch(60.71% 0.0115 128.60)",
+          "oklch(72.14% 0.0115 128.60)",
+          "oklch(83.57% 0.0115 128.60)",
+          "oklch(95.00% 0.0115 128.60)"
+        ]
+      },
+      "light-raised": {
+        "role": "neutral",
+        "displayName": "Light Raised",
+        "tonalRamp": [
+          "oklch(15.00% 0.0000 89.88)",
+          "oklch(26.43% 0.0000 89.88)",
+          "oklch(37.86% 0.0000 89.88)",
+          "oklch(49.29% 0.0000 89.88)",
+          "oklch(60.71% 0.0000 89.88)",
+          "oklch(72.14% 0.0000 89.88)",
+          "oklch(83.57% 0.0000 89.88)",
+          "oklch(95.00% 0.0000 89.88)"
+        ]
+      },
+      "light-foreground": {
+        "role": "neutral",
+        "displayName": "Light Foreground",
+        "tonalRamp": [
+          "oklch(15.00% 0.0192 201.61)",
+          "oklch(26.43% 0.0192 201.61)",
+          "oklch(37.86% 0.0192 201.61)",
+          "oklch(49.29% 0.0192 201.61)",
+          "oklch(60.71% 0.0192 201.61)",
+          "oklch(72.14% 0.0192 201.61)",
+          "oklch(83.57% 0.0192 201.61)",
+          "oklch(95.00% 0.0192 201.61)"
+        ]
+      },
+      "light-muted": {
+        "role": "neutral",
+        "displayName": "Light Muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.0198 205.75)",
+          "oklch(26.43% 0.0198 205.75)",
+          "oklch(37.86% 0.0198 205.75)",
+          "oklch(49.29% 0.0198 205.75)",
+          "oklch(60.71% 0.0198 205.75)",
+          "oklch(72.14% 0.0198 205.75)",
+          "oklch(83.57% 0.0198 205.75)",
+          "oklch(95.00% 0.0198 205.75)"
+        ]
+      },
+      "light-accent": {
+        "role": "primary",
+        "displayName": "Light Accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.0855 171.98)",
+          "oklch(26.43% 0.0855 171.98)",
+          "oklch(37.86% 0.0855 171.98)",
+          "oklch(49.29% 0.0855 171.98)",
+          "oklch(60.71% 0.0855 171.98)",
+          "oklch(72.14% 0.0855 171.98)",
+          "oklch(83.57% 0.0855 171.98)",
+          "oklch(95.00% 0.0855 171.98)"
+        ]
+      },
+      "light-accent-ink": {
+        "role": "primary",
+        "displayName": "Light Accent Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.0131 159.93)",
+          "oklch(26.43% 0.0131 159.93)",
+          "oklch(37.86% 0.0131 159.93)",
+          "oklch(49.29% 0.0131 159.93)",
+          "oklch(60.71% 0.0131 159.93)",
+          "oklch(72.14% 0.0131 159.93)",
+          "oklch(83.57% 0.0131 159.93)",
+          "oklch(95.00% 0.0131 159.93)"
+        ]
+      },
+      "light-line": {
+        "role": "neutral",
+        "displayName": "Light Line",
+        "tonalRamp": [
+          "oklch(15.00% 0.0136 152.57)",
+          "oklch(26.43% 0.0136 152.57)",
+          "oklch(37.86% 0.0136 152.57)",
+          "oklch(49.29% 0.0136 152.57)",
+          "oklch(60.71% 0.0136 152.57)",
+          "oklch(72.14% 0.0136 152.57)",
+          "oklch(83.57% 0.0136 152.57)",
+          "oklch(95.00% 0.0136 152.57)"
+        ]
+      },
+      "light-overlay": {
+        "role": "neutral",
+        "displayName": "Light Overlay",
+        "tonalRamp": [
+          "oklch(15.00% 0.0335 161.82)",
+          "oklch(26.43% 0.0335 161.82)",
+          "oklch(37.86% 0.0335 161.82)",
+          "oklch(49.29% 0.0335 161.82)",
+          "oklch(60.71% 0.0335 161.82)",
+          "oklch(72.14% 0.0335 161.82)",
+          "oklch(83.57% 0.0335 161.82)",
+          "oklch(95.00% 0.0335 161.82)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Hero display",
+        "purpose": "Desktop homepage headline; responsive rules in DESIGN.md."
+      },
+      "body": {
+        "displayName": "Reading copy",
+        "purpose": "Primary paragraph selectors, including mobile."
+      },
+      "measurement": {
+        "displayName": "Measurements",
+        "purpose": "Prices, percentages and numeric examples."
+      }
+    },
+    "shadows": [
+      {
+        "name": "cover-block-offset",
+        "value": "8px 8px 0 #0002",
+        "purpose": "Foundations artwork only; no ambient UI elevation."
+      },
+      {
+        "name": "cover-structure-offset",
+        "value": "10px 7px 0 #0002",
+        "purpose": "Structure artwork only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "0.2s ease",
+        "purpose": "Button, link and artwork hover states."
+      },
+      {
+        "name": "overlay-enter",
+        "value": "0.18s ease-out",
+        "purpose": "Dialog overlay appearance."
+      },
+      {
+        "name": "dialog-enter",
+        "value": "0.22s cubic-bezier(0.16,1,0.3,1)",
+        "purpose": "Preview dialog entry."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "Disable transitions/animations and decorative video; remove smooth scroll and hover lift."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-desktop-max",
+        "value": "1100px"
+      },
+      {
+        "name": "tablet-max",
+        "value": "899px"
+      },
+      {
+        "name": "phone-max",
+        "value": "600px"
+      },
+      {
+        "name": "ambient-video-min",
+        "value": "900px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main storefront action.",
+      "html": "<button class=\"ds-primary\">Explore the courses</button>",
+      "css": ".ds-primary{font-family:var(--body,\"Manrope Variable\",sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:52px;padding:14px 24px;border-radius:6px;border:1px solid transparent;font-size:13px;font-weight:650;line-height:1.4;cursor:pointer;transition:background .2s,color .2s,transform .2s;background:var(--accent,#89dec9);color:var(--accent-ink,#0b2621)}.ds-primary:hover{background:color-mix(in srgb,var(--accent,#89dec9) 85%,white);transform:translateY(-2px)}.ds-primary:focus-visible{outline:2px solid var(--accent,#89dec9);outline-offset:5px}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}.ds-primary:hover{transform:none}}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined supporting action.",
+      "html": "<button class=\"ds-secondary\">Inside the lessons</button>",
+      "css": ".ds-secondary{font-family:var(--body,\"Manrope Variable\",sans-serif);display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:52px;padding:14px 24px;border-radius:6px;border:1px solid transparent;font-size:13px;font-weight:650;line-height:1.4;cursor:pointer;transition:background .2s,color .2s,transform .2s;background:transparent;color:var(--foreground,#f3f1e9);border-color:var(--line,#2c393b)}.ds-secondary:hover{background:var(--raised,#1a2629);border-color:var(--muted,#a7b2b4)}.ds-secondary:focus-visible{outline:2px solid var(--accent,#89dec9);outline-offset:5px}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}"
+    },
+    {
+      "name": "Course search",
+      "kind": "input",
+      "description": "Labelled catalogue text search; behavioural filtering belongs to the application.",
+      "html": "<label class=\"ds-search\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m15.5 15.5 5 5\"/></svg><input aria-label=\"Search courses\" placeholder=\"Find a course\"></label>",
+      "css": ".ds-search{font-family:var(--body,\"Manrope Variable\",sans-serif);display:flex;align-items:center;gap:10px;color:var(--muted,#a7b2b4);border:1px solid var(--line,#2c393b);border-radius:5px;padding:0 13px}.ds-search input{font-family:var(--body,\"Manrope Variable\",sans-serif);background:transparent;color:var(--foreground,#f3f1e9);border:0;height:44px;width:210px;max-width:100%;font-size:12px;caret-color:var(--accent,#89dec9)}.ds-search input::placeholder{color:var(--muted,#a7b2b4)}.ds-search input:focus-visible{outline:2px solid var(--accent,#89dec9);outline-offset:0}"
+    },
+    {
+      "name": "Desktop navigation",
+      "kind": "nav",
+      "description": "Understated navigation with an explicit current route.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Preview navigation\"><a href=\"#courses\" aria-current=\"page\">Courses</a><a href=\"#approach\">Our approach</a><a href=\"#contact\">Get in touch</a></nav>",
+      "css": ".ds-nav{font-family:var(--body,\"Manrope Variable\",sans-serif);display:flex;flex-wrap:wrap;align-items:center;gap:32px;font-size:13px;color:var(--muted,#a7b2b4)}.ds-nav a{color:inherit;text-decoration:none;padding:12px 0}.ds-nav a:hover,.ds-nav a[aria-current=\"page\"]{color:var(--foreground,#f3f1e9)}.ds-nav a:focus-visible{outline:2px solid var(--accent,#89dec9);outline-offset:5px}"
+    },
+    {
+      "name": "Course tag",
+      "kind": "chip",
+      "refersTo": "course-tag",
+      "description": "Informational course-level tag, not a filter button.",
+      "html": "<span class=\"ds-tag\">Beginner</span>",
+      "css": ".ds-tag{font-family:var(--body,\"Manrope Variable\",sans-serif);display:inline-block;font-size:10px;color:var(--muted,#a7b2b4);border:1px solid var(--line,#2c393b);border-radius:4px;padding:4px 9px}"
+    },
+    {
+      "name": "Course card body",
+      "kind": "card",
+      "description": "Open editorial course group with illustrative content and separated price/action row; original geometric cover belongs above.",
+      "html": "<article class=\"ds-card\"><span class=\"ds-card-tag\">Beginner</span><h3>Market Foundations</h3><p>Illustrative course content. Learn the concepts behind a repeatable process.</p><div class=\"ds-card-bottom\"><div><small>Illustrative price</small><strong>?4,999</strong></div><a href=\"#curriculum\">View course ?</a></div></article>",
+      "css": ".ds-card{font-family:var(--body,\"Manrope Variable\",sans-serif);max-width:390px;color:var(--foreground,#f3f1e9)}.ds-card-tag{display:inline-block;font-size:10px;color:var(--muted,#a7b2b4);border:1px solid var(--line,#2c393b);border-radius:4px;padding:4px 9px}.ds-card h3{font-size:22px;font-weight:500;line-height:1.35;margin:13px 0 0}.ds-card p{font-size:16px;line-height:1.9;color:var(--muted,#a7b2b4);margin:12px 0 0}.ds-card-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:25px;padding-top:19px;border-top:1px solid var(--line,#2c393b)}.ds-card small{display:block;font-size:9px;color:var(--muted,#a7b2b4);margin-bottom:5px}.ds-card strong{font:19px var(--mono,\"IBM Plex Mono\",monospace)}.ds-card a{display:inline-flex;align-items:center;min-height:36px;font-size:11px;color:var(--foreground,#f3f1e9);text-decoration:none}.ds-card a:hover{color:var(--accent,#89dec9)}.ds-card a:focus-visible{outline:2px solid var(--accent,#89dec9);outline-offset:5px}"
+    },
+    {
+      "name": "Illustrative risk budget",
+      "kind": "custom",
+      "refersTo": "risk-exercise",
+      "description": "Static snapshot of the implemented capital ? risk percentage exercise, not a recommendation.",
+      "html": "<section class=\"ds-risk\"><div class=\"ds-risk-header\">Position-sizing exercise <span>Illustration</span></div><label class=\"ds-risk-label\" for=\"ds-capital\">Example account size</label><div class=\"ds-capital\">?<input id=\"ds-capital\" type=\"number\" value=\"50000\"></div><label class=\"ds-risk-label\" for=\"ds-range\">Hypothetical risk per trade: 1.0%</label><input class=\"ds-range\" id=\"ds-range\" type=\"range\" min=\"0.5\" max=\"2\" step=\"0.5\" value=\"1\"><div class=\"ds-risk-result\"><span>Hypothetical risk budget</span><strong>?500</strong></div><p>Account size ? risk percentage. An arithmetic example, not a recommendation. Real losses can exceed a planned risk budget.</p></section>",
+      "css": ".ds-risk{font-family:var(--body,\"Manrope Variable\",sans-serif);background:var(--surface,#131c1f);color:var(--foreground,#f3f1e9);border-radius:12px;padding:29px 32px 25px;max-width:500px}.ds-risk-header{display:flex;justify-content:space-between;gap:10px;font-size:12px;margin-bottom:29px}.ds-risk-header span{font-size:9px;border:1px solid var(--line,#2c393b);color:var(--muted,#a7b2b4);padding:4px 7px;border-radius:4px}.ds-risk-label{display:block;font-size:11px;color:var(--muted,#a7b2b4)}.ds-capital{display:flex;gap:8px;font:30px var(--mono,\"IBM Plex Mono\",monospace);margin:8px 0 28px;color:var(--muted,#a7b2b4)}.ds-capital input{min-width:0;width:100%;background:transparent;border:0;border-bottom:1px solid var(--line,#2c393b);color:var(--foreground,#f3f1e9);font:inherit;padding:3px 0}.ds-range{width:100%;height:44px;accent-color:var(--accent,#89dec9);cursor:pointer}.ds-risk-result{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line,#2c393b);margin-top:23px;padding-top:21px;font-size:11px;color:var(--muted,#a7b2b4)}.ds-risk-result strong{font:30px var(--mono,\"IBM Plex Mono\",monospace);color:var(--accent,#89dec9)}.ds-risk p{font-size:12px;line-height:1.9;margin:17px 0 0;color:var(--muted,#a7b2b4)}.ds-risk input:focus-visible{outline:2px solid var(--accent,#89dec9);outline-offset:5px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "An evening study space",
+    "overview": "Charcoal surfaces, mint active elements, warm paper highlights and clear grotesk typography make the storefront feel quiet and considered. Curriculum, teaching process and an interactive arithmetic example carry the message. Original conceptual desk imagery adds atmosphere without implying an instructor identity or trading performance.\n\nThis captures the implemented Phase 1 preview. The user delegated branding, colours and fonts; Market Method remains a developer-proposed identity. Final business identity, instructor information, course content/prices, public contacts and policy approval remain unresolved. [PRODUCT.md](./PRODUCT.md), the [requirements](./course-website-requirements.md) and [Phase 1 status](./docs/PHASE-1-STATUS.md) govern those facts. [globals.css](./frontend/styles/globals.css) is the implementation source; frontmatter records its current reusable values, and [.impeccable/design.json](./.impeccable/design.json) carries extensions.",
+    "keyCharacteristics": [
+      "Quiet charcoal and teal, with a complete light theme.",
+      "Spacious sections with compact secondary labels and readable primary copy.",
+      "Flat tonal surfaces, restrained outlines and original geometric course artwork.",
+      "Useful, keyboard-accessible interactions with honest preview states."
+    ],
+    "rules": [
+      {
+        "name": "The Theme Pairing Rule",
+        "body": "Pair accent with accent ink, and foreground/muted/line with the active theme's surfaces. Do not copy dark-only hex values into new controls.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "**Do** use semantic theme variables and self-hosted typography.",
+      "**Do** retain readable primary copy, keyboard focus, native controls and reduced-motion behaviour.",
+      "**Do** distinguish conceptual imagery and illustrative course/pricing content from owner-approved facts.",
+      "**Do** preserve disabled enrolment, preview notices and staging no-index rules until their integration and content gates pass.",
+      "**Do** carry access/refund information and safe-area clearance onto mobile detail pages."
+    ],
+    "donts": [
+      "**Don't** invent an instructor, credentials, student counts, testimonials, profit claims or urgency.",
+      "**Don't** describe the ambient loop or written preview as an instructor lesson video.",
+      "**Don't** promote the proposed identity, curriculum, prices or policy drafts to approved business facts.",
+      "**Don't** add background media to controls or imply that unavailable account/payment actions succeed.\r"
+    ]
+  }
+}
