@@ -1,4 +1,4 @@
-﻿# Priority website work
+# Priority website work
 
 Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting comparison, and launch gates: [priority work report](./docs/PRIORITY-WORK-2026-10-30.md).
 
@@ -12,7 +12,7 @@ Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting compa
 
 **Remaining**
 
-- [ ] Apply [migration 008](./backend/database/migrations/202610300008_payment_hardening.sql) to the shared staging database after explicit authorization, then verify a complete demo purchase with a disposable account. Local PostgreSQL-compatible tests passed; the shared database was not changed.
+- [x] Apply [migration 008](./backend/database/migrations/202610300008_payment_hardening.sql) to the shared staging database after explicit authorization, then verify a complete demo purchase with a disposable account. **Applied 30 Oct 2026 — all 8 staging verification tests passed** (amount mismatch, failed-no-enroll, terminal guard, atomic paid+enroll, duplicate idempotency, already-enrolled block, role denial, consistency check).
 - [ ] Implement and test real Cashfree order creation, authenticated webhook consumption, reconciliation, receipts and refunds before enabling live payment.
 - [ ] Replace the staging verification course and illustrative catalogue entries with two owner-approved courses, final prices, videos, instructor details, and policies.
 
@@ -62,7 +62,7 @@ Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting compa
 
 **Remaining**
 
-- [ ] Apply and verify migration 008 in staging after authorization.
+- [x] Apply and verify migration 008 in staging after authorization. **Done — 30 Oct 2026.**
 - [ ] Configure deployment WAF/bot controls, edge rate limits, monitoring and alerts; verify backups/restores and rotate/limit secrets before launch.
 - [ ] Run staging penetration and payment-flow testing after real Cashfree integration. No site can be guaranteed safe from all attacks.
 
@@ -80,6 +80,7 @@ Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting compa
 ## Verification and launch status
 
 - **Passed locally:** production build; lint, TypeScript and 24 automated Node tests; React unit tests; targeted browser, theme, dialog, CSP, disabled-checkout and accessibility checks on the temporary redesign. The landing changes were then reverted, so that visual pass is not a claim about the current landing page.
+- **Passed on staging:** migration 008 applied and verified 30 Oct 2026 — amount mismatch, failed settlement, terminal guard, atomic paid+enroll, duplicate idempotency, already-enrolled block, role denial, and consistency check all passed against the shared staging database.
 - **Not passed/blocked:** staging migration and full demo purchase; real Cashfree settlement; actual DRM playback and capture acceptance on physical devices; final approved courses/content.
 - The repository-wide Prettier check reports pre-existing formatting issues in many unrelated files. Files changed for this work were formatted individually.
 - Automatic approval review rejected applying migration 008 to the shared staging database because the request did not explicitly authorize an irreversible shared-database change. It remains unapplied.
