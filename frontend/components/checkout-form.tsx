@@ -1,0 +1,10 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Course } from "@/frontend/content/courses";
+import { formatPrice } from "@/frontend/content/courses";
+export function CheckoutForm({ course }: { course: Course }) {
+  const router = useRouter(); const [terms, setTerms] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  async function submit() { setBusy(true); setError(""); try { const response = await fetch("/api/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slug: course.slug, terms }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error); router.push(data.checkoutUrl); } catch (reason) { setError(reason instanceof Error ? reason.message : "Checkout could not start."); setBusy(false); } }
+  return <section className="checkout-card" aria-labelledby="checkout-title"><div className="demo-banner">DEMO MODE — no real payment</div><h1 id="checkout-title">Complete your checkout</h1><div className="checkout-course"><div><strong>{course.title}</strong><p>{course.shortTitle}</p></div><span>{formatPrice(course.price)}</span></div><div className="checkout-lines"><div><span>Course price</span><strong>{formatPrice(course.price)}</strong></div><div><span>GST</span><strong>Calculated at checkout</strong></div><div className="checkout-total"><span>Total</span><strong>{formatPrice(course.price)}</strong></div></div><label className="terms-check"><input type="checkbox" checked={terms} onChange={(event) => setTerms(event.target.checked)} /> <span>I agree to the terms, privacy policy and seven-day refund policy.</span></label>{error && <p className="auth-error" role="alert">{error}</p>}<button className="button button-primary checkout-submit" disabled={!terms || busy} onClick={submit}>{busy ? "Opening secure checkout…" : "Pay securely"}</button><p className="checkout-note">This reviewer checkout uses a simulated gateway. No card or payment data is stored.</p></section>;
+}
