@@ -14,7 +14,7 @@ body:has(.landing-page) {
 body:has(.landing-page) .site-header .container,
 body:has(.landing-page) .site-footer .container,
 .landing-page .container {
-  max-width: 1200px;
+  max-width: 1440px;
 }
 .landing-testimonials {
   padding-block: 100px;
@@ -126,12 +126,12 @@ body:has(.landing-page) .login-link:hover {
 }
 .landing-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.18fr) minmax(420px, 0.82fr);
   align-items: center;
-  gap: 80px;
-  padding-top: 78px;
-  padding-bottom: 74px;
-  min-height: 650px;
+  gap: clamp(72px, 7vw, 118px);
+  padding-top: 92px;
+  padding-bottom: 92px;
+  min-height: 720px;
 }
 .landing-hero-copy {
   min-width: 0;
@@ -152,12 +152,19 @@ body:has(.landing-page) .login-link:hover {
   color: var(--accent);
 }
 .landing-hero h1 {
-  font-size: clamp(3.5rem, 5.6vw, 5rem);
+  font-size: clamp(4.5rem, 6vw, 6.5rem);
   line-height: 1.07;
   letter-spacing: -0.04em;
   font-weight: 550;
   margin: 0;
   text-wrap: balance;
+}
+.landing-hero-line {
+  display: inline-block;
+  white-space: nowrap;
+}
+.landing-hero h1 > .landing-hero-line:first-child {
+  color: var(--foreground);
 }
 .landing-hero h1 > span {
   color: var(--accent);
@@ -747,15 +754,15 @@ body:has(.landing-page) .footer-top > div > p {
 }
 @media (min-width: 1550px) {
   .landing-hero {
-    padding-top: 92px;
-    padding-bottom: 92px;
-    min-height: 700px;
+    padding-top: 112px;
+    padding-bottom: 112px;
+    min-height: 780px;
   }
 }
 @media (max-width: 1150px) {
   .landing-hero {
     gap: 42px;
-    grid-template-columns: 1.15fr 1fr;
+    grid-template-columns: 1.25fr 1fr;
     padding-top: 62px;
     padding-bottom: 60px;
     min-height: 610px;
@@ -980,6 +987,9 @@ body:has(.landing-page) .footer-top > div > p {
   .landing-hero h1 {
     font-size: clamp(2.8125rem, 9.4vw, 4rem);
     line-height: 1.1;
+  }
+  .landing-hero-line {
+    white-space: normal;
   }
   .landing-hero-copy > p {
     font-size: 1rem;

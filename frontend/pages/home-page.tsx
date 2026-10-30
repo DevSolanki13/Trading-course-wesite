@@ -72,9 +72,9 @@ export default function HomePage({
             <span>Trading education. In Hindi.</span>
           </div>
           <h1 id="landing-title">
-            {content?.heroTitle || "Clarity before"}
+            <span className="landing-hero-line">{content?.heroTitle || "Clarity before"}</span>
             <br />
-            <span>{content?.heroAccent || "the first trade."}</span>
+            <span className="landing-hero-line">{content?.heroAccent || "the first trade."}</span>
           </h1>
           <p>
             {content?.heroDescription ||
