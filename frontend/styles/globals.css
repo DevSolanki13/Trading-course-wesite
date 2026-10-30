@@ -1,19 +1,22 @@
 @import "tailwindcss";
 :root {
   color-scheme: dark;
-  --background: #0b0e11;
-  --surface: #1e222d;
-  --raised: #272d3a;
-  --foreground: #f0f3fa;
-  --muted: #a1a6b2;
-  --brand: #2962ff;
-  --brand-hover: #2457e5;
-  --subtle: #787b86;
-  --accent: #90acff;
+  color-scheme: dark;
+  --background: #07090c;
+  --surface: #0e1218;
+  --raised: #151b24;
+  --foreground: #f3f5f7;
+  --muted: #a7afb9;
+  --brand: #3e7bff;
+  --brand-hover: #5c91ff;
+  --subtle: #7d8794;
+  --accent: #82aaff;
+  --gold: #c9a96a;
   --accent-ink: #ffffff;
-  --line: #343b4b;
+  --line: rgba(255,255,255,.1);
   --overlay: #000b;
   --body: "Manrope Variable", sans-serif;
+  --display: Georgia, "Times New Roman", serif;
   --mono: "IBM Plex Mono", monospace;
 }
 :root[data-theme="light"] {
@@ -2742,16 +2745,30 @@ main {
   height: 44px;
 }
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-  .button-primary:hover:not(:disabled) {
-    transform: none;
-  }
+}
+
+/* Market Method visual language */
+:root { --gold: #c9a96a; }
+:root[data-theme="light"] { --background: #f6f4ef; --surface: #fffdf8; --raised: #f0ede5; --foreground: #14181e; --muted: #59616c; --brand: #164fbd; --brand-hover: #0f419e; --accent: #164fbd; --line: rgba(20,24,30,.14); }
+body { font-size: 16px; background-image: radial-gradient(rgba(255,255,255,.025) 1px, transparent 1px); background-size: 5px 5px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; }
+.mono, .course-card strong, .learning-path-number, .principle-number, .method-step-number { font-family: var(--mono); }
+.site-header { position: sticky; top: 0; background: color-mix(in srgb, var(--background) 84%, transparent); backdrop-filter: blur(18px); transition: box-shadow .25s, background .25s; }
+.site-header.is-scrolled { box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+.header-inner { transition: height .25s; }
+.site-header.is-scrolled .header-inner { height: 68px; }
+.desktop-nav a[aria-current="page"] { color: var(--foreground); position: relative; }
+.desktop-nav a[aria-current="page"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 5px; height: 1px; background: var(--gold); }
+.button-primary { background: linear-gradient(135deg, var(--brand), #245ad8); box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 10px 24px rgba(62,123,255,.16); }
+.button-primary:hover:not(:disabled) { box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 14px 30px rgba(62,123,255,.28); }
+.landing-section-label, .preview-price-label { color: var(--gold); text-transform: uppercase; letter-spacing: .14em; font: 11px var(--mono); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .button-primary:hover:not(:disabled) { transform: none; }
 }
