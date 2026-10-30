@@ -20,3 +20,4 @@ async function main() {
   console.log('Constraint fix complete.');
 }
 main().catch(e => { console.error('❌', e.message); process.exit(1); });
+

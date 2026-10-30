@@ -13,6 +13,7 @@ Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting compa
 **Remaining**
 
 - [x] Apply [migration 008](./backend/database/migrations/202610300008_payment_hardening.sql) to the shared staging database after explicit authorization, then verify a complete demo purchase with a disposable account. **Applied 30 Oct 2026 — all 8 staging verification tests passed** (amount mismatch, failed-no-enroll, terminal guard, atomic paid+enroll, duplicate idempotency, already-enrolled block, role denial, consistency check).
+- [x] Phase 2 — Course flow and learner journey verification complete. **Verified 30 Oct 2026:** free preview accessibility vs locked paid lessons, unverified email rejection, 2-device admission limit, database price/GST/refund policy accuracy, pending order isolation (never grants access), 2-minute pending payment polling window with "Check again" safety, paid atomic settlement & enrollment, lesson selection, heartbeat progress tracking, notes, completion %, resume point, and instant access denial on refund or enrollment revocation. All 25 automated tests and live staging verification passed.
 - [ ] Implement and test real Cashfree order creation, authenticated webhook consumption, reconciliation, receipts and refunds before enabling live payment.
 - [ ] Replace the staging verification course and illustrative catalogue entries with two owner-approved courses, final prices, videos, instructor details, and policies.
 

@@ -48,3 +48,4 @@ async function main() {
 }
 
 main().catch(e => { console.error('❌ Check failed:', e.message); process.exit(1); });
+

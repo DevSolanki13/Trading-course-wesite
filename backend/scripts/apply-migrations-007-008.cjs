@@ -97,3 +97,4 @@ async function main() {
 }
 
 main().catch(e => { console.error('\n❌ Migration failed:', e.message, '\n', e.detail || ''); process.exit(1); });
+
