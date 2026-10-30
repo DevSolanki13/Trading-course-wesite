@@ -4,6 +4,12 @@ import Link from "next/link";
 import { ArrowRight, CircleNotch, CheckCircle } from "@phosphor-icons/react";
 
 export type AuthMode = "login" | "signup" | "forgot" | "reset" | "confirm";
+type AuthResponse = {
+  error?: string;
+  redirect?: string;
+  message?: string;
+  url?: string;
+};
 export function AuthForm({
   mode,
   admin = false,
@@ -61,7 +67,12 @@ export function AuthForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
+    let data: AuthResponse;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("Something went wrong. Please try again.");
+    }
     if (!response.ok) throw new Error(data.error || "This action could not be completed.");
     return data;
   }
@@ -266,11 +277,6 @@ export function AuthForm({
             </span>
             Google
           </button>
-          {!google && (
-            <p className="auth-field-help auth-google-note">
-              Google sign-in is not configured yet. You can use email and password.
-            </p>
-          )}
         </>
       )}
       <div className="auth-card-footer">
