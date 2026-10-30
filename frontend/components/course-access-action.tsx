@@ -29,17 +29,28 @@ export function CourseAccessAction({
         {mobile ? "Go to course" : "Go to your course"}
       </Link>
     );
+  const demoEnabled = process.env.NEXT_PUBLIC_PAYMENT_MODE === "demo";
   if (mobile)
-    return (
+    return demoEnabled ? (
+      <Link className="button button-primary" href={`/checkout/${slug}`}>
+        Buy now
+      </Link>
+    ) : (
       <button className="button button-primary" disabled>
         Enrolment not open
       </button>
     );
   return (
     <>
-      <button className="button button-primary" disabled>
-        Enrolment opens later
-      </button>
+      {demoEnabled ? (
+        <Link className="button button-primary" href={`/checkout/${slug}`}>
+          Buy now
+        </Link>
+      ) : (
+        <button className="button button-primary" disabled>
+          Enrolment opens later
+        </button>
+      )}
       {previewId && (
         <Link className="button button-secondary" href={`/learn/${slug}?lesson=${previewId}`}>
           Watch a free lesson
