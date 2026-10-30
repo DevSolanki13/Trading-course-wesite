@@ -63,7 +63,9 @@ test("catalogue search, filter and disabled purchase", async ({ page }) => {
     "href",
     "/refund-policy",
   );
-  const buttons = page.getByRole("button", { name: /Enrolment (opens later|not open)/ });
+  const buttons = page.getByRole("button", {
+    name: /Enrolment (opens later|not open)|Payments temporarily unavailable/,
+  });
   await expect(buttons).toHaveCount(1);
   for (const button of await buttons.all()) {
     await expect(button).toBeDisabled();

@@ -6,11 +6,15 @@ export function CourseAccessAction({
   previewId,
   mobile = false,
   demoEnabled = false,
+  courseId,
+  paymentsUnavailable = false,
 }: {
   slug: string;
   previewId?: string;
   mobile?: boolean;
   demoEnabled?: boolean;
+  courseId?: string;
+  paymentsUnavailable?: boolean;
 }) {
   const [owned, setOwned] = useState(false);
   useEffect(() => {
@@ -33,23 +37,23 @@ export function CourseAccessAction({
     );
   if (mobile)
     return demoEnabled ? (
-      <Link className="button button-primary" href={`/checkout/${slug}`}>
+      <Link className="button button-primary" href={`/checkout/${courseId ?? slug}`}>
         Buy now
       </Link>
     ) : (
       <button className="button button-primary" disabled>
-        Enrolment not open
+        {paymentsUnavailable ? "Payments temporarily unavailable" : "Enrolment not open"}
       </button>
     );
   return (
     <>
       {demoEnabled ? (
-        <Link className="button button-primary" href={`/checkout/${slug}`}>
+        <Link className="button button-primary" href={`/checkout/${courseId ?? slug}`}>
           Buy now
         </Link>
       ) : (
         <button className="button button-primary" disabled>
-          Enrolment opens later
+          {paymentsUnavailable ? "Payments temporarily unavailable" : "Enrolment opens later"}
         </button>
       )}
       {previewId && (

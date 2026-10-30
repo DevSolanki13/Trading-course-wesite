@@ -10,7 +10,13 @@ export default async function Login({
   return (
     <AuthPage
       mode="login"
-      next={typeof query.next === "string" ? query.next : undefined}
+      next={
+        typeof query.redirect === "string"
+          ? query.redirect
+          : typeof query.next === "string"
+            ? query.next
+            : undefined
+      }
       error={
         query.error === "oauth"
           ? "Google sign-in could not be completed. Please try again or use email and password."

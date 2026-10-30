@@ -21,13 +21,22 @@ import {
 export default function CourseDetailPage({
   course,
   demoEnabled = false,
+  paymentsUnavailable = false,
+  purchaseNotice = false,
 }: {
   course: Course;
   demoEnabled?: boolean;
+  paymentsUnavailable?: boolean;
+  purchaseNotice?: boolean;
 }) {
   return (
     <main id="main-content" className="course-detail">
       <div className="container">
+        {purchaseNotice && (
+          <p role="alert" className="auth-error">
+            Purchase to unlock this lesson. You can try a free preview below.
+          </p>
+        )}
         <Link className="back-link" href="/courses">
           <ArrowLeft size={16} />
           All courses
@@ -185,8 +194,14 @@ export default function CourseDetailPage({
               slug={course.slug}
               previewId={course.previewLessonId}
               demoEnabled={demoEnabled}
+              courseId={course.id}
+              paymentsUnavailable={paymentsUnavailable}
             />
-            <span className="purchase-status">Purchases are disabled in this preview.</span>
+            <span className="purchase-status">
+              {demoEnabled
+                ? "Complete checkout to add this course to your dashboard."
+                : "Purchases are disabled in this preview."}
+            </span>
             <ul className="purchase-includes">
               <li>
                 <Check size={17} />
@@ -233,7 +248,13 @@ export default function CourseDetailPage({
           <small>Illustrative price</small>
           <strong>{formatPrice(course.price)}</strong>
         </div>
-        <CourseAccessAction slug={course.slug} mobile demoEnabled={demoEnabled} />
+        <CourseAccessAction
+          slug={course.slug}
+          courseId={course.id}
+          mobile
+          demoEnabled={demoEnabled}
+          paymentsUnavailable={paymentsUnavailable}
+        />
       </div>
     </main>
   );

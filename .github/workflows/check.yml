@@ -20,9 +20,16 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:release
+      - run: npm run test:purchase
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: phase-6-browser-evidence
           path: artifacts/phase-6/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: purchase-demo-screenshots
+          path: artifacts/purchase/results/**/*.png
           retention-days: 7

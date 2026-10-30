@@ -1,0 +1,146 @@
+.purchase-summary {
+  display: grid;
+  gap: 14px;
+  margin-block: 24px;
+}
+.purchase-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+.purchase-summary dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.purchase-classroom {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 36px;
+  padding-block: 36px;
+}
+.purchase-sidebar {
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.purchase-sidebar h2 {
+  font: 600 20px/1.4 var(--body);
+  margin-block: 20px 12px;
+}
+.purchase-sidebar h3 {
+  font: 600 16px/1.5 var(--body);
+  margin-top: 24px;
+}
+.purchase-sidebar ol {
+  padding-left: 20px;
+}
+.purchase-sidebar li {
+  padding-block: 8px;
+}
+.purchase-sidebar a[aria-current="page"] {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.purchase-lesson {
+  min-width: 0;
+}
+.purchase-lesson h1 {
+  font-size: clamp(28px, 4vw, 42px);
+  margin-block: 20px;
+}
+.purchase-lesson video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: #111;
+  border-radius: 12px;
+}
+.purchase-lesson h2 {
+  font-size: 24px;
+  margin-top: 28px;
+}
+.purchase-notes {
+  white-space: pre-wrap;
+  margin-block: 20px;
+}
+.purchase-lesson .button {
+  margin-block: 12px;
+}
+.learning-tabs > a {
+  padding: 12px 4px;
+  display: inline-block;
+}
+.learning-tabs > a[aria-current="page"] {
+  color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+}
+.purchase-receipt {
+  max-width: 760px;
+  margin: 48px auto;
+  padding: 32px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.purchase-receipt h1 {
+  font-size: 32px;
+}
+.demo-login-hint {
+  border: 1px solid var(--line);
+  padding: 16px;
+  border-radius: 10px;
+  margin: 18px 0;
+  background: var(--raised);
+}
+.demo-login-hint p {
+  font-size: 14px;
+}
+.demo-login-hint .button {
+  margin-top: 12px;
+}
+.demo-login-hint .text-link {
+  margin-left: 12px;
+}
+@media (max-width: 800px) {
+  .purchase-classroom {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .purchase-sidebar {
+    padding: 20px;
+  }
+  .purchase-receipt {
+    padding: 20px;
+    margin: 24px auto;
+  }
+  .gateway-actions .button {
+    width: 100%;
+  }
+}
+@media print {
+  .site-header,
+  .site-footer,
+  .preview-notice,
+  .skip-link,
+  .print-control,
+  .purchase-receipt > a {
+    display: none !important;
+  }
+  .purchase-receipt {
+    border: 0;
+    margin: 0;
+    max-width: none;
+    background: white;
+    color: black;
+  }
+  .purchase-receipt p,
+  .purchase-receipt dt,
+  .purchase-receipt dd {
+    color: black;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+}

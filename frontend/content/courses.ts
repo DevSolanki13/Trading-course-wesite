@@ -1,4 +1,5 @@
 export type Course = {
+  id?: string;
   thumbnailUrl?: string | null;
   provisional?: boolean;
   previewLessonId?: string;

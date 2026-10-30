@@ -7,5 +7,16 @@ export default async function Signup({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = await searchParams;
-  return <AuthPage mode="signup" next={typeof query.next === "string" ? query.next : undefined} />;
+  return (
+    <AuthPage
+      mode="signup"
+      next={
+        typeof query.redirect === "string"
+          ? query.redirect
+          : typeof query.next === "string"
+            ? query.next
+            : undefined
+      }
+    />
+  );
 }

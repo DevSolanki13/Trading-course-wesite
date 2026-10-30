@@ -66,6 +66,8 @@ test("anonymous API calls and cross-origin mutations cannot grant access", async
   const health = await (await request.get("/api/health")).json();
   expect(health.checkoutEnabled).toBe(false);
   expect((await request.get("/api/operations/run")).status()).toBe(404);
+  expect((await request.post("/api/payments/mock/success", { data: {} })).status()).toBe(404);
+  expect((await request.get("/api/payments/mock/success")).status()).toBe(404);
   expect((await request.get("/pay/cashfree/11111111-1111-4111-8111-111111111111")).status()).toBe(
     404,
   );

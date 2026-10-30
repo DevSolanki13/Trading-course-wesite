@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CircleNotch, CheckCircle } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 export type AuthMode = "login" | "signup" | "forgot" | "reset" | "confirm";
 type AuthResponse = {
@@ -31,6 +32,7 @@ export function AuthForm({
   const [error, setError] = useState(initialError);
   const [message, setMessage] = useState(notice);
   const [google, setGoogle] = useState(false);
+  const [demoHint, setDemoHint] = useState(false);
   useEffect(() => {
     if (mode !== "login" && mode !== "signup") return;
     let live = true;
@@ -38,6 +40,7 @@ export function AuthForm({
       .then((response) => response.json())
       .then((data) => {
         if (live) setGoogle(data.googleEnabled === true);
+        if (live) setDemoHint(data.demoLoginHint === true);
       })
       .catch(() => {});
     return () => {
@@ -116,6 +119,7 @@ export function AuthForm({
       else setMessage(result.message || "Check your inbox to continue.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Please try again.");
+      toast.error(reason instanceof Error ? reason.message : "Please try again.");
     } finally {
       setPending(false);
     }
@@ -136,6 +140,27 @@ export function AuthForm({
     <div className="auth-card">
       <h2>{titles[mode]}</h2>
       <p className="auth-card-intro">{descriptions[mode]}</p>
+      {mode === "login" && demoHint && (
+        <aside className="demo-login-hint" aria-label="Demo login">
+          <strong>Demo login · local development only</strong>
+          <p>{admin ? "admin@example.com" : "demo@example.com"} / 1234567890</p>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => {
+              const email = document.getElementById("email") as HTMLInputElement;
+              const password = document.getElementById("password") as HTMLInputElement;
+              if (email) email.value = admin ? "admin@example.com" : "demo@example.com";
+              if (password) password.value = "1234567890";
+            }}
+          >
+            Fill demo credentials
+          </button>
+          <button type="button" className="text-link" onClick={() => setDemoHint(false)}>
+            Dismiss
+          </button>
+        </aside>
+      )}
       {message && (
         <div className="auth-message" role="status">
           <CheckCircle size={20} />
