@@ -1,6 +1,8 @@
 node_modules
 .agents/
 .next
+.next-demo
+.local-data
 package-lock.json
 pnpm-lock.yaml
 *.tsbuildinfo

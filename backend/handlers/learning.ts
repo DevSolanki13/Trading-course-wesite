@@ -5,6 +5,9 @@ import { learningAccount, library, loadCourse, lessonAccess } from "../learning/
 import { playbackCredentials } from "../learning/video";
 import { admitted } from "../auth/session";
 import type { LearningAccount } from "../learning/data";
+import { localDemoEnabled } from "../purchase/mode";
+import { purchaseUser } from "../purchase/session";
+import { purchaseCourse } from "../purchase/repository";
 
 function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);
@@ -32,6 +35,18 @@ function rpcError(error: { code?: string } | null) {
   throw new AuthError(503, "Learning progress could not be saved.");
 }
 export async function learningRequest(request: Request) {
+  if (localDemoEnabled()) {
+    if (request.method === "GET" && new URL(request.url).pathname === "/api/learning/course") {
+      const user = await purchaseUser(false);
+      return json({
+        course: await purchaseCourse(
+          new URL(request.url).searchParams.get("slug") ?? "",
+          user?.id ?? null,
+        ),
+      });
+    }
+    return json({ error: "Use the local demo classroom routes." }, 404);
+  }
   try {
     const url = new URL(request.url);
     const action = url.pathname.replace(/^\/api\/learning\//, "");

@@ -2,6 +2,12 @@
 export function releaseEnvironment(origin: string): Record<string, string> {
   return {
     NEXT_PUBLIC_APP_URL: origin,
+    PAYMENT_PROVIDER: "",
+    RAZORPAY_KEY_ID: "",
+    RAZORPAY_KEY_SECRET: "",
+    RAZORPAY_WEBHOOK_SECRET: "",
+    ALLOW_MOCK_PAYMENTS: "false",
+    LOCAL_DEMO: "false",
     PROJECT_STAGE: "local",
     PAYMENT_MODE: "",
     NEXT_PUBLIC_PAYMENT_MODE: "",

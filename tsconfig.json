@@ -15,7 +15,11 @@
     "erasableSyntaxOnly": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/frontend/*": ["./frontend/*"],
       "@/backend/*": ["./backend/*"],
@@ -32,7 +36,9 @@
     "backend/**/*.ts",
     "tests/**/*.ts",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next-demo/types/**/*.ts",
+    ".next-demo/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

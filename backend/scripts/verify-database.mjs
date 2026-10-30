@@ -65,6 +65,9 @@ try {
       "operations_tasks",
       "billing_documents",
       "commerce_jobs",
+      "purchase_access",
+      "purchase_lesson_content",
+      "purchase_events",
     ];
     const schema = await client.query(
       "select relname, relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relname = any($1::text[])",
@@ -100,6 +103,9 @@ try {
           "operations_tasks",
           "billing_documents",
           "commerce_jobs",
+          "purchase_access",
+          "purchase_lesson_content",
+          "purchase_events",
         ],
       ],
     );
@@ -159,6 +165,17 @@ try {
       commerceFunctions.rows.some((row) => row.anon_exec || row.user_exec || !row.service_exec)
     )
       throw new Error("UNSAFE_COMMERCE_FUNCTION_GRANT");
+    const purchaseFunctions = await client.query(`select p.proname,
+      has_function_privilege('anon',p.oid,'EXECUTE')as anon_exec,
+      has_function_privilege('authenticated',p.oid,'EXECUTE')as user_exec,
+      has_function_privilege('service_role',p.oid,'EXECUTE')as service_exec
+      from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'and p.proname in
+      ('purchase_has_access','purchase_catalog','purchase_read','purchase_create_order','purchase_claim_creation','purchase_bind_order','purchase_settle','purchase_complete','purchase_mail_claim','purchase_mail_finish','purchase_tax','purchase_payment_owner')`);
+    if (
+      purchaseFunctions.rows.length !== 12 ||
+      purchaseFunctions.rows.some((row) => row.anon_exec || row.user_exec || !row.service_exec)
+    )
+      throw new Error("UNSAFE_PURCHASE_FUNCTION_GRANT");
     const triggers = await client.query(
       "select count(*)::int as count from pg_trigger where not tgisinternal and tgname in ('on_auth_user_created','orders_protect_snapshots','group_removal_recheck')",
     );

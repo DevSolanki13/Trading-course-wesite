@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { contentSecurityPolicy } from "./backend/security/content-policy";
+import { localDemoEnabled } from "./backend/purchase/mode";
 
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -8,8 +9,22 @@ export async function proxy(request: NextRequest) {
     nonce,
     process.env.NODE_ENV === "development",
     request.nextUrl.pathname.startsWith("/pay/cashfree/"),
+    request.nextUrl.pathname.startsWith("/checkout/"),
+    localDemoEnabled(),
   );
   const requestHeaders = new Headers(request.headers);
+  const protectedPage = /^\/(dashboard|checkout)(\/|$)/.test(request.nextUrl.pathname);
+  const hasSession = localDemoEnabled()
+    ? !!request.cookies.get("mm_local_session")
+    : request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-"));
+  if (protectedPage && !hasSession) {
+    const login = new URL("/login", request.url);
+    login.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
+    const denied = NextResponse.redirect(login);
+    denied.headers.set("Content-Security-Policy", policy);
+    denied.headers.set("Cache-Control", "private, no-store");
+    return denied;
+  }
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", policy);
   const nextResponse = () => {

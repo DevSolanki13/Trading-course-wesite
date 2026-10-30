@@ -1,5 +1,7 @@
 node_modules/
+.local-data/
 .next/
+.next-demo/
 out/
 dist/
 coverage/

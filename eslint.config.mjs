@@ -40,6 +40,8 @@ export default defineConfig([
   },
   globalIgnores([
     ".next/**",
+    ".next-demo/**",
+    ".local-data/**",
     ".agents/**",
     "out/**",
     "dist/**",
