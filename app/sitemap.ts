@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { siteOrigin } from "@/frontend/lib/metadata";
 import { courses } from "@/frontend/content/courses";
 import { publicCatalog } from "@/backend/public/catalogue";
-export const dynamic="force-dynamic";
+export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const data = await publicCatalog();
   return [

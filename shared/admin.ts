@@ -127,10 +127,10 @@ export type SettingsView = {
   private_invite_expires_at: string | null;
 };
 export type SiteDocument = {
-  instructorName:string;
-  instructorBio:string;
-  instructorPortraitUrl:string;
-  instructorConfirmed:boolean;
+  instructorName: string;
+  instructorBio: string;
+  instructorPortraitUrl: string;
+  instructorConfirmed: boolean;
   heroTitle: string;
   heroAccent: string;
   heroDescription: string;

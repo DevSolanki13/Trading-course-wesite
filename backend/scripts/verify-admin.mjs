@@ -95,7 +95,9 @@ try {
     signal: AbortSignal.timeout(3000),
   }).catch(() => null);
   if (!serverProbe || !serverProbe.ok) {
-    throw new Error(`Application server not running at ${origin}. Please start 'npm run dev' or 'npm start' in another terminal first.`);
+    throw new Error(
+      `Application server not running at ${origin}. Please start 'npm run dev' or 'npm start' in another terminal first.`,
+    );
   }
   await db.connect();
   const owner = await fixture("admin"),
@@ -173,8 +175,25 @@ try {
   assert.equal(detail.course.status, "published");
   assert.equal(detail.course.modules[0].lessons.length, 1);
   assert.equal(detail.course.modules[0].lessons[0].lesson_assets.provider_video_id, vd.videoId);
-  const lastLesson=await action(a,"lesson_save",{courseId,version:4,moduleId,id:lessonId,title:"Protected verified lesson",duration_seconds:vd.duration,videoId:vd.videoId,notes:"An authorised test note.",is_preview:false,published:false,resources:[]},400);
-  assert.match(lastLesson.error,/Unpublish the course/);
+  const lastLesson = await action(
+    a,
+    "lesson_save",
+    {
+      courseId,
+      version: 4,
+      moduleId,
+      id: lessonId,
+      title: "Protected verified lesson",
+      duration_seconds: vd.duration,
+      videoId: vd.videoId,
+      notes: "An authorised test note.",
+      is_preview: false,
+      published: false,
+      resources: [],
+    },
+    400,
+  );
+  assert.match(lastLesson.error, /Unpublish the course/);
   const publicPage = await u.request.get(`/courses/${slug}`);
   assert.equal(publicPage.status(), 200);
   assert.match(await publicPage.text(), /Staging course editor verification/);
@@ -182,37 +201,76 @@ try {
   assert.match(sitemap, new RegExp(slug));
   const coupon = await action(a, "coupon", {
     code: `P5${randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`,
-    kind: "percent", value: 1000, courseId, expiresAt: null,
-    totalLimit: 10, perUserLimit: 1, active: true,
+    kind: "percent",
+    value: 1000,
+    courseId,
+    expiresAt: null,
+    totalLimit: 10,
+    perUserLimit: 1,
+    active: true,
   });
   couponId = coupon.id;
   assert.ok(couponId);
-  const forbiddenCoupon = await action(s, "coupon", {
-    code: "SUPPORT10", kind: "percent", value: 1000, courseId,
-    expiresAt: null, totalLimit: 10, perUserLimit: 1, active: true,
-  }, 403);
+  const forbiddenCoupon = await action(
+    s,
+    "coupon",
+    {
+      code: "SUPPORT10",
+      kind: "percent",
+      value: 1000,
+      courseId,
+      expiresAt: null,
+      totalLimit: 10,
+      perUserLimit: 1,
+      active: true,
+    },
+    403,
+  );
   assert.equal(forbiddenCoupon.code, "FORBIDDEN");
   pass(
     "atomic course/module/lesson builder, verified provider publication, coupon admin boundary and fourth-course public listing",
   );
-  step="course-builder browser authoring";
-  const editor=await a.newPage();await editor.goto("/admin",{waitUntil:"networkidle"});await editor.getByRole("button",{name:"Courses",exact:true}).first().click();await editor.getByRole("button",{name:"New course"}).click();
-  uiSlug=`phase5-ui-${randomUUID()}`;
-  await editor.getByRole("textbox",{name:"Course title"}).fill("Staging UI authoring check");
-  await editor.getByRole("textbox",{name:"URL slug"}).fill(uiSlug);
-  await editor.getByRole("spinbutton",{name:"Base price (INR)"}).fill("100");
-  await editor.getByRole("button",{name:"Save course details"}).click();
-  await editor.getByRole("heading",{name:"Staging UI authoring check"}).waitFor();
-  const uiRecord=await admin.from("courses").select("id,status").eq("slug",uiSlug).single();assert.equal(uiRecord.error,null);uiCourseId=uiRecord.data.id;assert.equal(uiRecord.data.status,"draft");
+  step = "course-builder browser authoring";
+  const editor = await a.newPage();
+  await editor.goto("/admin", { waitUntil: "networkidle" });
+  await editor.getByRole("button", { name: "Courses", exact: true }).first().click();
+  await editor.getByRole("button", { name: "New course" }).click();
+  uiSlug = `phase5-ui-${randomUUID()}`;
+  await editor.getByRole("textbox", { name: "Course title" }).fill("Staging UI authoring check");
+  await editor.getByRole("textbox", { name: "URL slug" }).fill(uiSlug);
+  await editor.getByRole("spinbutton", { name: "Base price (INR)" }).fill("100");
+  await editor.getByRole("button", { name: "Save course details" }).click();
+  await editor.getByRole("heading", { name: "Staging UI authoring check" }).waitFor();
+  const uiRecord = await admin.from("courses").select("id,status").eq("slug", uiSlug).single();
+  assert.equal(uiRecord.error, null);
+  uiCourseId = uiRecord.data.id;
+  assert.equal(uiRecord.data.status, "draft");
   const draftPage = await u.request.get(`/courses/${uiSlug}`);
   assert.match(await draftPage.text(), /A little off course/);
-  await editor.getByRole("button",{name:"Curriculum"}).click();await editor.getByRole("textbox",{name:"New module title"}).fill("Hands-on learning");await editor.getByRole("button",{name:"Add module"}).click();await editor.getByRole("textbox",{name:"Module title"}).waitFor();assert.equal(await editor.getByRole("textbox",{name:"Module title"}).inputValue(),"Hands-on learning");await editor.screenshot({path:".impeccable/review/admin-course-editor.png",fullPage:true});
-  await editor.close();pass("browser course draft and module authoring stay private until verified publication");
-  const supportFilters=await s.request.get("/api/admin/order-filters");assert.equal(supportFilters.status(),200);
-  const filterCourses=(await supportFilters.json()).courses;assert.ok(filterCourses.some(course=>course.id===courseId));assert.ok(!filterCourses.some(course=>course.id===uiCourseId));
+  await editor.getByRole("button", { name: "Curriculum" }).click();
+  await editor.getByRole("textbox", { name: "New module title" }).fill("Hands-on learning");
+  await editor.getByRole("button", { name: "Add module" }).click();
+  await editor.getByRole("textbox", { name: "Module title" }).waitFor();
+  assert.equal(
+    await editor.getByRole("textbox", { name: "Module title" }).inputValue(),
+    "Hands-on learning",
+  );
+  await editor.screenshot({ path: ".impeccable/review/admin-course-editor.png", fullPage: true });
+  await editor.close();
+  pass("browser course draft and module authoring stay private until verified publication");
+  const supportFilters = await s.request.get("/api/admin/order-filters");
+  assert.equal(supportFilters.status(), 200);
+  const filterCourses = (await supportFilters.json()).courses;
+  assert.ok(filterCourses.some((course) => course.id === courseId));
+  assert.ok(!filterCourses.some((course) => course.id === uiCourseId));
   step = "student and financial boundaries";
-  const staffGrant=await action(s,"grant",{userId:owner.id,courseId,note:"Staff grant must be denied"},403);
-  assert.equal(staffGrant.code,"FORBIDDEN");
+  const staffGrant = await action(
+    s,
+    "grant",
+    { userId: owner.id, courseId, note: "Staff grant must be denied" },
+    403,
+  );
+  assert.equal(staffGrant.code, "FORBIDDEN");
   assert.equal(
     (await action(s, "grant", { userId: student.id, courseId, note: "Authorised staging access" }))
       .message,
@@ -277,11 +335,13 @@ try {
     [`refund:${refundId}:approved`],
   );
   assert.equal(notices.rows[0].n, 1);
-  const filtered=await(await a.request.get(`/api/admin/orders?courseId=${courseId}&status=paid&userId=${student.id}`)).json();
-  assert.ok(filtered.items.some(item=>item.id===orderId));
-  const disabledRefund=await post(a,"/api/admin/refund-process",{requestId:refundId});
-  assert.equal(disabledRefund.status(),503);
-  assert.equal((await disabledRefund.json()).code,"PAYMENTS_DEFERRED");
+  const filtered = await (
+    await a.request.get(`/api/admin/orders?courseId=${courseId}&status=paid&userId=${student.id}`)
+  ).json();
+  assert.ok(filtered.items.some((item) => item.id === orderId));
+  const disabledRefund = await post(a, "/api/admin/refund-process", { requestId: refundId });
+  assert.equal(disabledRefund.status(), 503);
+  assert.equal((await disabledRefund.json()).code, "PAYMENTS_DEFERRED");
   const summary = await (await a.request.get("/api/admin/overview?range=all")).json();
   assert.ok(summary.gross >= 10000);
   assert.ok(summary.sales >= 1);
@@ -311,25 +371,40 @@ try {
     rights.rows.some((x) => x.source === "purchase" && !x.active),
     true,
   );
-  const tasks=await(await a.request.get("/api/admin/tasks")).json();
-  assert.ok(tasks.items.some(task=>task.request_id===refundId&&task.qualifyingPaidAccessNow===false));
-  const messages=await(await a.request.get("/api/admin/notifications")).json();
-  assert.ok(messages.items.some(message=>message.subject==="Refund confirmed"));
-  const audit=await(await a.request.get("/api/admin/audit")).json();
-  assert.ok(audit.items.some(item=>item.action==="refund_decide"));
-  assert.equal((await s.request.get("/api/admin/tasks")).status(),403);
+  const tasks = await (await a.request.get("/api/admin/tasks")).json();
+  assert.ok(
+    tasks.items.some(
+      (task) => task.request_id === refundId && task.qualifyingPaidAccessNow === false,
+    ),
+  );
+  const messages = await (await a.request.get("/api/admin/notifications")).json();
+  assert.ok(messages.items.some((message) => message.subject === "Refund confirmed"));
+  const audit = await (await a.request.get("/api/admin/audit")).json();
+  assert.ok(audit.items.some((item) => item.action === "refund_decide"));
+  assert.equal((await s.request.get("/api/admin/tasks")).status(), 403);
   pass(
     "Support grant/refund review, frozen evidence, no provider action on approval, safe export and idempotent synthetic settlement",
   );
-  step="student blocking and forced logout";
-  await action(a,"block",{userId:student.id,blocked:true,note:"Disposable staging access check"});
-  assert.equal((await u.request.get("/api/auth/me")).status(),403);
-  await action(a,"block",{userId:student.id,blocked:false,note:"Restore disposable staging account"});
-  assert.equal((await u.request.get("/api/auth/me")).status(),401);
-  await login(u,student);
-  assert.equal((await u.request.get("/api/auth/me")).status(),200);
-  await action(a,"logout_student",{userId:student.id,note:"Disposable forced sign-out check"});
-  assert.equal((await u.request.get("/api/auth/me")).status(),401);
+  step = "student blocking and forced logout";
+  await action(a, "block", {
+    userId: student.id,
+    blocked: true,
+    note: "Disposable staging access check",
+  });
+  assert.equal((await u.request.get("/api/auth/me")).status(), 403);
+  await action(a, "block", {
+    userId: student.id,
+    blocked: false,
+    note: "Restore disposable staging account",
+  });
+  assert.equal((await u.request.get("/api/auth/me")).status(), 401);
+  await login(u, student);
+  assert.equal((await u.request.get("/api/auth/me")).status(), 200);
+  await action(a, "logout_student", {
+    userId: student.id,
+    note: "Disposable forced sign-out check",
+  });
+  assert.equal((await u.request.get("/api/auth/me")).status(), 401);
   pass("Admin block, unblock and force logout revoke access while preserving account history");
   step = "admin panels accessibility";
   const page = await a.newPage();
@@ -339,10 +414,25 @@ try {
     for (const width of [1440, 390, 360]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/admin", { waitUntil: "networkidle" });
-      await page.evaluate(t=>{localStorage.setItem("market-method-theme",t);document.documentElement.dataset.theme=t;window.dispatchEvent(new Event("theme-change"));},theme);
-      assert.equal(await page.locator("html").getAttribute("data-theme"),theme);
+      await page.evaluate((t) => {
+        localStorage.setItem("market-method-theme", t);
+        document.documentElement.dataset.theme = t;
+        window.dispatchEvent(new Event("theme-change"));
+      }, theme);
+      assert.equal(await page.locator("html").getAttribute("data-theme"), theme);
       await page.getByRole("heading", { name: "Overview" }).waitFor();
-      for (const tab of ["Overview", "Courses", "Students", "Orders", "Refunds", "Settings", "Coupons", "Site content", "Operations", "Audit"]) {
+      for (const tab of [
+        "Overview",
+        "Courses",
+        "Students",
+        "Orders",
+        "Refunds",
+        "Settings",
+        "Coupons",
+        "Site content",
+        "Operations",
+        "Audit",
+      ]) {
         await page.getByRole("button", { name: tab, exact: true }).first().click();
         await page.waitForTimeout(150);
         assert.equal(
@@ -350,8 +440,11 @@ try {
           false,
           `${theme} ${width} ${tab} overflow`,
         );
-        if (["Overview", "Courses", "Refunds", "Settings", "Students", "Site content"].includes(tab)) {
-          if(tab==="Settings")await page.getByRole("heading",{name:"Tax and billing"}).waitFor();
+        if (
+          ["Overview", "Courses", "Refunds", "Settings", "Students", "Site content"].includes(tab)
+        ) {
+          if (tab === "Settings")
+            await page.getByRole("heading", { name: "Tax and billing" }).waitFor();
           const audit = await new AxeBuilder({ page })
             .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
             .analyze();
@@ -375,12 +468,16 @@ try {
     "Admin accessibility issues recorded in local report",
   );
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByRole("button",{name:"Overview",exact:true}).first().click();
+  await page.getByRole("button", { name: "Overview", exact: true }).first().click();
   await page.screenshot({ path: ".impeccable/review/admin-dashboard.png" });
-  const supportPage=await s.newPage();await supportPage.goto("/admin",{waitUntil:"networkidle"});await supportPage.getByRole("heading",{name:"Overview"}).waitFor();
-  assert.equal(await supportPage.getByRole("button",{name:"Courses",exact:true}).count(),0);
-  assert.equal(await supportPage.getByRole("button",{name:"Settings",exact:true}).count(),0);
-  await supportPage.getByRole("button",{name:"Students",exact:true}).click();await supportPage.getByRole("heading",{name:"Students",exact:true}).waitFor();await supportPage.close();
+  const supportPage = await s.newPage();
+  await supportPage.goto("/admin", { waitUntil: "networkidle" });
+  await supportPage.getByRole("heading", { name: "Overview" }).waitFor();
+  assert.equal(await supportPage.getByRole("button", { name: "Courses", exact: true }).count(), 0);
+  assert.equal(await supportPage.getByRole("button", { name: "Settings", exact: true }).count(), 0);
+  await supportPage.getByRole("button", { name: "Students", exact: true }).click();
+  await supportPage.getByRole("heading", { name: "Students", exact: true }).waitFor();
+  await supportPage.close();
   pass("admin workspace viewport/theme navigation and targeted accessibility checks");
 } catch (error) {
   const safeMessage = error?.message
@@ -433,9 +530,12 @@ try {
       );
       await db.query("delete from modules where course_id=$1", [courseId]);
       await db.query("delete from courses where id=$1", [courseId]);
-      if(!uiCourseId&&uiSlug){const found=await db.query("select id from courses where slug=$1",[uiSlug]);uiCourseId=found.rows[0]?.id;}
-      if(uiCourseId)await db.query("delete from modules where course_id=$1",[uiCourseId]);
-      if(uiCourseId)await db.query("delete from courses where id=$1",[uiCourseId]);
+      if (!uiCourseId && uiSlug) {
+        const found = await db.query("select id from courses where slug=$1", [uiSlug]);
+        uiCourseId = found.rows[0]?.id;
+      }
+      if (uiCourseId) await db.query("delete from modules where course_id=$1", [uiCourseId]);
+      if (uiCourseId) await db.query("delete from courses where id=$1", [uiCourseId]);
       await db.query("commit");
     }
     if (users.length) {

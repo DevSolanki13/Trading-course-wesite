@@ -62,6 +62,8 @@ Configure the Google OAuth client in Google Cloud and enable it in Supabase Auth
 
 ## 4. Cashfree sandbox
 
+**31 October update:** sandbox checkout, verified consumer/reconciliation, full refunds, private billing and email/scheduler code are implemented. [Phase 3 status](./PHASE-3-STATUS.md) supersedes older references below to future implementation. Migration 009 is local only; restore database trust/ledger and hosting access, obtain migration authorisation, then perform actual merchant acceptance. Live checkout is unsupported. Use the documented `cashfree-sandbox` mode and staging safeguards; `PAYMENT_MODE=cashfree` does not enable payments.
+
 Set `CASHFREE_ENV=sandbox`, merchant sandbox credentials and the explicit API version `2026-01-01` from [Cashfree's current API overview](https://www.cashfree.com/docs/api-reference/payments/latest/overview). Keep real checkout disabled.
 
 Deploy the staging application with its staging Supabase values and Cashfree sandbox secret. Set `INTEGRATION_PUBLIC_URL` to that publicly reachable HTTPS origin. Register `/api/webhooks/cashfree` in Cashfree and make sure deployment protection does not block the provider's requests.

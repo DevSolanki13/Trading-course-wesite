@@ -1,6 +1,10 @@
 # Priority website work
 
-Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting comparison, and launch gates: [priority work report](./docs/PRIORITY-WORK-2026-10-30.md).
+Updated: 31 October 2026 (IST). Detailed findings, learner states, hosting comparison, and launch gates: [priority work report](./docs/PRIORITY-WORK-2026-10-30.md). Fresh verification supersedes older summaries below: [Phase 6 status](./docs/PHASE-6-STATUS.md) and [operational runbook](./docs/OPERATIONS-RUNBOOK.md).
+
+**Latest implementation:** the locally possible commerce work is delivered: Cashfree sandbox order creation, API-confirmed webhook/reconciliation, approved full-refund dispatch/recovery, private PDF/HTML billing documents and credit notes, transactional email queues, protected scheduler/monitoring code and targeted security tests. Local lint/type/build/format checks, **35 Node tests, 10 React tests and 32 production-browser tests** pass. See [Phase 3 implementation and remaining gates](./docs/PHASE-3-STATUS.md). Earlier mobile 4G Lighthouse was 100/100 with LCP 1.06s/CLS 0.004; it has not been remeasured for this commerce follow-up. Real merchant testing, final GST invoice details, approved content and physical-device DRM remain open.
+
+**Fresh staging check:** migration-ledger matching failed; strict TLS now requires the trusted Supabase CA. Historical application/verification of migration 008 is not current schema acceptance. Hosting is also blocked: the saved Vercel project returns 404 via the connector and the local CLI has no credentials. No shared database changes or deployment were made in this session.
 
 ## 1. Course flow and learner journey — implemented for staging, real payment pending
 
@@ -9,12 +13,16 @@ Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting compa
 - Mapped the learner journey and states in the [priority work report](./docs/PRIORITY-WORK-2026-10-30.md): browse a course and optional free lesson → sign up or log in and verify email → review course price and terms → wait for payment confirmation → open My learning → stream lessons, read notes, track completion, and resume.
 - Checkout, payment status, learning library, and classroom now handle pending, paid, failed/cancelled, locked, empty, completed, and recoverable-error states more clearly.
 - Demo checkout code calculates price and tax from the database, validates course publication and ownership, and grants access only through a matching paid order. The new database function makes the demo settlement and enrollment atomic.
+- Cashfree now has its own sandbox-only adapter and hosted checkout. API-confirmed payment settlement atomically writes enrollment, billing snapshot and purchase email queue. Failed attempts may be retried on the same order; successful/refunded purchases cannot be downgraded or reactivated.
+- Approved full refunds query the provider before dispatch, reuse one reference after timeouts and revoke access only after matching confirmed success. Billing PDF/HTML downloads and credit notes are private. Email failures do not undo enrollment.
 
 **Remaining**
 
 - [x] Apply [migration 008](./backend/database/migrations/202610300008_payment_hardening.sql) to the shared staging database after explicit authorization, then verify a complete demo purchase with a disposable account. **Applied 30 Oct 2026 — all 8 staging verification tests passed** (amount mismatch, failed-no-enroll, terminal guard, atomic paid+enroll, duplicate idempotency, already-enrolled block, role denial, consistency check).
 - [x] Phase 2 — Course flow and learner journey verification complete. **Verified 30 Oct 2026:** free preview accessibility vs locked paid lessons, unverified email rejection, 2-device admission limit, database price/GST/refund policy accuracy, pending order isolation (never grants access), 2-minute pending payment polling window with "Check again" safety, paid atomic settlement & enrollment, lesson selection, heartbeat progress tracking, notes, completion %, resume point, and instant access denial on refund or enrollment revocation. All 25 automated tests and live staging verification passed.
-- [ ] Implement and test real Cashfree order creation, authenticated webhook consumption, reconciliation, receipts and refunds before enabling live payment.
+- [x] Implement and locally test the Cashfree sandbox adapter, verified consumer/reconciliation, private billing documents, full refunds, email queue and scheduler integration. **Done 31 Oct 2026; controlled provider responses and disposable database tests, not actual merchant acceptance.**
+- [ ] Resolve existing staging trust/ledger issues; review/apply [migration 009](./backend/database/migrations/202610310009_commerce_operations.sql) with authorisation, then complete an actual sandbox purchase/webhook/refund/email/download journey. No shared migration was applied in this session.
+- [ ] Supply/approve business and customer tax inputs and invoice classification. GST-enabled sandbox checkout is currently blocked; no statutory invoice compliance is claimed. Production payment and worker enablement still require acceptance.
 - [ ] Replace the staging verification course and illustrative catalogue entries with two owner-approved courses, final prices, videos, instructor details, and policies.
 
 ## 2. Landing page — redesign reverted at your request
@@ -64,6 +72,7 @@ Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting compa
 **Remaining**
 
 - [x] Apply and verify migration 008 in staging after authorization. **Done — 30 Oct 2026.**
+- [x] Implement protected scheduler/reconciliation and aggregate monitoring endpoint, durable job retries, private billing ownership checks and sandbox-only provider actions. **Local tests pass; endpoint/sending default disabled.**
 - [ ] Configure deployment WAF/bot controls, edge rate limits, monitoring and alerts; verify backups/restores and rotate/limit secrets before launch.
 - [ ] Run staging penetration and payment-flow testing after real Cashfree integration. No site can be guaranteed safe from all attacks.
 
@@ -78,10 +87,9 @@ Updated: 30 October 2026 (IST). Detailed findings, learner states, hosting compa
 
 - [ ] Choose the name, check trademarks and social handles, recheck availability and the complete Hostinger cart, then register and connect the domain. No name or price is reserved.
 
-## Verification and launch status
+## Verification and launch status (superseded by 31 October recheck)
 
-- **Passed locally:** production build; lint, TypeScript and 24 automated Node tests; React unit tests; targeted browser, theme, dialog, CSP, disabled-checkout and accessibility checks on the temporary redesign. The landing changes were then reverted, so that visual pass is not a claim about the current landing page.
+- **Passed locally, current code:** production build, lint, TypeScript, formatting, 35 automated Node tests, 10 React tests and 32 production-browser tests. The earlier mobile performance/accessibility 100/100 report belongs to the Phase 6 baseline. See Phase 3/6 reports for exact scope.
 - **Passed on staging:** migration 008 applied and verified 30 Oct 2026 — amount mismatch, failed settlement, terminal guard, atomic paid+enroll, duplicate idempotency, already-enrolled block, role denial, and consistency check all passed against the shared staging database.
-- **Not passed/blocked:** staging migration and full demo purchase; real Cashfree settlement; actual DRM playback and capture acceptance on physical devices; final approved courses/content.
-- The repository-wide Prettier check reports pre-existing formatting issues in many unrelated files. Files changed for this work were formatted individually.
-- Automatic approval review rejected applying migration 008 to the shared staging database because the request did not explicitly authorize an irreversible shared-database change. It remains unapplied.
+- **Not passed/blocked now:** trusted staging connection/matching ledger and application of migration 009; hosted deployment; actual Cashfree sandbox acceptance and production enablement; approved GST invoice details; real inbox delivery and scheduling/alerts; DRM/capture acceptance; approved courses/content; production operations and restore acceptance. Coupon redemption and unsupported payment/refund variants remain explicitly listed in Phase 3.
+- The earlier auto-review rejection and later reported migration application are historical events. The current unresolved issue is fresh schema/ledger acceptance, not a claim that migration 008 was never applied. Never replay it blindly.

@@ -61,9 +61,17 @@ export default function HomePage({
                 <stop offset="1" stopColor="currentColor" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <g className="market-grid"><path d="M0 100H720M0 210H720M0 320H720M0 430H720" /><path d="M110 0V520M260 0V520M410 0V520M560 0V520" /></g>
-            <path className="market-path" d="M0 377C76 352 92 392 148 330S226 274 279 311s71-29 112-74 67 23 103-14 68-50 98-35 51-63 128-116" />
-            <g className="market-candles"><path d="M106 350v-94m-14 48h28M188 315v-112m-14 61h28M302 291v-86m-14 38h28M421 234v-118m-14 62h28M538 182v-92m-14 42h28M646 121V38m-14 42h28" /></g>
+            <g className="market-grid">
+              <path d="M0 100H720M0 210H720M0 320H720M0 430H720" />
+              <path d="M110 0V520M260 0V520M410 0V520M560 0V520" />
+            </g>
+            <path
+              className="market-path"
+              d="M0 377C76 352 92 392 148 330S226 274 279 311s71-29 112-74 67 23 103-14 68-50 98-35 51-63 128-116"
+            />
+            <g className="market-candles">
+              <path d="M106 350v-94m-14 48h28M188 315v-112m-14 61h28M302 291v-86m-14 38h28M421 234v-118m-14 62h28M538 182v-92m-14 42h28M646 121V38m-14 42h28" />
+            </g>
           </svg>
         </div>
         <div className="landing-hero-copy">
@@ -198,7 +206,31 @@ export default function HomePage({
         </p>
       </section>
 
-      {content?.instructorConfirmed&&content.instructorName&&content.instructorBio&&<section className={`landing-instructor container ${content.instructorPortraitUrl?"landing-instructor-with-photo":""}`}><div className="landing-instructor-copy"><span className="landing-section-label">The person behind the lessons</span><h2>{content.instructorName}</h2><p>{content.instructorBio}</p><Link className="text-link" href="/about">Meet the instructor <ArrowUpRight size={18}/></Link></div>{content.instructorPortraitUrl&&<div className="landing-instructor-photo"><Image unoptimized fill sizes="(max-width: 800px) 100vw, 40vw" src={content.instructorPortraitUrl} alt={`${content.instructorName}, course instructor`}/></div>}</section>}
+      {content?.instructorConfirmed && content.instructorName && content.instructorBio && (
+        <section
+          className={`landing-instructor container ${content.instructorPortraitUrl ? "landing-instructor-with-photo" : ""}`}
+        >
+          <div className="landing-instructor-copy">
+            <span className="landing-section-label">The person behind the lessons</span>
+            <h2>{content.instructorName}</h2>
+            <p>{content.instructorBio}</p>
+            <Link className="text-link" href="/about">
+              Meet the instructor <ArrowUpRight size={18} />
+            </Link>
+          </div>
+          {content.instructorPortraitUrl && (
+            <div className="landing-instructor-photo">
+              <Image
+                unoptimized
+                fill
+                sizes="(max-width: 800px) 100vw, 40vw"
+                src={content.instructorPortraitUrl}
+                alt={`${content.instructorName}, course instructor`}
+              />
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="landing-method container" aria-labelledby="method-heading">
         <div className="landing-method-intro">

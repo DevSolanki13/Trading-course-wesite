@@ -4,6 +4,7 @@ import CourseDetailPage from "@/frontend/pages/course-detail-page";
 import { publicCatalog } from "@/backend/public/catalogue";
 import { pageMetadata } from "@/frontend/lib/metadata";
 import { isDemoPaymentEnabled } from "@/backend/payments/demo";
+import { cashfreeSandboxEnabled } from "@/backend/payments/cashfree";
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 async function find(slug: string) {
@@ -22,7 +23,9 @@ export default async function CourseRoute({ params }: { params: Promise<{ slug: 
   return (
     <CourseDetailPage
       course={course}
-      demoEnabled={course.provisional === false && isDemoPaymentEnabled()}
+      demoEnabled={
+        course.provisional === false && (isDemoPaymentEnabled() || cashfreeSandboxEnabled())
+      }
     />
   );
 }

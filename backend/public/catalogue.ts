@@ -1,5 +1,5 @@
 import "server-only";
-import {cache}from"react";
+import { cache } from "react";
 import { createAdminClient } from "../database/supabase";
 import type { SiteDocument } from "../../shared/admin";
 type RawCourse = {
@@ -112,9 +112,19 @@ export const publicCatalog = cache(async function publicCatalog() {
         "instagram.com",
         "www.instagram.com",
       ]),
-      supportEmail:typeof settings.data.support_email==="string"&&/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)?settings.data.support_email:null,
+      supportEmail:
+        typeof settings.data.support_email === "string" &&
+        /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)
+          ? settings.data.support_email
+          : null,
     };
   } catch {
-    return { courses: [], content: null, telegramUrl: null, instagramUrl: null,supportEmail:null };
+    return {
+      courses: [],
+      content: null,
+      telegramUrl: null,
+      instagramUrl: null,
+      supportEmail: null,
+    };
   }
 });

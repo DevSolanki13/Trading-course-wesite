@@ -1,6 +1,6 @@
 # Trading course website
 
-Next.js + TypeScript trading-course storefront for [the source brief](./course-website-requirements.md). This is a full-stack monolith with one root package and layered frontend, backend and database structure. The public storefront, account/device security and student classroom are implemented in staging. Phase 5 Admin/course/refund-review implementation is in progress. Cashfree/Phase 3 is deferred; supported-browser DRM, real course/content approval and remaining launch gates are open. Track evidence in [the plan](./IMPLEMENTATION-PLAN.md), [Phase 4 report](./docs/PHASE-4-STATUS.md) and [Phase 5 report](./docs/PHASE-5-STATUS.md).
+Next.js + TypeScript trading-course storefront for [the source brief](./course-website-requirements.md). The public storefront, account/device security, classroom and Admin workflows are implemented. Local Cashfree sandbox checkout/reconciliation, full refunds, private PDF/HTML billing, email queues and protected scheduler integration are delivered. Actual merchant/email/DRM acceptance, staging access and final content/tax approval remain open; live sales are disabled. Track evidence in [the plan](./IMPLEMENTATION-PLAN.md), [Phase 3](./docs/PHASE-3-STATUS.md) and [Phase 6](./docs/PHASE-6-STATUS.md).
 
 ## Requirements
 
@@ -25,7 +25,9 @@ The public storefront and health route run without provider credentials. Service
 
 ## Staging setup
 
-Follow [the service setup guide](./docs/SETUP.md) in order. Vercel staging linkage and all five staging database migrations are verified. Production builds can be checked locally independently; they perform no account creation or cloud migrations.
+Follow [the service setup guide](./docs/SETUP.md) and [Phase 3 acceptance steps](./docs/PHASE-3-STATUS.md). Nine migrations pass the disposable local tests; migration 009 has not been applied to shared staging. Trust/ledger and hosting access need restoration. Local builds perform no cloud migrations or account creation.
+
+**Current acceptance (31 October):** see [Phase 6 status](./docs/PHASE-6-STATUS.md) and [the operational runbook](./docs/OPERATIONS-RUNBOOK.md). Fresh local checks pass; shared staging verification is blocked by database trust/ledger issues and the saved Vercel project is inaccessible to current credentials. The earlier migration statements above are historical, not fresh schema acceptance.
 
 After setup:
 
@@ -62,7 +64,7 @@ After starting the local production build, `npm run smoke` verifies the public r
 
 - [Frontend](./frontend): pages, layouts and styles for the presentation layer.
 - [Backend](./backend): HTTP handlers, configuration, security and database access.
-- [Database](./backend/database): Supabase clients and the five applied [staging migrations](./backend/database/migrations).
+- [Database](./backend/database): Supabase clients and nine versioned [migrations](./backend/database/migrations); verify the actual target/ledger before applying.
 - [Next.js routes](./app): thin framework entry files connecting UI pages and backend handlers to their original URLs.
 - [Operator scripts](./backend/scripts): readiness, provider probes and controlled migration runner.
 - [Tests](./tests): focused configuration, webhook authenticity and database access tests.
@@ -72,7 +74,20 @@ There is one [package manifest](./package.json), one dependency lockfile, one bu
 
 ## Boundaries still to implement
 
-There is no buy-now endpoint. Learning APIs now issue protected playback tokens only after entitlement checks or published-preview permission. Cashfree events are signature-checked and stored in a durable inbox; no consumer processes them or grants enrollment yet. Accounts enforce device admission, application revocation, durable auth limits and staff MFA. Learning adds server-owned progress and watched ranges. Payment processing, receipts, refund workflows and content-management UI remain later work.
+Live checkout remains disabled. Demo and Cashfree sandbox modes are explicitly opt-in. Cashfree now has an API-confirmed consumer/reconciliation, atomic enrollment/billing/email persistence and full-refund dispatch/recovery. Private PDF/HTML records and credit notes use immutable snapshots. Actual sandbox acceptance, approved statutory invoice/tax inputs, coupon redemption, production enablement and delivery/DRM acceptance remain open. See [Phase 3](./docs/PHASE-3-STATUS.md) for supported states and limitations.
+
+## Repeatable Phase 6 verification
+
+```powershell
+npx playwright install chromium
+npm run verify:release
+npm run test:performance
+# Read-only checks against the verified staging target, after configuring its trusted CA:
+npm run db:verify
+npm run ops:check
+```
+
+The release browser suite uses dedicated port 3100 and synthetic configuration; performance uses port 3101. Both require a production build and refuse to reuse an existing server. Reports live under ignored `artifacts/phase-6/`. Tests do not prove real Cashfree, physical-device DRM or hosted recovery. `DATABASE_CA_CERT_PATH` accepts the trusted CA downloaded from the exact Supabase project's Database Settings; do not disable TLS checks. Retired ad-hoc mutation scripts now refuse changes, and old verification shortcuts delegate to the supported read-only verifier.
 
 ## Student learning area
 
@@ -86,4 +101,4 @@ Use `/login`, `/signup`, `/account` and `/admin/login` for the new flows. Test s
 
 After verifying the owner's staging account, an authorised operator can run `npm run admin:bootstrap -- --user-id YOUR_VERIFIED_USER_UUID --apply`. The owner then signs in at `/admin/login`, enrolls/verifies their authenticator and opens `/admin`. Course publishing uses real approved metadata, ready VdoCipher video and explicit Admin action. Support can inspect students/orders/refunds and grant access but cannot change prices, content, settings or staff. See [the Phase 5 report](./docs/PHASE-5-STATUS.md) before publishing or testing with real owner content.
 
-`npm run test:admin` uses disposable staging identities and a temporary course/order. `npm run notifications:send -- --send` is a separate operator action that sends real queued refund-status emails; it has not been scheduled or invoked against students during implementation. Final inbox delivery, provider refunds, receipts and reconciliation depend on external setup and Phase 3.
+`npm run test:admin` uses disposable staging identities and a temporary course/order. Explicit notification commands send real queued messages and were not invoked against students. `npm run operations:run` is a dry run; `-- --run` explicitly calls the protected staging worker after configuration. Notification delivery has a separate opt-in. Hosted scheduling/alerts, actual merchant/email acceptance and production enablement are still pending.

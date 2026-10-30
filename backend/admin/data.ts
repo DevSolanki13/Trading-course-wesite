@@ -63,11 +63,32 @@ export async function orderQuery(context: Identity, url: URL, exporting = false)
   return { items: result.data ?? [], total: result.count ?? 0 };
 }
 export async function overview(context: Identity, range: string) {
-  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()).filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
-  const date=`${parts.year}-${parts.month}-${parts.day}`;
-  const today=new Date(`${date}T00:00:00+05:30`);
-  const weekday=(new Date(`${date}T00:00:00Z`).getUTCDay()+6)%7;
-  const since=range==="today"?today.toISOString():range==="week"?new Date(today.getTime()-weekday*86400000).toISOString():range==="month"?new Date(`${parts.year}-${parts.month}-01T00:00:00+05:30`).toISOString():range==="7"?new Date(Date.now()-7*86400000).toISOString():range==="30"?new Date(Date.now()-30*86400000).toISOString():"1970-01-01T00:00:00Z";
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .formatToParts(new Date())
+      .filter((p) => p.type !== "literal")
+      .map((p) => [p.type, p.value]),
+  );
+  const date = `${parts.year}-${parts.month}-${parts.day}`;
+  const today = new Date(`${date}T00:00:00+05:30`);
+  const weekday = (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
+  const since =
+    range === "today"
+      ? today.toISOString()
+      : range === "week"
+        ? new Date(today.getTime() - weekday * 86400000).toISOString()
+        : range === "month"
+          ? new Date(`${parts.year}-${parts.month}-01T00:00:00+05:30`).toISOString()
+          : range === "7"
+            ? new Date(Date.now() - 7 * 86400000).toISOString()
+            : range === "30"
+              ? new Date(Date.now() - 30 * 86400000).toISOString()
+              : "1970-01-01T00:00:00Z";
   const result = await context.admin.rpc("admin_overview", {
     p_actor: context.user.id,
     p_session: context.sessionId,

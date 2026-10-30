@@ -315,7 +315,9 @@ export function AccountWorkspace({ admin = false }: { admin?: boolean }) {
           <Link className="text-link" href="/account">
             Manage your own account <ArrowUpRight size={17} />
           </Link>
-          <Link className="button button-primary" href="/admin">Open team workspace <ArrowUpRight size={17}/></Link>
+          <Link className="button button-primary" href="/admin">
+            Open team workspace <ArrowUpRight size={17} />
+          </Link>
         </>
       ) : (
         <div className="account-grid">

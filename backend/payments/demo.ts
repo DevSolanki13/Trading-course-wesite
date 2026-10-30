@@ -58,16 +58,10 @@ export class DemoProvider implements PaymentProvider {
     return eventSchema.parse(JSON.parse(rawBody));
   }
 }
-export class CashfreeProvider implements PaymentProvider {
-  createOrder(): Promise<{ providerOrderId: string; checkoutUrl: string }> {
-    throw new Error("Cashfree checkout is not available.");
-  }
-  verifyWebhook(): PaymentEvent {
-    throw new Error("Cashfree settlement is not available.");
-  }
-}
 export function paymentProvider(): PaymentProvider {
-  return isDemoPaymentEnabled() ? new DemoProvider() : new CashfreeProvider();
+  if (!isDemoPaymentEnabled())
+    throw new Error("Demo checkout is disabled. Cashfree uses its API-confirmed workflow.");
+  return new DemoProvider();
 }
 export function idempotencyKey(userId: string, courseId: string) {
   return createHash("sha256").update(`${userId}:${courseId}`).digest("hex");

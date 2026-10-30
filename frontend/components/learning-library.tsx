@@ -237,9 +237,32 @@ export function LearningLibrary() {
                         }
                         request={refunds.find((r) => r.orderId === o.id)?.request ?? null}
                       />
-                      <p className="learning-caption">
-                        Invoices and provider refund processing will open with the payment service.
-                      </p>
+                      {["paid", "refunded"].includes(o.status) && (
+                        <p className="learning-caption">
+                          <a className="text-link" href={`/api/orders/${o.id}/document`}>
+                            Download billing PDF
+                          </a>
+                          {" · "}
+                          <a
+                            className="text-link"
+                            href={`/api/orders/${o.id}/document?format=html`}
+                          >
+                            Accessible HTML copy
+                          </a>
+                          {o.status === "refunded" && (
+                            <>
+                              {" "}
+                              ·{" "}
+                              <a
+                                className="text-link"
+                                href={`/api/orders/${o.id}/document?kind=credit_note`}
+                              >
+                                Refund credit note
+                              </a>
+                            </>
+                          )}
+                        </p>
+                      )}
                     </article>
                   ))}
                 </div>

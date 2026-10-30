@@ -6,12 +6,23 @@ import { requireEnv } from "../config/env";
 import { cookiePolicy } from "../auth/cookies";
 
 /** Service-role access bypasses RLS. Only call after server-side authorisation. */
-export function createAdminClient() {
+export function createAdminClient(deadline?: AbortSignal) {
   return createClient(
     requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
     requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
     {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      global: {
+        fetch: (input, init) =>
+          fetch(input, {
+            ...init,
+            signal: AbortSignal.any([
+              ...(init?.signal ? [init.signal] : []),
+              ...(deadline ? [deadline] : []),
+              AbortSignal.timeout(15000),
+            ]),
+          }),
+      },
     },
   );
 }

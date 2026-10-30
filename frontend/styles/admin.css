@@ -450,7 +450,10 @@
   overflow: hidden;
   cursor: pointer;
 }
-.admin-upload-label:focus-within{outline:2px solid var(--accent);outline-offset:4px}
+.admin-upload-label:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
 .admin-upload-label input[type="file"] {
   position: absolute;
   inset: 0;

@@ -11,6 +11,8 @@ coverage/
 supabase/.temp/
 supabase/.branches/
 artifacts/
+test-results/
+playwright-report/
 .impeccable/review/
 *.log
 .DS_Store

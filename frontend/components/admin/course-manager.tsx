@@ -462,7 +462,7 @@ function CourseEditor({
               className="admin-inline-form admin-panel"
               onSubmit={async (e) => {
                 e.preventDefault();
-                const form=e.currentTarget;
+                const form = e.currentTarget;
                 const f = new FormData(form);
                 if (
                   await run("module_save", {
@@ -841,7 +841,8 @@ function LessonEditor({
         </div>
         <p className="admin-help">
           Published previews are playable without a purchase. Existing consumed video versions
-          cannot be replaced; add a new lesson instead. Unpublish a course before removing its final published lesson.
+          cannot be replaced; add a new lesson instead. Unpublish a course before removing its final
+          published lesson.
         </p>
         <button className="button button-primary" disabled={pending || busy}>
           Save lesson

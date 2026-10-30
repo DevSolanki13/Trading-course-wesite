@@ -4,10 +4,12 @@ import { admitted } from "@/backend/auth/session";
 import { AuthError } from "@/backend/auth/http";
 import { isDemoPaymentEnabled } from "@/backend/payments/demo";
 import { calculateTotal } from "@/backend/payments/calculations";
+import { cashfreeSandboxEnabled } from "@/backend/payments/cashfree";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Course checkout", robots: { index: false, follow: false } };
 export default async function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
-  if (!isDemoPaymentEnabled()) notFound();
+  const sandbox = cashfreeSandboxEnabled();
+  if (!isDemoPaymentEnabled() && !sandbox) notFound();
   const { slug } = await params;
   let context;
   try {
@@ -22,7 +24,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   const [course, settings] = await Promise.all([
     context.admin
       .from("courses")
-      .select("slug,title,description,price_paise")
+      .select("slug,title,description,price_paise,sale_price_paise")
       .eq("slug", slug)
       .eq("status", "published")
       .maybeSingle(),
@@ -35,7 +37,9 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   if (course.error || settings.error) throw new Error("Checkout is temporarily unavailable.");
   if (!course.data) notFound();
   const totals = calculateTotal({
-    basePaise: course.data.price_paise,
+    basePaise: sandbox
+      ? (course.data.sale_price_paise ?? course.data.price_paise)
+      : course.data.price_paise,
     gstEnabled: settings.data.gst_enabled,
     gstRateBps: settings.data.gst_rate_bps,
   });
@@ -46,6 +50,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
         totals={totals}
         refundDays={settings.data.refund_window_days}
         refundWatchLimit={settings.data.refund_watch_limit_percent}
+        sandbox={sandbox}
       />
     </main>
   );

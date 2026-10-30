@@ -29,7 +29,12 @@ try {
         "select checksum from course_migrations.applied where name = $1",
         [name],
       );
-      if (ledger.rows[0]?.checksum !== checksum) throw new Error("MIGRATION_LEDGER_MISMATCH");
+      if (ledger.rows[0]?.checksum !== checksum) {
+        console.error(
+          `Migration ledger: ${name}: ${ledger.rows.length ? "checksum differs" : "entry missing"}. No ledger or schema changes made.`,
+        );
+        throw new Error("MIGRATION_LEDGER_MISMATCH");
+      }
     }
     const tables = [
       "profiles",
@@ -58,6 +63,8 @@ try {
       "refund_decisions",
       "notification_outbox",
       "operations_tasks",
+      "billing_documents",
+      "commerce_jobs",
     ];
     const schema = await client.query(
       "select relname, relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r' and c.relname = any($1::text[])",
@@ -91,6 +98,8 @@ try {
           "refund_decisions",
           "notification_outbox",
           "operations_tasks",
+          "billing_documents",
+          "commerce_jobs",
         ],
       ],
     );
@@ -128,6 +137,28 @@ try {
       adminFunctions.rows.some((row) => row.anon_exec || row.user_exec || !row.service_exec)
     )
       throw new Error("UNSAFE_ADMIN_FUNCTION_GRANT");
+    const paymentFunctions = await client.query(`select p.proname,
+      has_function_privilege('anon',p.oid,'EXECUTE') as anon_exec,
+      has_function_privilege('authenticated',p.oid,'EXECUTE') as user_exec,
+      has_function_privilege('service_role',p.oid,'EXECUTE') as service_exec
+      from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname in ('demo_create_order','demo_settle_payment')`);
+    if (
+      paymentFunctions.rows.length !== 2 ||
+      paymentFunctions.rows.some((row) => row.anon_exec || row.user_exec || !row.service_exec)
+    )
+      throw new Error("UNSAFE_PAYMENT_FUNCTION_GRANT");
+    const commerceFunctions = await client.query(`select p.proname,
+      has_function_privilege('anon',p.oid,'EXECUTE') as anon_exec,
+      has_function_privilege('authenticated',p.oid,'EXECUTE') as user_exec,
+      has_function_privilege('service_role',p.oid,'EXECUTE') as service_exec
+      from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname in ('commerce_document','commerce_create_order','commerce_settle_payment','commerce_close_order','commerce_refund_state','commerce_claim_jobs','commerce_finish_job','commerce_ops_summary')`);
+    if (
+      commerceFunctions.rows.length !== 8 ||
+      commerceFunctions.rows.some((row) => row.anon_exec || row.user_exec || !row.service_exec)
+    )
+      throw new Error("UNSAFE_COMMERCE_FUNCTION_GRANT");
     const triggers = await client.query(
       "select count(*)::int as count from pg_trigger where not tgisinternal and tgname in ('on_auth_user_created','orders_protect_snapshots','group_removal_recheck')",
     );
@@ -136,8 +167,15 @@ try {
       "select device_limit, refund_window_days, refund_watch_limit_percent from public.site_settings where id=true",
     );
     if (!settings.rows.length) throw new Error("DEFAULT_SETTINGS_MISSING");
-    const cap=await client.query("select convalidated from pg_constraint where conname='site_settings_device_limit_max_two' and conrelid='public.site_settings'::regclass");
-    if(cap.rows.length!==1||cap.rows[0].convalidated!==true||settings.rows[0].device_limit>2)throw new Error("DEVICE_CAP_NOT_ENFORCED");
+    const cap = await client.query(
+      "select convalidated from pg_constraint where conname='site_settings_device_limit_max_two' and conrelid='public.site_settings'::regclass",
+    );
+    if (
+      cap.rows.length !== 1 ||
+      cap.rows[0].convalidated !== true ||
+      settings.rows[0].device_limit > 2
+    )
+      throw new Error("DEVICE_CAP_NOT_ENFORCED");
     console.log(
       `PASS ${migrations.length} migration checksums, ${tables.length} RLS-protected tables, ownership/admitted-session policies, restricted tables, nine auth/five learning/nine admin RPC grants, three triggers and default settings.`,
     );

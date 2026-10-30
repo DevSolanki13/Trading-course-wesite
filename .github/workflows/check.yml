@@ -1,4 +1,4 @@
-name: Foundation checks
+name: Release verification
 on:
   push:
   pull_request:
@@ -15,5 +15,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: npm run test:unit
       - run: npm run format:check
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:release
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase-6-browser-evidence
+          path: artifacts/phase-6/
+          retention-days: 7
