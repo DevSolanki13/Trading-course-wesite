@@ -52,6 +52,20 @@ export default function HomePage({
   return (
     <main id="main-content" className="landing-page">
       <section className="landing-hero container" aria-labelledby="landing-title">
+        <div className="market-structure-bg" aria-hidden="true">
+          <svg viewBox="0 0 720 520" role="presentation">
+            <defs>
+              <linearGradient id="market-line" x1="0" x2="1">
+                <stop offset="0" stopColor="currentColor" stopOpacity="0" />
+                <stop offset="0.45" stopColor="currentColor" stopOpacity="0.7" />
+                <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <g className="market-grid"><path d="M0 100H720M0 210H720M0 320H720M0 430H720" /><path d="M110 0V520M260 0V520M410 0V520M560 0V520" /></g>
+            <path className="market-path" d="M0 377C76 352 92 392 148 330S226 274 279 311s71-29 112-74 67 23 103-14 68-50 98-35 51-63 128-116" />
+            <g className="market-candles"><path d="M106 350v-94m-14 48h28M188 315v-112m-14 61h28M302 291v-86m-14 38h28M421 234v-118m-14 62h28M538 182v-92m-14 42h28M646 121V38m-14 42h28" /></g>
+          </svg>
+        </div>
         <div className="landing-hero-copy">
           <div className="landing-subject">
             <BookOpen size={16} />

@@ -66,6 +66,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     let active = true;
     fetch("/api/auth/status", { cache: "no-store" })
@@ -78,6 +79,12 @@ export function SiteHeader() {
       active = false;
     };
   }, [pathname]);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 18);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   useEffect(() => {
     const close = () => setOpen(false);
     window.addEventListener("popstate", close);
@@ -92,7 +99,7 @@ export function SiteHeader() {
         Preview edition{" "}
         <span>Course information and prices may change. Enrolment is not open.</span>
       </aside>
-      <header className="site-header">
+      <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="container header-inner">
           <Brand />
           <nav className="desktop-nav" aria-label="Main navigation">
