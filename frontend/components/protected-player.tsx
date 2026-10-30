@@ -42,7 +42,7 @@ export function ProtectedPlayer({
     ended.current = onEnded;
   }, [onEnded]);
   useEffect(() => {
-    if (!ready || !iframe.current || !window.VdoPlayer) return;
+    if (error || !ready || !iframe.current || !window.VdoPlayer) return;
     const player = window.VdoPlayer.getInstance(iframe.current);
     const video = player.video;
     proxy.current = video;
@@ -92,7 +92,13 @@ export function ProtectedPlayer({
       if (playback.position > 0) video.currentTime = playback.position;
       if (playback.autoplay) void video.play().catch(() => {});
     };
-    const play = () => pulse();
+    const play = () => {
+      if (stopped) {
+        void video.pause().catch(() => {});
+        return;
+      }
+      pulse();
+    };
     const pause = () => pulse();
     const rateChange = () => {
       if (video.playbackRate < 0.5 || video.playbackRate > 2) video.playbackRate = 1;
@@ -134,7 +140,7 @@ export function ProtectedPlayer({
       for (const [name, callback] of listeners) video.removeEventListener(name, callback);
       void video.pause().catch(() => {});
     };
-  }, [ready, playback]);
+  }, [ready, playback, error]);
   const params = new URLSearchParams({
     otp: playback.otp,
     playbackInfo: playback.playbackInfo,
@@ -173,14 +179,19 @@ export function ProtectedPlayer({
         }}
         onContextMenu={(e) => e.preventDefault()}
       >
-        <iframe
-          ref={iframe}
-          title={title}
-          src={`https://player.vdocipher.com/v2/?${params}`}
-          allow="encrypted-media; fullscreen; autoplay"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
+        {!error && (
+          <iframe
+            ref={iframe}
+            title={title}
+            src={`https://player.vdocipher.com/v2/?${params}`}
+            allow="encrypted-media; fullscreen; autoplay"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        )}
+        {error && (
+          <p role="status">Playback stopped. Reload the lesson to verify your access again.</p>
+        )}
       </div>
       <label className="learning-speed">
         Playback speed{" "}

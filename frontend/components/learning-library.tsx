@@ -28,7 +28,12 @@ function LearningCard({ course }: { course: CourseView }) {
             className="text-link"
             href={`/learn/${course.slug}${course.resumeLessonId ? `?lesson=${course.resumeLessonId}` : ""}`}
           >
-            Continue learning <ArrowUpRight size={16} />
+            {course.progress >= 100
+              ? "Review course"
+              : course.progress > 0
+                ? "Continue learning"
+                : "Start learning"}{" "}
+            <ArrowUpRight size={16} />
           </Link>
         </div>
       </div>
@@ -39,6 +44,7 @@ export function LearningLibrary() {
   const router = useRouter();
   const [data, setData] = useState<LibraryView | null>(null);
   const [error, setError] = useState("");
+  const [refundError, setRefundError] = useState("");
   const [tab, setTab] = useState("courses");
   const [refunds, setRefunds] = useState<
     {
@@ -55,7 +61,7 @@ export function LearningLibrary() {
   >([]);
   useEffect(() => {
     let active = true;
-    Promise.all([
+    Promise.allSettled([
       learningApi<LibraryView>("library"),
       fetch("/api/refunds", { cache: "no-store" }).then(async (r) => {
         const d = await r.json();
@@ -66,8 +72,13 @@ export function LearningLibrary() {
     ])
       .then(([value, refund]) => {
         if (active) {
-          setData(value);
-          setRefunds(refund.items ?? []);
+          if (value.status === "rejected") throw value.reason;
+          setData(value.value);
+          if (refund.status === "fulfilled") setRefunds(refund.value.items ?? []);
+          else
+            setRefundError(
+              "Refund status is temporarily unavailable. You can still use your courses. Refresh to check again.",
+            );
         }
       })
       .catch((e) => {
@@ -141,8 +152,8 @@ export function LearningLibrary() {
                   <BookOpen size={36} />
                   <h2>Your next chapter is ahead.</h2>
                   <p>
-                    Your enrolled courses will appear here. Enrolment is not open in this staging
-                    preview.
+                    Your courses appear here after payment is confirmed or access is granted.
+                    Explore a course and try an available free lesson first.
                   </p>
                   <Link className="button button-primary" href="/courses">
                     Explore courses <ArrowUpRight size={17} />
@@ -183,6 +194,11 @@ export function LearningLibrary() {
           )}
           {tab === "orders" && (
             <section>
+              {refundError && (
+                <p className="auth-error" role="status">
+                  {refundError}
+                </p>
+              )}
               <div className="learning-section-heading">
                 <h2>Order history</h2>
                 <span>Amounts in INR · Times in IST</span>

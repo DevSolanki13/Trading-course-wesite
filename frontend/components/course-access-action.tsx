@@ -5,10 +5,12 @@ export function CourseAccessAction({
   slug,
   previewId,
   mobile = false,
+  demoEnabled = false,
 }: {
   slug: string;
   previewId?: string;
   mobile?: boolean;
+  demoEnabled?: boolean;
 }) {
   const [owned, setOwned] = useState(false);
   useEffect(() => {
@@ -29,7 +31,6 @@ export function CourseAccessAction({
         {mobile ? "Go to course" : "Go to your course"}
       </Link>
     );
-  const demoEnabled = process.env.NEXT_PUBLIC_PAYMENT_MODE === "demo";
   if (mobile)
     return demoEnabled ? (
       <Link className="button button-primary" href={`/checkout/${slug}`}>

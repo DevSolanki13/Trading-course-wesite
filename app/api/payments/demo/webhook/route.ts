@@ -1,23 +1,37 @@
-import { NextResponse } from "next/server";
-import { createAdminClient } from "@/backend/database/supabase";
+﻿import { AuthError, failure, json } from "@/backend/auth/http";
 import { DemoProvider, isDemoPaymentEnabled } from "@/backend/payments/demo";
+import { settleDemoPayment } from "@/backend/payments/settlement";
 export const runtime = "nodejs";
+
 export async function POST(request: Request) {
-  if (!isDemoPaymentEnabled()) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const raw = await request.text();
+  if (!isDemoPaymentEnabled()) return json({ error: "Not found" }, 404);
   try {
-    const event = new DemoProvider().verifyWebhook(raw, request.headers);
-    const admin = createAdminClient();
-    const { data: order } = await admin.from("orders").select("id,user_id,course_id,total_paise,status").eq("provider_order_id", event.providerOrderId).single();
-    if (!order || order.total_paise !== event.amountPaise) throw new Error("Order mismatch");
-    const { error: inboxError } = await admin.from("webhook_events").insert({ provider: "demo", payload_hash: event.eventId, payload: event, status: "received" });
-    if (inboxError?.code === "23505") return NextResponse.json({ received: true });
-    if (inboxError) throw inboxError;
-    const status = event.status === "paid" ? "paid" : event.status === "failed" ? "failed" : event.status === "cancelled" ? "cancelled" : "pending";
-    const update = await admin.from("orders").update({ status, paid_at: status === "paid" ? new Date().toISOString() : null }).eq("id", order.id).eq("status", "pending");
-    if (update.error) throw update.error;
-    if (status === "paid") { const enrollment = await admin.from("enrollments").insert({ user_id: order.user_id, course_id: order.course_id, order_id: order.id, source: "purchase", active: true }); if (enrollment.error && enrollment.error.code !== "23505") throw enrollment.error; }
-    await admin.from("webhook_events").update({ status: "processed", processed_at: new Date().toISOString() }).eq("payload_hash", event.eventId).eq("provider", "demo");
-    return NextResponse.json({ received: true });
-  } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid payment event." }, { status: 400 }); }
+    const reader = request.body?.getReader();
+    if (!reader) throw new AuthError(400, "Empty event.");
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 16384) {
+        await reader.cancel();
+        throw new AuthError(413, "Event too large.");
+      }
+      chunks.push(value);
+    }
+    let event;
+    try {
+      event = new DemoProvider().verifyWebhook(
+        Buffer.concat(chunks).toString("utf8"),
+        request.headers,
+      );
+    } catch {
+      throw new AuthError(401, "Invalid payment event.");
+    }
+    await settleDemoPayment(event);
+    return json({ received: true });
+  } catch (error) {
+    return failure(error);
+  }
 }

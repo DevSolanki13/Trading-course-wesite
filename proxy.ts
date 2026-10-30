@@ -1,8 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { contentSecurityPolicy } from "./backend/security/content-policy";
 
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const policy = contentSecurityPolicy(nonce, process.env.NODE_ENV === "development");
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", policy);
+  const nextResponse = () => {
+    const next = NextResponse.next({ request: { headers: requestHeaders } });
+    next.headers.set("Content-Security-Policy", policy);
+    next.headers.set("Cache-Control", "private, no-store");
+    return next;
+  };
+  let response = nextResponse();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key || !request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-")))
@@ -13,7 +25,8 @@ export async function proxy(request: NextRequest) {
       getAll: () => request.cookies.getAll(),
       setAll(values) {
         for (const { name, value } of values) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
+        requestHeaders.set("cookie", request.cookies.toString());
+        response = nextResponse();
         for (const { name, value, options } of values)
           response.cookies.set(name, value, {
             ...options,
@@ -33,12 +46,6 @@ export async function proxy(request: NextRequest) {
 }
 export const config = {
   matcher: [
-    "/account/:path*",
-    "/admin/:path*",
-    "/auth/:path*",
-    "/api/auth/:path*",
-    "/api/admin/:path*",
-    "/learn/:path*",
-    "/api/learning/:path*",
+    "/((?!_next/static|_next/image|images/|videos/|favicon.ico|robots.txt|sitemap.xml|opengraph-image).*)",
   ],
 };

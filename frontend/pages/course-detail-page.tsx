@@ -18,7 +18,13 @@ import {
   ShieldCheck,
 } from "../components/icons";
 
-export default function CourseDetailPage({ course }: { course: Course }) {
+export default function CourseDetailPage({
+  course,
+  demoEnabled = false,
+}: {
+  course: Course;
+  demoEnabled?: boolean;
+}) {
   return (
     <main id="main-content" className="course-detail">
       <div className="container">
@@ -75,7 +81,9 @@ export default function CourseDetailPage({ course }: { course: Course }) {
           <ShieldCheck size={19} />
           <p>
             {course.provisional === false
-              ? "Published curriculum and duration are shown. Payments are not open yet; final prices and instructor details require approval."
+              ? demoEnabled
+                ? "Published curriculum and duration are shown. Only simulated checkout is available; no money is collected. Instructor details require confirmation."
+                : "Published curriculum and duration are shown. Payments are not open yet; final prices and instructor details require approval."
               : "Course preview: curriculum, lesson totals, durations and price are illustrative. The outlines below show selected example lessons. Final details and instructor identity await confirmation."}
           </p>
         </div>
@@ -173,7 +181,11 @@ export default function CourseDetailPage({ course }: { course: Course }) {
             <p className="purchase-tax-note">
               Final price and applicable GST will be confirmed before checkout.
             </p>
-            <CourseAccessAction slug={course.slug} previewId={course.previewLessonId} />
+            <CourseAccessAction
+              slug={course.slug}
+              previewId={course.previewLessonId}
+              demoEnabled={demoEnabled}
+            />
             <span className="purchase-status">Purchases are disabled in this preview.</span>
             <ul className="purchase-includes">
               <li>
@@ -221,7 +233,7 @@ export default function CourseDetailPage({ course }: { course: Course }) {
           <small>Illustrative price</small>
           <strong>{formatPrice(course.price)}</strong>
         </div>
-        <CourseAccessAction slug={course.slug} mobile />
+        <CourseAccessAction slug={course.slug} mobile demoEnabled={demoEnabled} />
       </div>
     </main>
   );
