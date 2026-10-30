@@ -1,6 +1,6 @@
 ﻿import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import type { PaymentEvent, PaymentOrder, PaymentProvider } from "./types";
+import type { PaymentEvent, PaymentOrder, LegacyDemoPaymentProvider } from "./types";
 
 const eventSchema = z
   .object({
@@ -12,6 +12,8 @@ const eventSchema = z
   .strict();
 
 export function isDemoPaymentEnabled(env: Record<string, string | undefined> = process.env) {
+  if (env.PAYMENT_PROVIDER === "razorpay" && env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET)
+    return false;
   return (
     env.PAYMENT_MODE === "demo" &&
     ["local", "staging"].includes(env.PROJECT_STAGE ?? "") &&
@@ -35,7 +37,7 @@ export function demoSignature(rawBody: string, timestamp: string) {
     .update(timestamp + rawBody)
     .digest("base64");
 }
-export class DemoProvider implements PaymentProvider {
+export class DemoProvider implements LegacyDemoPaymentProvider {
   async createOrder(order: PaymentOrder) {
     secret();
     return { providerOrderId: `demo_${order.id}`, checkoutUrl: `/pay/demo/${order.id}` };
@@ -58,7 +60,7 @@ export class DemoProvider implements PaymentProvider {
     return eventSchema.parse(JSON.parse(rawBody));
   }
 }
-export function paymentProvider(): PaymentProvider {
+export function paymentProvider(): LegacyDemoPaymentProvider {
   if (!isDemoPaymentEnabled())
     throw new Error("Demo checkout is disabled. Cashfree uses its API-confirmed workflow.");
   return new DemoProvider();

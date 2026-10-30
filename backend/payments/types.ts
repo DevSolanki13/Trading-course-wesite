@@ -14,7 +14,9 @@ export type PaymentEvent = {
   amountPaise: number;
 };
 
-export interface PaymentProvider {
+/** Compatibility contract for the older explicitly configured demo routes. */
+export interface LegacyDemoPaymentProvider {
   createOrder(order: PaymentOrder): Promise<{ providerOrderId: string; checkoutUrl: string }>;
   verifyWebhook(rawBody: string, headers: Headers): PaymentEvent;
 }
+export type { PaymentProvider } from "./providers";

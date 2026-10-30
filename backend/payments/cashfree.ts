@@ -72,6 +72,8 @@ export type Purchase = {
   billing_snapshot: { customer_email: string; customer_phone: string; customer_name: string };
 };
 export function cashfreeSandboxEnabled(env: Environment = process.env) {
+  if (env.PAYMENT_PROVIDER === "razorpay" && env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET)
+    return false;
   return (
     env.PAYMENT_MODE === "cashfree-sandbox" &&
     ["local", "staging"].includes(env.PROJECT_STAGE ?? "") &&
