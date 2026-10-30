@@ -91,6 +91,12 @@ async function insert(table, values) {
   return r.data;
 }
 try {
+  const serverProbe = await fetch(`${origin}/api/auth/options`, {
+    signal: AbortSignal.timeout(3000),
+  }).catch(() => null);
+  if (!serverProbe || !serverProbe.ok) {
+    throw new Error(`Application server not running at ${origin}. Please start 'npm run dev' or 'npm start' in another terminal first.`);
+  }
   await db.connect();
   const owner = await fixture("admin"),
     support = await fixture("support"),
@@ -376,8 +382,14 @@ try {
   assert.equal(await supportPage.getByRole("button",{name:"Settings",exact:true}).count(),0);
   await supportPage.getByRole("button",{name:"Students",exact:true}).click();await supportPage.getByRole("heading",{name:"Students",exact:true}).waitFor();await supportPage.close();
   pass("admin workspace viewport/theme navigation and targeted accessibility checks");
-} catch {
-  console.error(`FAIL ${step}. Account/provider details withheld.`);
+} catch (error) {
+  const safeMessage = error?.message
+    ? String(error.message).replace(
+        /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})|([0-9a-f]{8}-[0-9a-f-]{27,})/gi,
+        "[redacted]",
+      )
+    : "Details withheld";
+  console.error(`FAIL ${step}: ${safeMessage}`);
   process.exitCode = 1;
 } finally {
   writeFileSync(
