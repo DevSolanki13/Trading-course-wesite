@@ -1,6 +1,6 @@
 # Trading course website
 
-Next.js + TypeScript trading-course storefront for [the source brief](./course-website-requirements.md). This is a full-stack monolith with one root package and a layered frontend, backend and database structure. Track progress in [the implementation plan](./IMPLEMENTATION-PLAN.md). The public storefront and Phase 2 account/device/security implementation are available in staging. Email sender acceptance and Google consent verification remain open; purchases and paid lessons follow in later phases.
+Next.js + TypeScript trading-course storefront for [the source brief](./course-website-requirements.md). This is a full-stack monolith with one root package and layered frontend, backend and database structure. The public storefront, account/device security and student classroom are implemented in staging. Phase 5 Admin/course/refund-review implementation is in progress. Cashfree/Phase 3 is deferred; supported-browser DRM, real course/content approval and remaining launch gates are open. Track evidence in [the plan](./IMPLEMENTATION-PLAN.md), [Phase 4 report](./docs/PHASE-4-STATUS.md) and [Phase 5 report](./docs/PHASE-5-STATUS.md).
 
 ## Requirements
 
@@ -21,11 +21,11 @@ npm run build
 
 Copy the template only when the local file does not already exist. Fill values directly in the ignored local file or secure environment settings. Never paste secrets into commands, Markdown, screenshots or chat. Configuration checks print key names and status only. A missing-service exit code is expected until configuration is complete; it is not an application crash.
 
-The public storefront and health route run without provider credentials. Service operations fail closed if required configuration is missing. The landing page uses self-hosted fonts and a typography-led charcoal/sage design; its hero image and video were removed at the owner's request. Original course artwork remains elsewhere. Brand, course outlines/prices, instructor facts and policies remain provisional; real checkout is disabled. See [Phase 1 status](./docs/PHASE-1-STATUS.md) and [Phase 2 status](./docs/PHASE-2-STATUS.md) for acceptance gaps and verification.
+The public storefront and health route run without provider credentials. Service operations fail closed if required configuration is missing. The landing page uses self-hosted fonts and an obsidian/slate/electric-blue design; its hero image and video were removed at the owner's request. Original course artwork remains elsewhere. Brand, illustrative outlines/prices, instructor facts and policies remain provisional until owner-approved content is published; real checkout is disabled. See [Phase 1 status](./docs/PHASE-1-STATUS.md) and [Phase 2 status](./docs/PHASE-2-STATUS.md) for acceptance gaps and verification.
 
 ## Staging setup
 
-Follow [the service setup guide](./docs/SETUP.md) in order. Vercel staging linkage and all three staging database migrations are verified. Production builds can be checked locally independently; they perform no account creation or cloud migrations.
+Follow [the service setup guide](./docs/SETUP.md) in order. Vercel staging linkage and all five staging database migrations are verified. Production builds can be checked locally independently; they perform no account creation or cloud migrations.
 
 After setup:
 
@@ -62,7 +62,7 @@ After starting the local production build, `npm run smoke` verifies the public r
 
 - [Frontend](./frontend): pages, layouts and styles for the presentation layer.
 - [Backend](./backend): HTTP handlers, configuration, security and database access.
-- [Database](./backend/database): Supabase clients and the unchanged [initial migration](./backend/database/migrations/202610290001_initial_foundation.sql).
+- [Database](./backend/database): Supabase clients and the five applied [staging migrations](./backend/database/migrations).
 - [Next.js routes](./app): thin framework entry files connecting UI pages and backend handlers to their original URLs.
 - [Operator scripts](./backend/scripts): readiness, provider probes and controlled migration runner.
 - [Tests](./tests): focused configuration, webhook authenticity and database access tests.
@@ -72,6 +72,18 @@ There is one [package manifest](./package.json), one dependency lockfile, one bu
 
 ## Boundaries still to implement
 
-There is no buy-now endpoint or public playback-token endpoint. Cashfree events are signature-checked and stored in a durable inbox; no consumer processes them or grants enrollment yet. Accounts now enforce device admission, immediate application revocation, durable auth limits and staff MFA. Later phases must add payment/order matching, reconciliation, refund processing, progress tracking and full content management before launch.
+There is no buy-now endpoint. Learning APIs now issue protected playback tokens only after entitlement checks or published-preview permission. Cashfree events are signature-checked and stored in a durable inbox; no consumer processes them or grants enrollment yet. Accounts enforce device admission, application revocation, durable auth limits and staff MFA. Learning adds server-owned progress and watched ranges. Payment processing, receipts, refund workflows and content-management UI remain later work.
+
+## Student learning area
+
+Open `/learn` after signing in, or follow My learning from `/account`. Published course classrooms live at `/learn/[slug]`. The library reflects actual database enrollments; illustrative storefront outlines are not automatically published courses or purchased access. No demo enrollment was added to the owner's real account.
+
+`npm run test:learning` exercises disposable staging courses/accounts and real provider token generation. Its SDK-contract simulation is separate from actual DRM testing. The command reports a partial, nonzero result when the browser cannot confirm protected playback; this environment's isolated Chrome reported Widevine unavailable. See [the learning runbook](./docs/PHASE-4-STATUS.md) for content contracts, manual browser acceptance and remaining Phase 3 dependencies.
 
 Use `/login`, `/signup`, `/account` and `/admin/login` for the new flows. Test scripts requiring staging credentials are operator tools, not automatic CI jobs. They do not use an existing person's account. Read [the auth runbook](./docs/PHASE-2-STATUS.md) before running them or provisioning the first administrator.
+
+## Phase 5 operator workspace
+
+After verifying the owner's staging account, an authorised operator can run `npm run admin:bootstrap -- --user-id YOUR_VERIFIED_USER_UUID --apply`. The owner then signs in at `/admin/login`, enrolls/verifies their authenticator and opens `/admin`. Course publishing uses real approved metadata, ready VdoCipher video and explicit Admin action. Support can inspect students/orders/refunds and grant access but cannot change prices, content, settings or staff. See [the Phase 5 report](./docs/PHASE-5-STATUS.md) before publishing or testing with real owner content.
+
+`npm run test:admin` uses disposable staging identities and a temporary course/order. `npm run notifications:send -- --send` is a separate operator action that sends real queued refund-status emails; it has not been scheduled or invoked against students during implementation. Final inbox delivery, provider refunds, receipts and reconciliation depend on external setup and Phase 3.

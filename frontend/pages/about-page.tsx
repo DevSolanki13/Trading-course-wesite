@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "../components/icons";
+import type{SiteDocument}from"../../shared/admin";
 
-export default function AboutPage() {
+export default function AboutPage({content=null}:{content?:SiteDocument|null}) {
   return (
     <main id="main-content" className="container about-page">
       <div className="page-intro">
@@ -41,16 +42,13 @@ export default function AboutPage() {
             Lessons will be in Hindi, supported by an English website and a clear module-by-module
             structure. Learning outcomes describe skills to study, not financial outcomes to expect.
           </p>
-          <p>
-            The instructor’s verified name, biography, experience and photograph have not yet been
-            supplied. These will be published before the courses go on sale. We will not substitute
-            invented credentials, ratings or learner results.
-          </p>
+          {content?.instructorConfirmed&&content.instructorName&&content.instructorBio?<p>The course instructor is {content.instructorName}. {content.instructorBio}</p>:<p>The instructor’s verified name, biography, experience and photograph have not yet been supplied. These will be published before the courses go on sale. We will not substitute invented credentials, ratings or learner results.</p>}
           <Link href="/courses" className="button button-primary">
             Explore the learning path <ArrowUpRight size={19} />
           </Link>
         </div>
       </section>
+      {content?.instructorConfirmed&&content.instructorName&&content.instructorBio&&<section className="about-instructor"><div><span className="auth-section-label">Meet your instructor</span><h2>{content.instructorName}</h2><p>{content.instructorBio}</p></div>{content.instructorPortraitUrl&&<div className="about-instructor-photo"><Image unoptimized fill sizes="(max-width: 768px) 100vw, 40vw" src={content.instructorPortraitUrl} alt={`${content.instructorName}, course instructor`}/></div>}</section>}
       <section className="about-principles">
         <article>
           <h3>Context over calls.</h3>

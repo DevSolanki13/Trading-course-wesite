@@ -34,7 +34,7 @@ export function sameOrigin(request: Request) {
   } catch {}
   throw new AuthError(403, "This request must come from the application.", "ORIGIN_REQUIRED");
 }
-export async function body(request: Request) {
+export async function body(request: Request, maximumBytes = 16384) {
   if (!request.headers.get("content-type")?.includes("application/json"))
     throw new AuthError(415, "Send a JSON request.");
   const reader = request.body?.getReader();
@@ -45,7 +45,7 @@ export async function body(request: Request) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
-    if (size > 16384) {
+    if (size > maximumBytes) {
       await reader.cancel();
       throw new AuthError(413, "Request is too large.");
     }

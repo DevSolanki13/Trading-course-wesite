@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Faq } from "../components/faq";
 import { ArrowUpRight, TelegramLogo, InstagramLogo } from "../components/icons";
 import { site } from "../content/site";
+import type{SiteDocument}from"../../shared/admin";
 
-export default function ContactPage() {
+export default function ContactPage({supportEmail=site.supportEmail,telegramUrl=site.telegramUrl,instagramUrl=site.instagramUrl,content=null}:{supportEmail?:string|null;telegramUrl?:string|null;instagramUrl?:string|null;content?:SiteDocument|null}) {
   return (
     <main id="main-content" className="container contact-page">
       <div className="page-intro">
@@ -20,13 +21,13 @@ export default function ContactPage() {
       <div className="contact-grid">
         <section className="contact-details">
           <h2>Course & account support</h2>
-          {site.supportEmail ? (
+          {supportEmail ? (
             <>
               <p>
                 Include the course title and, if you have purchased, your order reference. Please
                 never send passwords or payment credentials.
               </p>
-              <a className="button button-primary" href={`mailto:${site.supportEmail}`}>
+              <a className="button button-primary" href={`mailto:${supportEmail}`}>
                 Email support <ArrowUpRight size={18} />
               </a>
             </>
@@ -39,10 +40,10 @@ export default function ContactPage() {
               <span className="contact-pending">Support address awaiting confirmation</span>
             </>
           )}
-          <h2>Find the community</h2>
+          <h2 id="community">Find the community</h2>
           <div className="contact-socials">
-            {site.telegramUrl ? (
-              <a href={site.telegramUrl} target="_blank" rel="noreferrer">
+            {telegramUrl ? (
+              <a href={telegramUrl} target="_blank" rel="noreferrer">
                 <TelegramLogo size={21} />
                 Public Telegram <ArrowUpRight size={16} />
               </a>
@@ -52,8 +53,8 @@ export default function ContactPage() {
                 Telegram link coming soon
               </p>
             )}
-            {site.instagramUrl ? (
-              <a href={site.instagramUrl} target="_blank" rel="noreferrer">
+            {instagramUrl ? (
+              <a href={instagramUrl} target="_blank" rel="noreferrer">
                 <InstagramLogo size={21} />
                 Instagram <ArrowUpRight size={16} />
               </a>
@@ -67,7 +68,7 @@ export default function ContactPage() {
         </section>
         <section>
           <h2>Often, the answer is here.</h2>
-          <Faq />
+          <Faq items={content?.faqs?.length?content.faqs:undefined}/>
         </section>
       </div>
       <div className="contact-policy-links">

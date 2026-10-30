@@ -1,0 +1,155 @@
+export type AdminLesson = {
+  id: string;
+  module_id?: string;
+  title: string;
+  position: number;
+  duration_seconds: number;
+  is_preview: boolean;
+  published: boolean;
+  lesson_assets: {
+    provider_video_id: string;
+    notes: string;
+    provider_status: string | null;
+    verified_at: string | null;
+    verified_duration: number | null;
+  } | null;
+  lesson_resources: { id: string; title: string; content: string; position: number }[];
+};
+export type AdminModule = { id: string; title: string; position: number; lessons: AdminLesson[] };
+export type AdminCourse = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  level: "beginner" | "intermediate" | "advanced";
+  language: string;
+  status: "draft" | "published" | "archived";
+  price_paise: number;
+  sale_price_paise: number | null;
+  thumbnail_url: string | null;
+  outcomes: string[];
+  audience: string;
+  prerequisites: string;
+  artwork: "foundations" | "structure" | "risk";
+  version: number;
+  updated_at: string;
+  modules: AdminModule[];
+};
+export type StudentRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  blocked: boolean;
+  created_at: string;
+};
+export type StudentDetail = {
+  profile: StudentRow;
+  enrollments: {
+    id: string;
+    course_id: string;
+    source: string;
+    active: boolean;
+    revoked_at: string | null;
+    order_id: string | null;
+  }[];
+  orders: {
+    id: string;
+    course_id: string;
+    status: string;
+    total_paise: number;
+    created_at: string;
+  }[];
+  progress: {
+    lesson_id: string;
+    position_ms: number;
+    duration_seconds: number;
+    watched_seconds: number;
+    completed: boolean;
+  }[];
+  devices: { id: string; device_name: string; last_active_at: string }[];
+  courses: { id: string; title: string; status: string }[];
+};
+export type AdminOrder = {
+  id: string;
+  user_id: string;
+  course_id: string;
+  provider_order_id: string | null;
+  status: string;
+  currency: string;
+  total_paise: number;
+  tax_paise: number;
+  discount_paise: number;
+  course_snapshot: { title?: string };
+  billing_snapshot: Record<string, unknown>;
+  created_at: string;
+  paid_at: string | null;
+};
+export type RefundEvidence = {
+  valid?: boolean;
+  eligible: boolean;
+  reason: string;
+  deadline?: string;
+  watchedPercent?: number;
+  watchedSeconds?: number;
+  durationSeconds?: number;
+};
+export type RefundRow = {
+  id: string;
+  order_id: string;
+  user_id: string;
+  reason: string;
+  state: string;
+  provider_reference: string;
+  requested_evidence: RefundEvidence;
+  reviewed_evidence: RefundEvidence | null;
+  current_evidence: RefundEvidence;
+  review_note: string | null;
+  goodwill: boolean;
+  version: number;
+  created_at: string;
+};
+export type SettingsView = {
+  version: number;
+  gst_enabled: boolean;
+  gst_rate_bps: number;
+  gstin: string | null;
+  device_limit: number;
+  refund_window_days: number;
+  refund_watch_limit_percent: number;
+  business_name: string;
+  business_address: string;
+  support_email: string | null;
+  public_telegram_url: string | null;
+  public_instagram_url: string | null;
+  private_telegram_url: string | null;
+  private_invite_expires_at: string | null;
+};
+export type SiteDocument = {
+  instructorName:string;
+  instructorBio:string;
+  instructorPortraitUrl:string;
+  instructorConfirmed:boolean;
+  heroTitle: string;
+  heroAccent: string;
+  heroDescription: string;
+  teachingTitle: string;
+  teachingDescription: string;
+  faqs: { question: string; answer: string }[];
+  testimonials: { name: string; quote: string; course: string }[];
+  genuineTestimonialsConfirmed: boolean;
+};
+export type CouponView = {
+  id: string;
+  code: string;
+  kind: "fixed" | "percent";
+  value: number;
+  course_id: string | null;
+  expires_at: string | null;
+  total_limit: number | null;
+  per_user_limit: number;
+  active: boolean;
+  version: number;
+  coupon_redemptions: { state: string }[];
+};

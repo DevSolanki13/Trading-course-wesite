@@ -25,6 +25,13 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       { source: "/admin/:path*", headers: [{ key: "Cache-Control", value: "private, no-store" }] },
+      {
+        source: "/learn/:path*",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
     ];
   },
 };

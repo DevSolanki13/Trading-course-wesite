@@ -305,8 +305,8 @@ export function AccountWorkspace({ admin = false }: { admin?: boolean }) {
                 <section className="account-panel">
                   <h2>Support workspace</h2>
                   <p>
-                    Your role is protected and ready. Order, refund and student-support tools will
-                    become available with their corresponding features.
+                    Your role is protected. Student, order and refund-review tools are available in
+                    the team workspace.
                   </p>
                 </section>
               )}
@@ -315,6 +315,7 @@ export function AccountWorkspace({ admin = false }: { admin?: boolean }) {
           <Link className="text-link" href="/account">
             Manage your own account <ArrowUpRight size={17} />
           </Link>
+          <Link className="button button-primary" href="/admin">Open team workspace <ArrowUpRight size={17}/></Link>
         </>
       ) : (
         <div className="account-grid">
@@ -447,11 +448,11 @@ export function AccountWorkspace({ admin = false }: { admin?: boolean }) {
             <section className="account-panel">
               <h2>Your next learning step</h2>
               <p>
-                You can explore the course previews. Enrolment and purchased-course tools are not
-                open yet.
+                Open your enrolled courses, continue a lesson or review your learning progress. New
+                purchases remain unavailable in this preview.
               </p>
-              <Link className="button button-primary" href="/courses">
-                Browse courses <ArrowUpRight size={17} />
+              <Link className="button button-primary" href="/learn">
+                My learning <ArrowUpRight size={17} />
               </Link>
             </section>
             {["admin", "support"].includes(user.role) && (

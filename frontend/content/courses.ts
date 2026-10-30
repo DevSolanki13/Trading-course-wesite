@@ -1,4 +1,7 @@
 export type Course = {
+  thumbnailUrl?: string | null;
+  provisional?: boolean;
+  previewLessonId?: string;
   slug: string;
   title: string;
   shortTitle: string;
@@ -12,7 +15,10 @@ export type Course = {
   outcomes: string[];
   audience: string;
   prerequisites: string;
-  modules: { title: string; lessons: { title: string; duration: string; preview?: boolean }[] }[];
+  modules: {
+    title: string;
+    lessons: { id?: string; title: string; duration: string; preview?: boolean }[];
+  }[];
 };
 
 /** Illustrative public catalogue only. Never use these values to create a payment. */
@@ -161,6 +167,6 @@ export function formatPrice(price: number) {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(price);
 }

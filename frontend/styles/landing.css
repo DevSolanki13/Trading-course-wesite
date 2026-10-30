@@ -1,36 +1,61 @@
-/* Public, comfortable-density surface. Scope protects catalogue and account layouts. */
+/* Landing surfaces inherit the shared institutional trading palette. */
 body:has(.landing-page) {
-  --background: #101411;
-  --surface: #171d18;
-  --raised: #202921;
-  --foreground: #f1f3eb;
-  --muted: #b0b9ae;
-  --accent: #c0dfae;
-  --accent-ink: #1c2b19;
-  --line: #303a31;
-  --lp-panel: #171d18;
-  --lp-secondary: #95a78f;
+  --lp-panel: var(--surface);
+  --lp-secondary: var(--muted);
   --lp-shadow: 0 1px 0 #ffffff09 inset, 0 16px 44px #00000025;
-  --lp-section: #141a16;
+  --lp-section: #131722;
 }
 :root[data-theme="light"] body:has(.landing-page) {
-  --background: #f8f9f4;
-  --surface: #eff2e9;
-  --raised: #e4ebde;
-  --foreground: #202b23;
-  --muted: #576453;
-  --accent: #345e37;
-  --accent-ink: #f7fff2;
-  --line: #d6dfd0;
-  --lp-panel: #ffffff;
-  --lp-secondary: #596f50;
-  --lp-shadow: 0 1px 0 #ffffff inset, 0 16px 44px #26312109;
-  --lp-section: #eff3e9;
+  --lp-panel: var(--surface);
+  --lp-secondary: var(--muted);
+  --lp-shadow: 0 1px 0 #ffffff inset, 0 16px 44px #13172209;
+  --lp-section: #e8edf7;
 }
 body:has(.landing-page) .site-header .container,
 body:has(.landing-page) .site-footer .container,
 .landing-page .container {
   max-width: 1200px;
+}
+.landing-testimonials {
+  padding-block: 100px;
+}
+.landing-instructor{display:grid;align-items:center;gap:45px;padding-block:90px;border-top:1px solid var(--line)}
+.landing-instructor-with-photo{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr)}
+.landing-instructor-copy{max-width:650px}.landing-instructor-copy h2{margin-bottom:22px}.landing-instructor-copy p{font-size:15px;line-height:1.9}.landing-instructor-copy .text-link{margin-top:25px}.landing-instructor-photo{position:relative;min-height:370px;border-radius:13px;overflow:hidden;background:var(--surface)}.landing-instructor-photo img{object-fit:cover}
+@media(max-width:800px){.landing-instructor-with-photo{grid-template-columns:1fr}.landing-instructor{padding-block:65px}.landing-instructor-photo{min-height:320px}}
+.landing-testimonials h2 {
+  max-width: 640px;
+}
+.landing-testimonial-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 35px;
+}
+.landing-testimonial-grid blockquote {
+  margin: 0;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.landing-testimonial-grid p {
+  font-size: 15px;
+  color: var(--foreground);
+  line-height: 1.8;
+}
+.landing-testimonial-grid footer {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 25px;
+}
+@media (max-width: 800px) {
+  .landing-testimonial-grid {
+    grid-template-columns: 1fr;
+  }
+  .landing-testimonials {
+    padding-block: 70px;
+  }
 }
 body:has(.landing-page) .site-header {
   border-color: color-mix(in srgb, var(--line) 70%, transparent);

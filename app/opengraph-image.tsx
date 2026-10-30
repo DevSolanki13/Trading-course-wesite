@@ -6,8 +6,8 @@ export default function OpenGraphImage() {
   return new ImageResponse(
     <div
       style={{
-        background: "#0B1012",
-        color: "#F3F1E9",
+        background: "#0B0E11",
+        color: "#F0F3FA",
         width: "100%",
         height: "100%",
         display: "flex",
@@ -17,7 +17,7 @@ export default function OpenGraphImage() {
       }}
     >
       <div style={{ fontSize: 32, display: "flex" }}>
-        marketmethod<span style={{ color: "#69D6BC" }}>.</span>
+        marketmethod<span style={{ color: "#90ACFF" }}>.</span>
       </div>
       <div
         style={{
@@ -29,9 +29,9 @@ export default function OpenGraphImage() {
         }}
       >
         <span>Learn the process.</span>
-        <span style={{ color: "#69D6BC" }}>Respect the risk.</span>
+        <span style={{ color: "#90ACFF" }}>Respect the risk.</span>
       </div>
-      <div style={{ fontSize: 22, color: "#A8B3B5", display: "flex" }}>
+      <div style={{ fontSize: 22, color: "#A1A6B2", display: "flex" }}>
         Trading education in Hindi · Preview edition
       </div>
     </div>,

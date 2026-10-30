@@ -38,5 +38,7 @@ export const config = {
     "/auth/:path*",
     "/api/auth/:path*",
     "/api/admin/:path*",
+    "/learn/:path*",
+    "/api/learning/:path*",
   ],
 };

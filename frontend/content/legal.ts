@@ -44,15 +44,15 @@ export const legalPages = {
       },
       {
         title: "Account and future purchase information",
-        body: "Accounts process your name, email, optional phone, authentication details, device labels derived from browser information, session timestamps and security audit events. Rate limiting uses keyed hashes of request identifiers. Email-action verifiers are encrypted and links expire after 30 minutes. Purchases, lesson progress and watched-content measurements will be added in later phases. Card or UPI credentials should be handled by the payment provider, not stored by this application.",
+        body: "Accounts process your name, email, optional phone, authentication details, device labels, session timestamps and security audit events. Enrolled learning records include resume positions, completion checkmarks and bounded unique watched ranges. Rate limiting uses keyed hashes of request identifiers. Email-action verifiers are encrypted and links expire after 30 minutes. Payments remain unavailable; future card or UPI credentials will be handled by the payment provider.",
       },
       {
         title: "Service providers",
-        body: "Staging accounts use Supabase for database and authentication, with verification, recovery and invitation messages sent through Resend when the sender is authorised. Google sign-in depends on provider configuration. Cashfree payments and VdoCipher lessons remain future integrations; Vercel is the planned host. Final processor arrangements, retention periods, international transfers and lawful processing grounds require owner review before public release.",
+        body: "Staging accounts use Supabase for database and authentication, Resend for account messages when the sender is authorised, and VdoCipher for protected lessons. Google sign-in uses the configured identity provider. Cashfree payments remain a future integration; Vercel is the planned host. Final processor arrangements, retention periods, international transfers and lawful processing grounds require owner review before public release.",
       },
       {
         title: "Video protection",
-        body: "Protected lessons are planned to display a viewer-specific watermark. The exact identifier and handling will be explained before the player is enabled. Browser and playback information may be processed by the video provider to deliver protected content.",
+        body: "When an authenticated learner starts a lesson, their account email is sent to VdoCipher to display a moving personalised watermark. Guests viewing published previews receive a public-preview watermark. VdoCipher also processes the browser and playback information needed for protected streaming. Progress is recorded separately in this application's database. DRM reduces copying but cannot guarantee prevention of screen recording.",
       },
       {
         title: "Your choices and requests",
@@ -66,7 +66,7 @@ export const legalPages = {
     sections: [
       {
         title: "No purchases in this preview",
-        body: "Enrolment is currently disabled, so this preview cannot take payment or accept refund requests. The policy below describes the planned launch rules and requires business approval before sales begin.",
+        body: "New enrolment and payment are disabled in this staging preview. An existing confirmed paid order, if present, may have a request reviewed, but actual money cannot be returned through this preview until the payment provider is connected. The policy below describes planned launch rules and requires business approval before sales begin.",
       },
       {
         title: "Eligibility",
@@ -108,7 +108,7 @@ export const legalPages = {
       },
       {
         title: "Examples and preview material",
-        body: "The catalogue, prices, lesson information and conceptual imagery in this preview are illustrative. They are not evidence of real trades, student results, instructor performance or an existing teaching history. No invented testimonials or credentials are presented.",
+        body: "Some preview catalogue material, prices and conceptual imagery are illustrative. Published course records and genuine owner-approved content are identified separately. Neither kind of material is evidence of real trades, student results or guaranteed returns. No invented testimonials or credentials are presented.",
       },
       {
         title: "Registration and business review",

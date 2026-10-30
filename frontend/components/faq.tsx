@@ -1,10 +1,16 @@
 import { Plus } from "./icons";
 import { faqs } from "../content/site";
 
-export function Faq({ compact = false }: { compact?: boolean }) {
+export function Faq({
+  compact = false,
+  items = faqs,
+}: {
+  compact?: boolean;
+  items?: { question: string; answer: string }[];
+}) {
   return (
     <div className="faq-list">
-      {(compact ? faqs.slice(0, 3) : faqs).map((item) => (
+      {(compact ? items.slice(0, 3) : items).map((item) => (
         <details key={item.question}>
           <summary>
             {item.question}

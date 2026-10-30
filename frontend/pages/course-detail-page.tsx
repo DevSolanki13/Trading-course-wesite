@@ -1,9 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Course } from "../content/courses";
 import { courses, formatPrice } from "../content/courses";
 import { CourseArtwork } from "../components/course-artwork";
 import { CourseCard } from "../components/course-card";
 import { PreviewDialog } from "../components/preview-dialog";
+import { CourseAccessAction } from "../components/course-access-action";
 import { Faq } from "../components/faq";
 import {
   ArrowLeft,
@@ -40,19 +42,41 @@ export default function CourseDetailPage({ course }: { course: Course }) {
               </span>
               <span>
                 <Clock size={17} />
-                {course.duration} illustrative duration
+                {course.duration}{" "}
+                {course.provisional === false ? "course duration" : "illustrative duration"}
               </span>
             </div>
-            <PreviewDialog courseSlug={course.slug} label="Preview the lesson format" />
+            {course.previewLessonId ? (
+              <Link
+                className="button button-secondary"
+                href={`/learn/${course.slug}?lesson=${course.previewLessonId}`}
+              >
+                Watch a free lesson
+              </Link>
+            ) : (
+              <PreviewDialog courseSlug={course.slug} label="Preview the lesson format" />
+            )}
           </div>
-          <CourseArtwork kind={course.artwork} className="detail-artwork" />
+          {course.thumbnailUrl ? (
+            <div className="detail-artwork-photo">
+              <Image
+                unoptimized
+                fill
+                sizes="(max-width: 900px) 100vw, 45vw"
+                src={course.thumbnailUrl}
+                alt={`${course.title} course cover`}
+              />
+            </div>
+          ) : (
+            <CourseArtwork kind={course.artwork} className="detail-artwork" />
+          )}
         </section>
         <div className="detail-preview-note">
           <ShieldCheck size={19} />
           <p>
-            Course preview: curriculum, lesson totals, durations and price are illustrative. The
-            outlines below show selected example lessons. Final details and instructor identity are
-            awaiting confirmation.
+            {course.provisional === false
+              ? "Published curriculum and duration are shown. Payments are not open yet; final prices and instructor details require approval."
+              : "Course preview: curriculum, lesson totals, durations and price are illustrative. The outlines below show selected example lessons. Final details and instructor identity await confirmation."}
           </p>
         </div>
         <section className="mobile-course-info" aria-label="Course access and refund information">
@@ -103,7 +127,9 @@ export default function CourseDetailPage({ course }: { course: Course }) {
                           {lesson.preview ? <BookOpen size={17} /> : <LockSimple size={17} />}
                           <span>{lesson.title}</span>
                           {lesson.preview && (
-                            <span className="lesson-preview-tag">Preview planned</span>
+                            <span className="lesson-preview-tag">
+                              {course.provisional === false ? "Free preview" : "Preview planned"}
+                            </span>
                           )}
                           <time>{lesson.duration}</time>
                         </li>
@@ -140,14 +166,14 @@ export default function CourseDetailPage({ course }: { course: Course }) {
             </section>
           </div>
           <aside className="purchase-panel">
-            <span className="preview-price-label">Illustrative course price</span>
+            <span className="preview-price-label">
+              {course.provisional === false ? "Course price preview" : "Illustrative course price"}
+            </span>
             <div className="detail-price">{formatPrice(course.price)}</div>
             <p className="purchase-tax-note">
               Final price and applicable GST will be confirmed before checkout.
             </p>
-            <button className="button button-primary" disabled>
-              Enrolment opens later
-            </button>
+            <CourseAccessAction slug={course.slug} previewId={course.previewLessonId} />
             <span className="purchase-status">Purchases are disabled in this preview.</span>
             <ul className="purchase-includes">
               <li>
@@ -195,9 +221,7 @@ export default function CourseDetailPage({ course }: { course: Course }) {
           <small>Illustrative price</small>
           <strong>{formatPrice(course.price)}</strong>
         </div>
-        <button className="button button-primary" disabled>
-          Enrolment not open
-        </button>
+        <CourseAccessAction slug={course.slug} mobile />
       </div>
     </main>
   );

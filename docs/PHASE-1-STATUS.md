@@ -73,3 +73,9 @@ The mechanical design detector ran once and flagged an unnecessary course-artwor
 - Authenticated ownership-aware course CTA after Phase 2; checkout activation after Phase 3.
 
 The UI implementation can be reviewed now. Full Phase 1 content acceptance remains pending these inputs.
+
+### Colour revision ? 30 October 2026
+
+Applied the owner?s institutional obsidian/slate/electric-blue palette across shared and landing styles, auth forms, course artwork, dialogs and Open Graph image. Landing colour overrides now inherit shared tokens; secondary text uses a brighter cool grey for small-text contrast. This supersedes the earlier charcoal/sage direction.
+
+Verification: production build, lint, formatting and editor diagnostics pass. All 48 storefront route/viewport/theme checks and eight mobile authentication-page WCAG A/AA Axe audits pass, with zero recorded violations in the targeted audits.

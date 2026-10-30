@@ -90,7 +90,7 @@ export function SiteHeader() {
       </a>
       <aside className="preview-notice" aria-label="Development preview">
         Preview edition{" "}
-        <span>Provisional brand, illustrative courses and prices. Enrolment is not open.</span>
+        <span>Course information and prices may change. Enrolment is not open.</span>
       </aside>
       <header className="site-header">
         <div className="container header-inner">

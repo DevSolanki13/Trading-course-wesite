@@ -1,10 +1,16 @@
 "use client";
 import { useState } from "react";
-import { courses } from "../content/courses";
+import { courses as sampleCourses, type Course } from "../content/courses";
 import { CourseCard } from "../components/course-card";
 import { ArrowDown, MagnifyingGlass } from "@phosphor-icons/react";
 
-export default function CataloguePage() {
+export default function CataloguePage({
+  courses = sampleCourses,
+  published = false,
+}: {
+  courses?: Course[];
+  published?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("All levels");
   const results = courses.filter(
@@ -76,8 +82,9 @@ export default function CataloguePage() {
         </div>
       )}
       <p className="catalogue-note">
-        Preview catalogue. All curriculum, counts, durations and prices are illustrative. Final
-        course information and tax treatment will be confirmed before enrolment opens.
+        {published
+          ? "Published course information is shown for learning. Payments and final tax treatment remain unavailable in this preview."
+          : "Preview catalogue. All curriculum, counts, durations and prices are illustrative. Final course information and tax treatment will be confirmed before enrolment opens."}
       </p>
     </main>
   );

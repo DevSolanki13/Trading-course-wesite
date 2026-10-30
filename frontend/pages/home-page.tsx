@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CourseCard } from "../components/course-card";
 import { PreviewDialog } from "../components/preview-dialog";
 import { RiskExercise } from "../components/risk-exercise";
@@ -12,7 +13,8 @@ import {
   InstagramLogo,
   Clock,
 } from "../components/icons";
-import { courses } from "../content/courses";
+import { courses as sampleCourses, type Course } from "../content/courses";
+import type { SiteDocument } from "../../shared/admin";
 import { site } from "../content/site";
 import "../styles/landing.css";
 
@@ -34,7 +36,19 @@ const learningSteps = [
   },
 ];
 
-export default function HomePage() {
+export default function HomePage({
+  courses = sampleCourses,
+  content = null,
+  telegramUrl = site.telegramUrl,
+  instagramUrl = site.instagramUrl,
+  published = false,
+}: {
+  courses?: Course[];
+  content?: SiteDocument | null;
+  telegramUrl?: string | null;
+  instagramUrl?: string | null;
+  published?: boolean;
+}) {
   return (
     <main id="main-content" className="landing-page">
       <section className="landing-hero container" aria-labelledby="landing-title">
@@ -44,19 +58,28 @@ export default function HomePage() {
             <span>Trading education. In Hindi.</span>
           </div>
           <h1 id="landing-title">
-            Clarity before
+            {content?.heroTitle || "Clarity before"}
             <br />
-            <span>the first trade.</span>
+            <span>{content?.heroAccent || "the first trade."}</span>
           </h1>
           <p>
-            Understand the market, not just the chart. A structured learning path through
-            foundations, price action and risk.
+            {content?.heroDescription ||
+              "Understand the market, not just the chart. A structured learning path through foundations, price action and risk."}
           </p>
           <div className="landing-actions">
             <Link href="/courses" className="button button-primary">
               Explore courses <ArrowUpRight size={19} />
             </Link>
-            <PreviewDialog />
+            {courses[0]?.previewLessonId ? (
+              <Link
+                className="button button-secondary"
+                href={`/learn/${courses[0].slug}?lesson=${courses[0].previewLessonId}`}
+              >
+                Watch a free lesson
+              </Link>
+            ) : (
+              <PreviewDialog />
+            )}
           </div>
           <div className="landing-hero-meta">
             <span>
@@ -82,7 +105,7 @@ export default function HomePage() {
               <br />
               starts with the basics.
             </h2>
-            <p>Three subjects. One considered approach.</p>
+            <p>{courses.length} subjects. One considered approach.</p>
           </div>
           <nav aria-label="Learning path courses">
             {courses.map((course, index) => (
@@ -155,22 +178,25 @@ export default function HomePage() {
         </div>
         <p className="catalogue-note">
           <ShieldCheck size={15} />
-          Preview collection. Curriculum, lesson counts, durations and prices are illustrative and
-          awaiting instructor confirmation.
+          {published
+            ? "Published course details are shown. Payments remain unavailable; final prices and policies require approval."
+            : "Preview collection. Curriculum, lesson counts, durations and prices are illustrative and awaiting instructor confirmation."}
         </p>
       </section>
+
+      {content?.instructorConfirmed&&content.instructorName&&content.instructorBio&&<section className={`landing-instructor container ${content.instructorPortraitUrl?"landing-instructor-with-photo":""}`}><div className="landing-instructor-copy"><span className="landing-section-label">The person behind the lessons</span><h2>{content.instructorName}</h2><p>{content.instructorBio}</p><Link className="text-link" href="/about">Meet the instructor <ArrowUpRight size={18}/></Link></div>{content.instructorPortraitUrl&&<div className="landing-instructor-photo"><Image unoptimized fill sizes="(max-width: 800px) 100vw, 40vw" src={content.instructorPortraitUrl} alt={`${content.instructorName}, course instructor`}/></div>}</section>}
 
       <section className="landing-method container" aria-labelledby="method-heading">
         <div className="landing-method-intro">
           <span className="landing-section-label">A different starting point</span>
           <h2 id="method-heading">
-            More than a setup.
+            {content?.teachingTitle || "More than a setup."}
             <br />
             <span>A way to think.</span>
           </h2>
           <p>
-            A chart can show you a pattern. Understanding asks what surrounds it, what could go
-            wrong, and what you can learn.
+            {content?.teachingDescription ||
+              "A chart can show you a pattern. Understanding asks what surrounds it, what could go wrong, and what you can learn."}
           </p>
           <Link href="/about" className="text-link">
             Our approach to learning <ArrowUpRight size={18} />
@@ -241,13 +267,13 @@ export default function HomePage() {
             {
               name: "Telegram",
               detail: "The public channel",
-              url: site.telegramUrl,
+              url: telegramUrl,
               Icon: TelegramLogo,
             },
             {
               name: "Instagram",
               detail: "Notes from the learning journey",
-              url: site.instagramUrl,
+              url: instagramUrl,
               Icon: InstagramLogo,
             },
           ].map(({ name, detail, url, Icon }) =>
@@ -291,8 +317,29 @@ export default function HomePage() {
             Have another question? <ArrowUpRight size={18} />
           </Link>
         </div>
-        <Faq />
+        <Faq items={content?.faqs?.length ? content.faqs : undefined} />
       </section>
+
+      {!!content?.testimonials?.length && content.genuineTestimonialsConfirmed && (
+        <section className="landing-testimonials container">
+          <span className="landing-section-label">Learner perspectives</span>
+          <h2>From people who learned with us.</h2>
+          <div className="landing-testimonial-grid">
+            {content.testimonials.map((item, index) => (
+              <blockquote key={index}>
+                <p>{item.quote}</p>
+                <footer>
+                  {item.name}
+                  {item.course ? ` · ${item.course}` : ""}
+                </footer>
+              </blockquote>
+            ))}
+          </div>
+          <p className="learning-caption">
+            Individual experiences vary. No trading outcome is promised or implied.
+          </p>
+        </section>
+      )}
 
       <section className="landing-close container">
         <div className="landing-close-mark" aria-hidden="true">

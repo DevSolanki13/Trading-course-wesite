@@ -33,7 +33,7 @@ export const faqs = [
   {
     question: "Can I use my phone and laptop?",
     answer:
-      "The planned limit is two active devices per account. You will be able to manage your devices from your profile. An additional device will require signing out an existing one.",
+      "Accounts allow two active devices by default. You can manage them from your profile. A third device asks you to sign out an existing one before continuing.",
   },
   {
     question: "Will these courses provide trading calls or guaranteed returns?",

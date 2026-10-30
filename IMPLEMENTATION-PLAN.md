@@ -1,10 +1,10 @@
 # Trading Course Website: Implementation Plan and Project Status
 
-**Last updated:** 29 October 2026 (Asia/Kolkata)  
+**Last updated:** 30 October 2026 (Asia/Kolkata)  
 **Requested delivery:** Friday, 30 October 2026, end of day IST (working assumption; exact handover time unconfirmed)  
 **Original launch:** Monday, 2 November 2026, with work finished by 1 November  
 **Source:** [Course website requirements](./course-website-requirements.md)  
-**Current stage:** Phase 2 account/security implementation delivered; final provider acceptance pending  
+**Current stage:** Phase 5 Admin/course/refund-review implementation in progress; Cashfree and DRM acceptance pending  
 **Delivery confidence:** At risk for the full requirements by tomorrow
 
 ## 1. What this document controls
@@ -30,10 +30,10 @@ Status values: **DONE**, **IN PROGRESS**, **NOT STARTED**, **AWAITING INPUT**, *
 | Authentication and device limit | IN PROGRESS | Implementation and live staging device/password/MFA tests pass; Resend operator message delivered using testing sender; Google enabled and app PKCE initiation passed. General-recipient sender verification and Google consent/callback acceptance remain open |
 | Public website and legal content | IN PROGRESS | Homepage, catalogue, three course previews, approach/contact and draft policy pages implemented; real content/approval pending |
 | Payments, receipts and refunds | NOT STARTED | Phase 0 signed webhook inbox prepared; order processing, receipts and refunds remain unimplemented |
-| DRM player and watch tracking | NOT STARTED | Requires processed videos and provider access |
-| Student dashboard and community | IN PROGRESS | Account profile/security/devices delivered; purchased courses, orders and community remain Phase 4 |
-| Admin and support workflows | IN PROGRESS | Staff roles, separate login, MFA and Support management implemented; business workflows remain Phase 5 |
-| QA, performance and accessibility | IN PROGRESS | Build/checks/15 tests, live staging auth, 48 auth/account/device and 48 storefront responsive checks, targeted Axe and smoke pass. Landing local Lighthouse 99 performance/100 accessibility, LCP 0.9s; field/deployment acceptance remains open |
+| DRM player and watch tracking | IN PROGRESS | Backend VdoCipher integration, leases, resume and unique watched ranges implemented; actual automated playback blocked by unavailable Widevine. Physical-browser acceptance pending |
+| Student dashboard and community | IN PROGRESS | Library, classroom, progress, private orders and eligibility-gated community implemented; real content/invites and Phase 3 receipts remain pending |
+| Admin and support workflows | IN PROGRESS | Phase 5 Admin/course/student/refund-review code, migrations 005–006 and staging browser/accessibility acceptance verified. Cashfree refunds and reconciliation remain deferred |
+| QA, performance and accessibility | IN PROGRESS | Build/checks/18 tests and live staging auth/learning access tests pass; 12 learning layout/theme combinations plus earlier storefront/auth checks pass. Actual DRM playback is unverified in the automated browser. Landing local Lighthouse 99 performance/100 accessibility, LCP 0.9s; field/deployment acceptance remains open |
 | Deployment and live readiness | IN PROGRESS | Dedicated Vercel staging project created/linked; no deployment or live-sales readiness yet |
 | Owner content and service readiness | AWAITING INPUT | Checklist in section 3; availability unconfirmed |
 
@@ -50,7 +50,7 @@ The implementer updates this file at the start and end of every work session and
 5. Update the handover section with working features and remaining gaps.
 6. If scope or timing changes, update this document explicitly; keep the original requirement mapped.
 
-**Next task:** complete Resend sender authorisation and Google provider/callback acceptance using the [Phase 2 runbook](./docs/PHASE-2-STATUS.md). The next code milestone is Phase 3 sandbox checkout. Final brand/course/business content and all launch gates remain required before sales.
+**Next task:** finish supported-browser DRM and real-course content acceptance using the [Phase 4 report](./docs/PHASE-4-STATUS.md). Cashfree/Phase 3 remains deferred by the owner; receipts, financial snapshots and real purchase-to-playback acceptance depend on it. Email/Google/owner content and all remaining launch gates still apply.
 
 ## 3. Inputs and external dependencies
 
@@ -298,35 +298,39 @@ Effort ranges below are rough focused engineering hours, not a guarantee or an e
 
 ### Phase 4: Protected player, progress and student area
 
-**Estimate:** 9–14 hours. **Status:** NOT STARTED. **Depends on:** Phases 2–3 and encoded videos.
+**Estimate:** 9-14 hours. **Status:** IN PROGRESS: core implementation delivered; DRM/browser acceptance pending. **Depends on:** Phase 2 and encoded videos. Phase 3 purchase acceptance is deferred.
 
-- [ ] Authorise every playback-token request using active session, admitted device, user state, published lesson and current entitlement or preview permission.
-- [ ] Generate short-lived VdoCipher playback tokens on the backend; apply a per-viewer dynamic watermark and provider restrictions.
-- [ ] Disable paid-video download/offline options and expose no plain course MP4 sources.
-- [ ] Implement module sidebar/mobile drawer, locked/preview states, resume, quality/speed controls and accessible keyboard shortcuts where supported by the chosen player.
-- [ ] Add next lesson, mark complete and auto-next with a visible control. Verify provider support for requested speed range and optional PiP restriction.
-- [ ] Persist resume and progress server-side; provide loading, expired-token, unsupported-browser and playback-error recovery.
-- [ ] Collect validated playback heartbeats and merge watched intervals to calculate refund consumption without counting seeks or repeated ranges twice.
-- [ ] Implement My courses, continue watching, browse, profile/devices, order history, receipts and refund-eligibility screen.
-- [ ] Render lesson notes/attachments through authenticated browser views.
-- [ ] Show public community links to all; expose a short-lived or individually controlled private invite only to eligible paid students.
+- [x] Authorise every playback-token request using active session, admitted device, user state, published lesson and current entitlement or preview permission.
+- [x] Generate short-lived VdoCipher playback tokens on the backend; apply a per-viewer dynamic watermark and provider restrictions.
+- [x] Disable paid-video download/offline options and expose no plain course MP4 sources.
+- [x] Implement responsive module/lesson navigation, locked/public-preview states, resume, explicit 0.5x to 2x speed selection and keyboard controls. Provider quality UI is integrated; actual browser playback/quality acceptance remains below.
+- [x] Implement next lesson, independent completion and optional auto-next playback; verify actual autoplay, speeds and optional PiP behavior in supported browsers before sign-off.
+- [x] Persist resume and progress server-side; provide loading, expired-token, unsupported-browser and playback-error recovery.
+- [x] Collect validated playback heartbeats and merge watched intervals to calculate refund consumption without counting seeks or repeated ranges twice.
+- [x] Implement My courses, continue watching, browse, private order history, honest snapshot-dependent eligibility states and links to existing profile/device controls.
+- [ ] Finish real purchase/receipt flow with Phase 3 and refund submission/processing with Phase 5.
+- [ ] Verify real DRM playback, moving email watermark, controls/resume/auto-next and revocation windows on supported desktop and physical mobile browsers. Isolated headless Chrome reported Widevine unavailable.
+- [x] Render authorised lesson notes and text worksheets in the browser without public download URLs. Binary/PDF viewer support requires a separate content/storage decision.
+- [x] Implement validated public community links and time-limited private invite eligibility for qualifying paid students. Actual official URLs and provider-side expiry remain owner configuration.
 
-**Exit gate:** an unauthorised account cannot request a paid token; a buyer can watch, leave and resume. Watched consumption persists across devices and cannot be reset by changing local storage. Verify playback on physical Android Chrome and iPhone Safari where available.
+**Evidence:** [Phase 4 implementation and acceptance report](./docs/PHASE-4-STATUS.md). Synthetic orders/grants were used only in disposable test fixtures; no Cashfree transaction or permanent demo enrollment was created.
+
+**Exit gate: NOT YET PASSED:** an unauthorised account cannot request a paid token; a buyer can watch, leave and resume. Watched consumption persists across devices and cannot be reset by changing local storage. Verify playback on physical Android Chrome and iPhone Safari where available.
 
 [VdoCipher's OTP documentation](https://www.vdocipher.com/docs/server/playbackauth/otp/) requires token generation on the backend. DRM and watermarking reduce piracy but cannot guarantee that a screen is never recorded. Disabling right-click is cosmetic; browser-rendered notes can also be copied or photographed. Token expiry does not necessarily terminate an already-running stream: test provider revocation behavior and document the remaining access window after refund/session revocation.
 
 ### Phase 5: Refunds, admin operations and content management
 
-**Estimate:** 12–18 hours. **Status:** NOT STARTED. **Depends on:** Phases 2–4.
+**Estimate:** 12–18 hours. **Status:** IN PROGRESS. **Depends on:** Phases 2–4; Cashfree processing remains deferred.
 
-- [ ] Compute eligibility on the server from purchase time, purchased policy snapshot and validated watched duration.
+- [x] Compute eligibility on the server from purchase time, purchased policy snapshot and validated per-order watched duration; SQL boundary tests pass.
 - [ ] Show days/time remaining, watched percentage, reason field and clear ineligibility explanation.
 - [ ] Build refund request/review queue and approval/rejection notes; snapshot eligibility evidence when requested.
-- [ ] Recheck policy and watch data at review; preserve request-time evidence and explicitly record any goodwill exception.
+- [x] Recheck frozen policy and watched data at review; preserve request-time evidence and record Admin-only goodwill exceptions. SQL tests pass; browser acceptance pending.
 - [ ] Trigger Cashfree refunds with a unique refund reference, duplicate-click protection and retries that do not create a second refund.
 - [ ] Distinguish requested, approved, provider-processing, rejected, failed and confirmed-refunded states. API acceptance alone is not final settlement.
 - [ ] Revoke the refunded purchase's entitlement on confirmed refund; define any earlier temporary suspension explicitly and restore it on provider failure.
-- [ ] Keep other valid course purchases/manual grants intact; remove private-group eligibility only when no qualifying paid course remains.
+- [x] Preserve other valid purchases/manual grants after verified settlement and open a community-removal task only when no paid eligibility remains; SQL fixture tests pass.
 - [ ] Send refund status emails and create an admin task for actual Telegram member removal. Verify that task is completed, not just the link hidden.
 - [ ] Build admin overview with gross/net revenue, paid sales, refunds, refund rate, time filters, chart and course breakdown; exclude failed/pending payments from revenue.
 - [ ] Implement searchable/filterable orders, order details, invoice resend, safe CSV export and payment reconciliation.
@@ -334,7 +338,9 @@ Effort ranges below are rough focused engineering hours, not a guarantee or an e
 - [ ] Implement draft/publish course builder, ordered modules/lessons, provider upload/processing status and publish-time validation.
 - [ ] Implement coupon management, FAQs/testimonials/content editor and community/tax/refund/device settings.
 - [ ] Implement staff management, privileged MFA and append-only audit events for refunds, grants, settings, content and staff changes.
-- [ ] Enforce Support restrictions on each server endpoint: no price/course/settings/staff/coupon changes or unapproved powers such as user blocking.
+- [x] Enforce Support restrictions on server endpoints: no course/price/settings/staff/coupon/block/export changes; role/MFA and SQL tests pass. Browser direct-call regression remains to run.
+
+**Evidence:** [Phase 5 implementation and acceptance report](./docs/PHASE-5-STATUS.md). Migration 005 is applied; five checksums and 26 RLS-protected tables verify. The last completed automated suite had 20 passes. Final Admin browser and newly added boundary assertions are awaiting execution; do not mark the phase exit gate passed yet.
 
 **Exit gate:** a refund is processed exactly once, final failure is recoverable, access changes follow the recorded state and every privileged action has an actor/time record. A fourth course can be drafted, populated and published without code changes.
 
@@ -431,8 +437,8 @@ Use meaningful automated tests for financial, role and entitlement logic, plus b
 | Duplicate/out-of-order events and late SUCCESS after FAILED | Exactly one paid enrollment; paid order never downgraded | NOT RUN |
 | Browser closes after payment; webhook delayed | Reconciliation resolves status without charging twice | NOT RUN |
 | Email fails after purchase | Course stays unlocked; email retries safely | NOT RUN |
-| Non-buyer, revoked buyer and preview lesson | Only authorised content receives playback tokens | NOT RUN |
-| Seek/replay/2x playback/multiple tabs | Watch consumption counts validated unique content time and is capped | NOT RUN |
+| Non-buyer, revoked buyer and preview lesson | Only authorised content receives playback tokens | PASS for live staging authorisation/token tests; actual DRM/browser acceptance remains open |
+| Seek/replay/2x playback/multiple tabs | Watch consumption counts validated unique content time and is capped | PASS for SQL watch ledger and lease replacement; actual DRM telemetry acceptance pending |
 | Refund at 9.99%, 10%, before/at seven days | Boundary behavior matches approved policy | NOT RUN |
 | Duplicate refund approval; provider timeout/failure | No double refund; explicit processing/retry/failure state | NOT RUN |
 | Multiple purchases and one refunded course | Other entitlements remain; community eligibility recalculated correctly | NOT RUN |
@@ -478,7 +484,7 @@ Missing information is marked unverified until confirmed. It is not evidence tha
 | B04 | Final instructor/course/business/support content unknown | Business owner | AWAITING INPUT | Supply minimum real launch content before public release |
 | B05 | Tax, legal review, domain and sender readiness unknown | Business owner + accountant | UNVERIFIED | Confirm production configuration before enabling purchases |
 | B06 | Budget and service capacity not agreed | Business owner | AWAITING INPUT | Record expected launch traffic, video hours and spending limits |
-| B07 | Remaining payment/video provider credentials and acceptance | Business owner + developer | AWAITING INPUT | Supabase and email values are present and database migrations verified. Cashfree/VdoCipher values remain missing; email/Google acceptance is tracked separately below |
+| B07 | Remaining payment/video provider credentials and acceptance | Business owner + developer | AWAITING INPUT | Supabase and email values are present and database migrations verified. Cashfree values remain pending. VdoCipher credentials now issue a backend playback OTP successfully; actual playback/watermark acceptance remains pending. Email/Google acceptance is tracked separately below |
 | B08 | Direct Supabase database endpoint required unavailable IPv6 | Business owner + developer | RESOLVED | Session pooler connection verified; staging migration committed and schema checks passed |
 | B09 | General-recipient Resend sender verification | Business owner | PARTIALLY RESOLVED | Operator test now delivered with testing sender; verify a business domain before emailing students and finish real auth email acceptance |
 | B10 | Google browser consent/callback acceptance | Business owner + developer | PARTIALLY RESOLVED | Provider is enabled; app PKCE initiation returns 200. Complete real sign-in/callback and same-email behavior |
@@ -493,11 +499,11 @@ For implementation, use available frontend-quality, authentication, deployment a
 
 ### Latest handover state
 
-- **Delivered:** Phase 0 foundation/staging schema, Phase 1 public storefront and Phase 2 account/security implementation. Full Phase 2 acceptance awaits external email/Google verification.
+- **Delivered:** Phase 0 foundation/staging schema, Phase 1 storefront, Phase 2 account/security and Phase 4 library/classroom with protected provider integration, persistent progress and unique watch ranges. Full DRM/browser and real-content acceptance remains open.
 - **Website preview URL:** <http://localhost:3000> while the production preview task runs; no hosted deployment verified.
 - **Website features implemented:** storefront/catalogue/previews, theme/menu/dialog/risk controls, updated draft policies, signup/login/recovery/profile/devices, atomic device admission and revocation, staff MFA/roles/management, Google callback, Resend link transport and durable auth limits. Enrolment remains disabled.
-- **Tests run:** lint/typecheck/format, 15 automated SQL/security tests, production build, read-only remote schema verification, live staging auth/device/concurrency/MFA suite, 48 auth/account/device responsive/Axe checks, 48 storefront checks and HTTP smoke pass. Disposable test records cleaned up. Landing Lighthouse 99 performance/100 accessibility, LCP 0.9s (local lab only).
-- **Next implementation milestone:** finish Resend/Google acceptance and begin Phase 3 sandbox checkout; owner content acceptance and remaining launch gates still open.
+- **Tests run:** lint/typecheck/format, 18 automated SQL/security tests, production build, four-migration/18-table remote verification, live staging auth and learning access/progress checks, 12 learning layout/Axe combinations and 48 storefront checks pass. The SDK contract simulation saved real server progress and exercised auto-next. Actual DRM remains unverified due to unavailable Widevine in isolated browser profiles. Disposable test records cleaned up. Earlier landing Lighthouse: 99 performance/100 accessibility, LCP 0.9s (local lab only).
+- **Next milestone:** supported-browser DRM and real learning-content acceptance. Cashfree/Phase 3 is deferred by the owner; actual purchase/receipt/refund paths and all launch gates remain open.
 - **Live-sales decision:** not ready; launch gates remain open.
 
 ### Change log
@@ -535,3 +541,15 @@ Live-sales readiness / failed gates:
 ### Provider recheck: 29 October 2026
 
 Google provider enablement and application PKCE initiation now pass. The operator Resend message was accepted and reported delivered using the testing sender. Previous disabled-provider and HTTP 403 findings are superseded for these checks. Full Phase 2 acceptance still requires Google consent/callback, verified business-domain sending to general recipients and delivered authentication email journeys.
+
+### UI palette update: 30 October 2026
+
+Applied the owner-requested institutional palette: obsidian #0B0E11, slate #1E222D, electric-blue actions #2962FF and off-white #F0F3FA. Shared tokens cover landing, catalogue, auth and staff screens; light mode uses coordinated cool neutrals. Secondary copy is brightened for contrast. No payment or learning features are added by this visual revision.
+
+### VdoCipher connection verification: 30 October 2026
+
+The configured API secret and test video ID successfully issued backend OTP/playback credentials. Private short-lived playback HTML was written only to ignored operator artifacts. The provider probe reports PARTIAL intentionally: browser DRM playback, watermark, device support and protected application integration remain Phase 4 acceptance work. Cashfree setup is deferred by the owner.
+
+### Phase 4 implementation: 30 October 2026
+
+Delivered student library/classroom, protected VdoCipher integration, server resume/completion and bounded unique watch ranges, browser notes, private order/eligibility states and community access checks. Applied migration 004; four migration checksums and 18 RLS tables verified. Eighteen automated tests and live staging access/progress/layout checks pass. Actual DRM playback remains unconfirmed: isolated automated Chrome reports Widevine unavailable. See [Phase 4 report](./docs/PHASE-4-STATUS.md). Cashfree and Phase 3 remain deferred; live sales are disabled.

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Course } from "../content/courses";
 import { formatPrice } from "../content/courses";
 import { CourseArtwork } from "./course-artwork";
+import Image from "next/image";
 import { ArrowUpRight, Clock, BookOpen } from "./icons";
 
 export function CourseCard({ course }: { course: Course }) {
@@ -13,7 +14,18 @@ export function CourseCard({ course }: { course: Course }) {
         tabIndex={-1}
         aria-hidden="true"
       >
-        <CourseArtwork kind={course.artwork} />
+        {course.thumbnailUrl ? (
+          <Image
+            unoptimized
+            src={course.thumbnailUrl}
+            alt=""
+            width={600}
+            height={400}
+            className="course-cover-photo"
+          />
+        ) : (
+          <CourseArtwork kind={course.artwork} />
+        )}
         <span className="course-image-arrow">
           <ArrowUpRight size={24} />
         </span>
@@ -39,7 +51,9 @@ export function CourseCard({ course }: { course: Course }) {
         </div>
         <div className="course-card-bottom">
           <div>
-            <span className="preview-price-label">Illustrative price</span>
+            <span className="preview-price-label">
+              {course.provisional === false ? "Course price preview" : "Illustrative price"}
+            </span>
             <strong>{formatPrice(course.price)}</strong>
           </div>
           <Link

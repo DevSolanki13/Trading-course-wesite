@@ -2,24 +2,24 @@
 name: Market Method
 description: A considered trading-education storefront preview; learn the process and respect the risk.
 colors:
-  background: "#0b1012"
-  surface: "#131c1f"
-  raised: "#1a2629"
-  foreground: "#f3f1e9"
-  muted: "#a7b2b4"
-  accent: "#89dec9"
-  accent-ink: "#0b2621"
-  line: "#2c393b"
+  background: "#0b0e11"
+  surface: "#1e222d"
+  raised: "#272d3a"
+  foreground: "#f0f3fa"
+  muted: "#a1a6b2"
+  accent: "#90acff"
+  accent-ink: "#ffffff"
+  line: "#343b4b"
   overlay: "#000b"
-  light-background: "#f5f5ef"
-  light-surface: "#e8ece4"
+  light-background: "#f0f3fa"
+  light-surface: "#ffffff"
   light-raised: "#fff"
-  light-foreground: "#172526"
-  light-muted: "#526264"
-  light-accent: "#176d58"
-  light-accent-ink: "#f5fff9"
-  light-line: "#cdd6cf"
-  light-overlay: "#10251bc0"
+  light-foreground: "#131722"
+  light-muted: "#535b6d"
+  light-accent: "#234fca"
+  light-accent-ink: "#ffffff"
+  light-line: "#cbd2df"
+  light-overlay: "#0b0e11c0"
 typography:
   display:
     fontFamily: '"Manrope Variable", sans-serif'
@@ -97,9 +97,9 @@ components:
 
 ### Current landing-page direction
 
-The owner requested a richer redesign using the newly added [SaaS Product UI System skill](./.agents/skills/ai-ui-design-skills/saas-product-ui-system/SKILL.md). The current landing surface is **a considered learning workspace**: neutral-first warm charcoal, restrained sage actions, strong typography, elevated course-path panel, structured course collection and clear supporting sections. It contains no hero photograph or video, respecting the owner's earlier removals.
+The owner requested a richer redesign using the newly added [SaaS Product UI System skill](./.agents/skills/ai-ui-design-skills/saas-product-ui-system/SKILL.md). The current landing surface is **a considered learning workspace**: neutral-first obsidian and slate, restrained electric-blue actions, strong typography, elevated course-path panel, structured course collection and clear supporting sections. It contains no hero photograph or video, respecting the owner's earlier removals.
 
-[landing.css](./frontend/styles/landing.css) owns scoped landing overrides; the original frontmatter and [globals.css](./frontend/styles/globals.css) remain the shared base for other routes. The scoped dark palette is background `#101411`, panel `#171D18`, raised `#202921`, foreground `#F1F3EB`, muted `#B0B9AE`, accent `#C0DFAE`, accent ink `#1C2B19`, line `#303A31`. Light counterparts are `#F8F9F4`, white panel, `#E4EBDE`, `#202B23`, `#576453`, `#345E37`, `#F7FFF2`, and `#D6DFD0`.
+[landing.css](./frontend/styles/landing.css) owns landing composition and section surfaces; shared colour tokens come from [globals.css](./frontend/styles/globals.css). The landing page inherits the institutional palette used by the catalogue, authentication and account screens. The exact current token choices are documented in the colour revision below.
 
 The landing layout uses a 1200px container, comfortable density, a two-column desktop hero with actual course navigation, three product cards, a learning-process section, a working arithmetic exercise, community readiness, FAQ and final CTA. Typography uses the existing self-hosted Manrope/IBM Plex Mono with rem-based landing scales. Most reading text is 1rem; metadata is secondary. Panels use consistent 18–20px radii with limited elevation; primary/secondary controls remain distinct. The hero stacks before cramped widths and keeps the primary action visible early on mobile.
 
@@ -107,13 +107,13 @@ CSS scope is `.landing-page` plus a body selector when that surface is present. 
 
 **Creative North Star: "An evening study space"**
 
-Charcoal surfaces, mint active elements, warm paper highlights and clear grotesk typography make the storefront feel quiet and considered. Curriculum, teaching process and an interactive arithmetic example carry the message. Original conceptual desk imagery adds atmosphere without implying an instructor identity or trading performance.
+Obsidian surfaces, electric-blue actions, off-white highlights and clear grotesk typography make the storefront feel quiet and considered. Curriculum, teaching process and an interactive arithmetic example carry the message. Original conceptual desk imagery adds atmosphere without implying an instructor identity or trading performance.
 
 This captures the implemented Phase 1 preview. The user delegated branding, colours and fonts; Market Method remains a developer-proposed identity. Final business identity, instructor information, course content/prices, public contacts and policy approval remain unresolved. [PRODUCT.md](./PRODUCT.md), the [requirements](./course-website-requirements.md) and [Phase 1 status](./docs/PHASE-1-STATUS.md) govern those facts. [globals.css](./frontend/styles/globals.css) is the implementation source; frontmatter records its current reusable values, and [.impeccable/design.json](./.impeccable/design.json) carries extensions.
 
 **Key Characteristics:**
 
-- Quiet charcoal and teal, with a complete light theme.
+- Institutional obsidian, slate and electric blue, with a coordinated cool light theme.
 - Spacious sections with compact secondary labels and readable primary copy.
 - Flat tonal surfaces, restrained outlines and original geometric course artwork.
 - Useful, keyboard-accessible interactions with honest preview states.
@@ -210,3 +210,7 @@ Dark is the default. A theme toggle persists the preference locally; an early sc
 - **Don't** describe the ambient loop or written preview as an instructor lesson video.
 - **Don't** promote the proposed identity, curriculum, prices or policy drafts to approved business facts.
 - **Don't** add background media to controls or imply that unavailable account/payment actions succeed.
+
+## Current palette revision ? 30 October 2026
+
+The owner selected an institutional trading palette. This supersedes the earlier warm charcoal/sage direction described above. Shared surfaces use obsidian #0B0E11, section backgrounds #131722, slate cards #1E222D and off-white text #F0F3FA. Primary actions use electric blue #2962FF with white text; inline accents use #90ACFF in dark mode and #234FCA in light mode. Secondary copy uses #A1A6B2 for readable contrast on slate; the requested #787B86 is retained as a subtle neutral token. The landing page now inherits shared colour tokens instead of overriding them. Course artwork, preview banners/dialogs and social images follow the blue/slate family. Existing layouts, typography and interactions are preserved, with cool light-theme counterparts.

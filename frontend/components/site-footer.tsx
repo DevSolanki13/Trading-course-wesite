@@ -23,6 +23,7 @@ export function SiteFooter() {
               <Link href="/contact">
                 Contact <ArrowUpRight size={13} />
               </Link>
+              <Link href="/contact#community">Community</Link>
             </div>
             <div>
               <h2>The details</h2>
@@ -39,7 +40,7 @@ export function SiteFooter() {
             of capital. No outcome or return is guaranteed.
           </p>
           <p>
-            This preview uses illustrative course information. Instructor details, final prices and
+            Course information is under review. Instructor details, final prices and
             policies require confirmation before launch.
           </p>
         </div>
