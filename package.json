@@ -12,6 +12,8 @@
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:playwright": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "node --test --experimental-strip-types tests/*.test.ts",
