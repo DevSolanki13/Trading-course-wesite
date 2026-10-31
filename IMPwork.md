@@ -52,9 +52,17 @@ Details: [purchase/access implementation and file inventory](./docs/PURCHASE-ACC
 - [ ] Review the merged hero copy against administrator content editing: the new hero text is hardcoded, while FAQ content still supports configured entries.
 - [ ] Run a fresh production build and browser regression/accessibility tests against the merged homepage and latest CSS. Earlier build/browser results below predate these changes.
 - [x] Committed the local work separately by purpose: `ac0f38c` (demo/editor setup), `1254aee` (homepage spacing and graph), `095f9f4` (shared website theme), and `f2d86d9` (course expiry, renewal and tests). The consolidated tracker/setup/report updates are recorded in a separate documentation commit.
-- [ ] Push the branch if requested. The merge and subsequent local commits have not been pushed in this session.
+- [x] Pushed the feature branch `feat/zero-env-purchase-access` to GitHub. Main remains unchanged; release checks and preview acceptance are required before merging.
 
 ## Verification completed locally
+
+### Pull request release-check fixes
+
+- [x] Moved purchase-confirmation expiry calculation into server-side repository loading, removing the render-time `Date.now()` lint failure without disabling the purity rule.
+- [x] Removed the stale pnpm lockfile, declared npm as the package manager and added [Vercel build settings](./vercel.json) using `npm ci` and `npm run build`.
+- [x] Formatted the merged homepage and landing stylesheet. Fixed star-rating ARIA markup and light-theme contrast, and moved the keyboard/focus-restoration dialog test to the existing course-preview dialog.
+- [x] Local lint, strict TypeScript, 41 Node tests, 10 React tests, full formatting check, production build and all 32 release browser tests passed for the fixes.
+- [ ] Confirm the new GitHub Actions and Vercel preview checks on the pushed commit before merging. These checks do not apply shared migrations or establish production payment/DRM acceptance.
 
 ### Time-limited course access
 
