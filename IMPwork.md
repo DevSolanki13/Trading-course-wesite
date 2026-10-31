@@ -46,6 +46,7 @@ Details: [purchase/access implementation and file inventory](./docs/PURCHASE-ACC
 - [x] Increased scrolling-card heights from 160px to 190px on desktop and 150px to 180px on mobile; increased gaps from 16px to 24px.
 - [x] Replaced fixed statistics row heights with flexible minimums of 280px and 230px. Added 32px card padding, wrapping for learner avatars/details, and a single-column layout at widths of 540px and below with 28px padding.
 - [x] Increased the curriculum bar-chart height from 120px to 180px, with 212px of reserved bottom space to separate the chart from text.
+- [x] Added inset artwork and comfortable course-card body/footer padding on the homepage and catalogue; increased landing-card gaps to 24px and removed the sideways grid offset. Removed the page-wide fade so the closing call to action and disclaimer stay fully visible. Desktop/mobile and light/dark checks found no horizontal overflow or homepage Axe violations.
 - [x] Consolidated completed and remaining work into this tracker and removed the duplicate work log.
 - [ ] Inspect the latest spacing and graph changes in a browser on desktop and mobile, including longer text and zoom. CSS diagnostics and diff checks passed; these do not establish visual acceptance.
 - [ ] Approve or replace hardcoded homepage ratings, student counts, testimonials, curriculum statistics and broker/trust names before public launch. The merged page contains these claims; their accuracy and permission are not established.
@@ -62,7 +63,7 @@ Details: [purchase/access implementation and file inventory](./docs/PURCHASE-ACC
 - [x] Removed the stale pnpm lockfile, declared npm as the package manager and added [Vercel build settings](./vercel.json) using `npm ci` and `npm run build`.
 - [x] Formatted the merged homepage and landing stylesheet. Fixed star-rating ARIA markup and light-theme contrast, and moved the keyboard/focus-restoration dialog test to the existing course-preview dialog.
 - [x] Local lint, strict TypeScript, 41 Node tests, 10 React tests, full formatting check, production build and all 32 release browser tests passed for the fixes.
-- [ ] Confirm the new GitHub Actions and Vercel preview checks on the pushed commit before merging. These checks do not apply shared migrations or establish production payment/DRM acceptance.
+- [x] GitHub Actions and Vercel preview both passed for release-fix commit `0341ee0`. Later commits need their own checks before merging. These checks do not apply shared migrations or establish production payment/DRM acceptance.
 
 ### Time-limited course access
 
@@ -72,6 +73,7 @@ Details: [purchase/access implementation and file inventory](./docs/PURCHASE-ACC
 - [x] Displayed access periods on course cards/details/checkout, and expiry dates on confirmation, dashboard, classroom and receipts. Expired dashboard entries offer renewal; removed public lifetime-access promises.
 - [x] Lint, strict TypeScript and 41 Node tests passed, including new month-end/leap-year, migration backfill, frozen-term, exact-expiry, manual-grant, denial and progress-preserving renewal checks.
 - [x] All four purchase browser tests passed after this change, including checkout-to-receipt-to-lesson progress, failed/cancelled payments, signup/role denial, and 12 desktop/mobile/theme combinations with accessibility checks. The earlier development-lock blocker was absent for this run; no production build or real merchant acceptance is claimed.
+- [x] Corrected the still-unapplied shared migration 011 upgrade path: existing paid/refunded snapshots stay immutable, and pre-migration orders use the documented one-month term. Added an existing-paid-purchase regression; all 41 Node tests, lint and TypeScript passed. Existing local demo purchases were retained. Disposable local databases using the earlier draft checksum require a new data name; do not alter shared migration ledgers or reset customer data.
 - [ ] Review/back up and apply migration 011 to shared staging after resolving earlier TLS/ledger issues and outstanding migrations. It backfills existing courses to one month and existing enrollments from their original payment/grant time; older access may expire immediately. Confirm actual course periods and legacy-customer treatment before shared rollout. No shared database changes or deployment were performed.
 - [ ] Actual per-course durations, shared production migration, real merchant acceptance and physical-device DRM acceptance remain launch gates. Stored owner-authored FAQ/legal content also needs review for older access wording.
 

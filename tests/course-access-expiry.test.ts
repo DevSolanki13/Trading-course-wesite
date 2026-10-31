@@ -54,6 +54,16 @@ test("SQL freezes purchased terms, denies expired access, preserves progress and
       "insert into enrollments(user_id,course_id,source,granted_at)values($1,$2,'manual','2026-01-31T12:00:00Z')",
       [user, course],
     );
+    const legacyOrder = (
+      await db.query<{ id: string }>(
+        "insert into orders(user_id,course_id,status,base_paise,total_paise,paid_at,purchase_provider,course_snapshot)values($1,$2,'paid',10000,10000,'2026-01-31T12:00:00Z','mock','{\"title\":\"Original receipt\"}')returning id",
+        [user, course],
+      )
+    ).rows[0].id;
+    await db.query(
+      "insert into enrollments(user_id,course_id,order_id,source)values($1,$2,$3,'purchase')",
+      [user, course, legacyOrder],
+    );
     await db.exec(
       await readFile(
         new URL(
@@ -67,6 +77,19 @@ test("SQL freezes purchased terms, denies expired access, preserves progress and
       (await db.query<{ expiry: string }>("select expires_at::text as expiry from enrollments"))
         .rows[0].expiry,
       "2026-02-28 12:00:00+00",
+    );
+    assert.deepEqual(
+      (
+        await db.query<{ course_snapshot: unknown }>(
+          "select course_snapshot from orders where id=$1",
+          [legacyOrder],
+        )
+      ).rows[0].course_snapshot,
+      { title: "Original receipt" },
+    );
+    await assert.rejects(
+      db.query("update orders set course_snapshot='{}' where id=$1", [legacyOrder]),
+      /immutable/,
     );
     assert.equal(
       (

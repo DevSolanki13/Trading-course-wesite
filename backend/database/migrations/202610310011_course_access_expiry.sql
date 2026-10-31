@@ -7,8 +7,8 @@ create function public.course_access_end(p_start timestamptz,p_period integer,p_
 language sql immutable set search_path='' as $$
  select ((p_start at time zone 'UTC') + case when p_unit='months' then make_interval(months=>p_period) else make_interval(days=>p_period) end) at time zone 'UTC';
 $$;
-update public.orders o set course_snapshot=coalesce(o.course_snapshot,'{}'::jsonb)||jsonb_build_object('access_period',c.access_period,'access_unit',c.access_unit)
- from public.courses c where c.id=o.course_id;
+-- Existing paid/refunded snapshots are immutable. Orders created before this
+-- migration use the documented one-month backfill without rewriting receipts.
 update public.enrollments e set expires_at=public.course_access_end(coalesce(o.paid_at,e.granted_at),c.access_period,c.access_unit)
  from public.courses c,public.orders o where e.course_id=c.id and e.order_id=o.id;
 update public.enrollments e set expires_at=public.course_access_end(e.granted_at,c.access_period,c.access_unit)
@@ -31,7 +31,7 @@ begin
  if new.expires_at is not null then return new;end if;
  if new.order_id is not null then
    select o.course_snapshot,coalesce(o.paid_at,new.granted_at)into snapshot,started from public.orders o where o.id=new.order_id;
-   period:=(snapshot->>'access_period')::integer;unit:=snapshot->>'access_unit';
+   period:=coalesce((snapshot->>'access_period')::integer,1);unit:=coalesce(snapshot->>'access_unit','months');
  else
    select c.access_period,c.access_unit into period,unit from public.courses c where c.id=new.course_id;started:=new.granted_at;
  end if;
@@ -76,7 +76,7 @@ begin
  if p_action in('orders','order')then
    select coalesce(jsonb_agg(jsonb_build_object('id',o.id,'courseId',o.course_id,'slug',coalesce(o.course_snapshot->>'slug',c.slug),
    'courseTitle',coalesce(o.course_snapshot->>'title',c.title),'userId',o.user_id,'amount',o.total_paise,'base',o.base_paise,'tax',o.tax_paise,
-   'accessPeriod',(o.course_snapshot->>'access_period')::integer,'accessUnit',o.course_snapshot->>'access_unit','accessExpiresAt',(select e.expires_at from public.enrollments e where e.order_id=o.id),'currency',o.currency,'status',o.status,'provider',o.purchase_provider,'providerOrderId',o.provider_order_id,'createdAt',o.created_at,'paidAt',o.paid_at)order by o.created_at desc),'[]'::jsonb)
+   'accessPeriod',coalesce((o.course_snapshot->>'access_period')::integer,1),'accessUnit',coalesce(o.course_snapshot->>'access_unit','months'),'accessExpiresAt',(select e.expires_at from public.enrollments e where e.order_id=o.id),'currency',o.currency,'status',o.status,'provider',o.purchase_provider,'providerOrderId',o.provider_order_id,'createdAt',o.created_at,'paidAt',o.paid_at)order by o.created_at desc),'[]'::jsonb)
    into result from public.orders o join public.courses c on c.id=o.course_id where o.user_id=p_user and o.purchase_provider is not null and(p_action='orders'or o.id::text=p_ref);
    if p_action='order'then return result->0;end if;return result;
  end if;
