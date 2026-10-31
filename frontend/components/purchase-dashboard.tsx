@@ -3,6 +3,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { PurchaseUser, PurchaseCourse, PurchaseOrder } from "../../shared/purchase";
+import { accessExpiryLabel } from "../../shared/course-access";
 export function PurchaseDashboard({
   user,
   courses,
@@ -65,6 +66,12 @@ export function PurchaseDashboard({
                 <article className="learning-course-card" key={course.id}>
                   <div className="learning-card-body">
                     <h2>{course.title}</h2>
+                    <p>
+                      {course.owned ? "Access until" : "Access expired"}:{" "}
+                      {course.accessExpiresAt
+                        ? accessExpiryLabel(course.accessExpiresAt)
+                        : "Access unavailable"}
+                    </p>
                     <p>{course.progress}% complete</p>
                     <progress
                       aria-label={`${course.title} completion`}
@@ -73,13 +80,21 @@ export function PurchaseDashboard({
                     />
                     <Link
                       className="button button-primary"
-                      href={next ? `/learn/${course.slug}/${next.id}` : `/learn/${course.slug}`}
+                      href={
+                        !course.owned
+                          ? `/checkout/${course.slug}`
+                          : next
+                            ? `/learn/${course.slug}/${next.id}`
+                            : `/learn/${course.slug}`
+                      }
                     >
-                      {course.progress === 100
-                        ? "Review course"
-                        : course.progress > 0
-                          ? "Continue learning"
-                          : "Start learning"}
+                      {!course.owned
+                        ? "Renew course access"
+                        : course.progress === 100
+                          ? "Review course"
+                          : course.progress > 0
+                            ? "Continue learning"
+                            : "Start learning"}
                     </Link>
                   </div>
                 </article>
@@ -111,6 +126,9 @@ export function PurchaseDashboard({
                   </strong>
                 </div>
                 <p>Order {order.id}</p>
+                {order.accessExpiresAt && (
+                  <p>Access ends: {accessExpiryLabel(order.accessExpiresAt)}</p>
+                )}
                 <p>
                   {new Date(order.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}{" "}
                   IST

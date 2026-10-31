@@ -18,6 +18,7 @@ export type CourseView = {
   language: string;
   modules: ModuleView[];
   owned: boolean;
+  accessExpiresAt?: string | null;
   progress: number;
   resumeLessonId: string | null;
 };

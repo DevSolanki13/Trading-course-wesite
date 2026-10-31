@@ -153,6 +153,11 @@ export function PurchaseCheckout({
       </h1>
       <h2>{course.title}</h2>
       <p>{course.description}</p>
+      <p>
+        Course access: {course.accessPeriod}{" "}
+        {course.accessPeriod === 1 ? course.accessUnit.slice(0, -1) : course.accessUnit} from
+        successful payment. Access ends automatically; this is a one-time payment.
+      </p>
       <dl className="purchase-summary">
         <div>
           <dt>Course price</dt>

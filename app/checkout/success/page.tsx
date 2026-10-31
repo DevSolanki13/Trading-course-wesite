@@ -17,7 +17,10 @@ export default async function Success({
   if (!order) notFound();
   return (
     <main id="main-content" className="container checkout-page">
-      <PurchaseConfirmation order={order} />
+      <PurchaseConfirmation
+        order={order}
+        expired={!!order.accessExpiresAt && Date.parse(order.accessExpiresAt) <= Date.now()}
+      />
     </main>
   );
 }

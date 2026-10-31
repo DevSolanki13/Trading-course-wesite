@@ -25,6 +25,8 @@ export const courseSchema = z
     description: text(2000),
     price_paise: z.number().int().min(0).max(100000000),
     sale_price_paise: z.number().int().min(0).max(100000000).nullable(),
+    access_period: z.number().int().min(1).max(3650).default(1),
+    access_unit: z.enum(["days", "months"]).default("months"),
     level: z.enum(["beginner", "intermediate", "advanced"]),
     language: text(30).min(1),
     thumbnail_url: url,

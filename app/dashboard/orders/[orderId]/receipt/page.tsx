@@ -24,6 +24,16 @@ export default async function Receipt({ params }: { params: Promise<{ orderId: s
         <p>Course: {order.courseTitle}</p>
         <p>Status: {order.status}</p>
         <p>
+          Access period: {order.accessPeriod} {order.accessUnit} from successful payment.
+        </p>
+        {order.accessExpiresAt && (
+          <p>
+            Access ends:{" "}
+            {new Date(order.accessExpiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}{" "}
+            IST
+          </p>
+        )}
+        <p>
           {order.paidAt
             ? new Date(order.paidAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
             : ""}{" "}

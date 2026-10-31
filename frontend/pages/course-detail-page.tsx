@@ -99,8 +99,8 @@ export default function CourseDetailPage({
         <section className="mobile-course-info" aria-label="Course access and refund information">
           <h2>Your course access</h2>
           <p>
-            Hindi lessons, lifetime online access and a private student community are planned. You
-            can use two active devices.
+            Hindi lessons, online access for the period shown at checkout and a private student
+            community are planned. You can use two active devices.
           </p>
           <p>
             Seven-day refund window, with less than 10% watched.{" "}
@@ -169,9 +169,9 @@ export default function CourseDetailPage({
             <section className="detail-section">
               <h2>Learn at your pace.</h2>
               <p>
-                Hindi video lessons, a structured curriculum and lifetime online access are planned
-                for each course. The educator’s biography and trailer will be published before
-                enrolment opens.
+                Hindi video lessons, a structured curriculum and online access for the period shown
+                at checkout are planned for each course. The educator’s biography and trailer will
+                be published before enrolment opens.
               </p>
               <Link className="text-link" href="/about">
                 More about the approach <ArrowUpRight size={17} />
@@ -209,7 +209,15 @@ export default function CourseDetailPage({
               </li>
               <li>
                 <Check size={17} />
-                Lifetime online access planned
+                {course.accessPeriod ?? 1}{" "}
+                {(course.accessUnit ?? "months") === "months"
+                  ? course.accessPeriod === 1 || !course.accessPeriod
+                    ? "month"
+                    : "months"
+                  : course.accessPeriod === 1
+                    ? "day"
+                    : "days"}{" "}
+                of online access from payment
               </li>
               <li>
                 <Check size={17} />

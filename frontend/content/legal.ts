@@ -13,7 +13,7 @@ export const legalPages = {
       },
       {
         title: "Accounts and access",
-        body: "Verified accounts are available in staging, with at most two admitted devices. You can review and revoke devices from your account. Purchases remain disabled. Future purchased courses are intended to include lifetime online access, subject to final terms and lawful availability. Sharing or reselling account access is not permitted.",
+        body: "Verified accounts are available in staging, with at most two admitted devices. You can review and revoke devices from your account. Purchases remain disabled. Future purchased courses are intended to include online access for the period shown at checkout, subject to final terms and lawful availability. Sharing or reselling account access is not permitted.",
       },
       {
         title: "Course content and intellectual property",

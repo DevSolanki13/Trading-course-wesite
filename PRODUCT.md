@@ -12,7 +12,7 @@ Learners purchasing trading education, with English website text and Hindi cours
 
 ## Product Purpose
 
-Sell 2–3 courses initially and provide secure, online-only lifetime access after verified purchase. The public storefront helps visitors understand the curriculum, preview teaching and choose a suitable course.
+Sell 2–3 courses initially and provide secure, online-only access for the configured course period after verified purchase; no lifetime access. The public storefront helps visitors understand the curriculum, preview teaching and choose a suitable course.
 
 ## Capabilities and Constraints
 

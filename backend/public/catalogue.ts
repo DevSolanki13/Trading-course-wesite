@@ -1,4 +1,4 @@
-﻿import "server-only";
+import "server-only";
 import { cache } from "react";
 import { createAdminClient } from "../database/supabase";
 import type { SiteDocument } from "../../shared/admin";
@@ -12,6 +12,8 @@ type RawCourse = {
   level: string;
   language: string;
   price_paise: number;
+  access_period: number;
+  access_unit: "days" | "months";
   thumbnail_url: string | null;
   artwork: string;
   outcomes: unknown;
@@ -56,6 +58,8 @@ export const publicCatalog = cache(async function publicCatalog() {
         duration: `${c.modules.flatMap((m) => m.lessons).reduce((sum, l) => sum + l.duration, 0) / 60}m`,
         lessons: c.modules.flatMap((m) => m.lessons).length,
         price: c.price / 100,
+        accessPeriod: c.accessPeriod,
+        accessUnit: c.accessUnit,
         artwork:
           c.slug === "price-action"
             ? "structure"
@@ -91,7 +95,7 @@ export const publicCatalog = cache(async function publicCatalog() {
       admin
         .from("courses")
         .select(
-          "id,slug,title,description,level,language,price_paise,thumbnail_url,artwork,outcomes,audience,prerequisites,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
+          "id,slug,title,description,level,language,price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
         )
         .eq("status", "published")
         .order("created_at")
@@ -134,6 +138,8 @@ export const publicCatalog = cache(async function publicCatalog() {
         duration: `${Math.floor(seconds / 3600)}h ${String(Math.round((seconds % 3600) / 60)).padStart(2, "0")}m`,
         lessons: lessons.length,
         price: raw.price_paise / 100,
+        accessPeriod: raw.access_period,
+        accessUnit: raw.access_unit,
         artwork: ["foundations", "structure", "risk"].includes(raw.artwork)
           ? raw.artwork
           : "foundations",

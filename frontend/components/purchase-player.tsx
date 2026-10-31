@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useHydrated } from "../lib/use-hydrated";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { PurchaseCourse, PurchaseLessonContent } from "../../shared/purchase";
+import { accessExpiryLabel } from "../../shared/course-access";
 export function PurchasePlayer({
   course,
   lesson,
@@ -17,6 +18,25 @@ export function PurchasePlayer({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [videoError, setVideoError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (lesson.preview || !course.accessExpiresAt) return;
+    let timer: ReturnType<typeof setTimeout>;
+    function checkExpiry() {
+      const remaining = Date.parse(course.accessExpiresAt!) - Date.now();
+      if (remaining > 0) {
+        timer = setTimeout(checkExpiry, Math.min(remaining, 2147483647));
+        return;
+      }
+      videoRef.current?.pause();
+      videoRef.current?.removeAttribute("src");
+      videoRef.current?.load();
+      router.replace(`/courses/${course.slug}?message=access-expired`);
+      router.refresh();
+    }
+    checkExpiry();
+    return () => clearTimeout(timer);
+  }, [course.accessExpiresAt, course.slug, lesson.preview, router]);
   const lessons = course.modules.flatMap((m) => m.lessons);
   const index = lessons.findIndex((l) => l.id === lesson.id);
   async function complete() {
@@ -47,6 +67,7 @@ export function PurchasePlayer({
           My courses
         </Link>
         <h2>{course.title}</h2>
+        {course.accessExpiresAt && <p>Access until {accessExpiryLabel(course.accessExpiresAt)}</p>}
         <p>{course.progress}% complete</p>
         <progress aria-label="Overall course progress" max={100} value={course.progress} />
         {course.modules.map((module) => (
@@ -76,6 +97,7 @@ export function PurchasePlayer({
         <h1>{lesson.title}</h1>
         {lesson.videoUrl && !videoError ? (
           <video
+            ref={videoRef}
             key={lesson.id}
             controls
             playsInline

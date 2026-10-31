@@ -9,6 +9,7 @@ test("enrollment requires active access and a matching paid purchase or manual g
     course_id: "course",
     active: true,
     revoked_at: null,
+    expires_at: new Date(Date.now() + 86400000).toISOString(),
     source: "purchase",
     order_id: "order",
   };

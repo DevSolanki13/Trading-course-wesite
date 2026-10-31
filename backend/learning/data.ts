@@ -41,7 +41,7 @@ export async function learningAccount() {
   const [enrollments, orders, progress] = await Promise.all([
     context.admin
       .from("enrollments")
-      .select("course_id,source,order_id,active,revoked_at")
+      .select("course_id,source,order_id,active,revoked_at,expires_at")
       .eq("user_id", context.user.id),
     context.admin
       .from("orders")
@@ -100,6 +100,25 @@ export function courseView(row: Row, account: LearningAccount | null): CourseVie
     language: row.language,
     modules,
     owned,
+    accessExpiresAt:
+      account?.enrollments
+        .filter(
+          (e) =>
+            e.course_id === row.id &&
+            e.active &&
+            !e.revoked_at &&
+            (e.source === "manual" ||
+              account.orders.some(
+                (o) =>
+                  o.id === e.order_id &&
+                  o.status === "paid" &&
+                  o.course_id === row.id &&
+                  o.user_id === account.context.user.id,
+              )),
+        )
+        .map((e) => e.expires_at as string)
+        .filter(Boolean)
+        .sort((a, b) => Date.parse(b) - Date.parse(a))[0] ?? null,
     progress: lessons.length
       ? Math.round((lessons.filter((l) => l.completed).length / lessons.length) * 100)
       : 0,
@@ -231,5 +250,10 @@ export async function lessonAccess(lessonId: string, account: LearningAccount | 
       "A current course enrollment is required.",
       account ? "COURSE_LOCKED" : "SIGN_IN_REQUIRED",
     );
-  return { lesson, admin };
+  const accessExpiresAt =
+    account?.enrollments
+      .filter((e) => hasCourseAccess([e], account.orders, course.id, account.context.user.id))
+      .map((e) => e.expires_at as string)
+      .sort((a, b) => Date.parse(b) - Date.parse(a))[0] ?? null;
+  return { lesson, admin, accessExpiresAt };
 }

@@ -20,6 +20,13 @@ function LearningCard({ course }: { course: CourseView }) {
       </div>
       <div className="learning-card-body">
         <h2>{course.title}</h2>
+        {course.accessExpiresAt && (
+          <p>
+            Access {course.owned ? "until" : "ended"}:{" "}
+            {new Date(course.accessExpiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}{" "}
+            IST
+          </p>
+        )}
         <p>{total} published lessons</p>
         <progress aria-label={`${course.title} completion`} max={100} value={course.progress} />
         <div className="learning-card-meta">

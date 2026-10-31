@@ -41,7 +41,7 @@ export async function purchaseRequest(request: Request) {
           purchaseCatalog(user.id),
           purchaseOrders(user.id),
         ]);
-        return json({ user, courses: courses.filter((c) => c.owned), orders });
+        return json({ user, courses: courses.filter((c) => c.owned || c.accessExpiresAt), orders });
       }
       if (action === "order") {
         const order = await purchaseOrder(

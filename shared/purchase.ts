@@ -16,6 +16,9 @@ export type PurchaseCourse = {
   language: string;
   thumbnail: string | null;
   owned: boolean;
+  accessPeriod: number;
+  accessUnit: "days" | "months";
+  accessExpiresAt: string | null;
   progress: number;
   modules: { id: string; title: string; lessons: PurchaseLesson[] }[];
 };
@@ -34,6 +37,9 @@ export type PurchaseOrder = {
   providerOrderId: string | null;
   createdAt: string;
   paidAt: string | null;
+  accessPeriod: number;
+  accessUnit: "days" | "months";
+  accessExpiresAt: string | null;
 };
 export type PurchaseLessonContent = PurchaseLesson & {
   content: string;

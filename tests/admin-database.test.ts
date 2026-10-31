@@ -63,6 +63,8 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
       description: "Test only",
       price_paise: 10000,
       sale_price_paise: null,
+      access_period: 3,
+      access_unit: "months",
       level: "beginner",
       language: "Hindi",
       thumbnail_url: "",
@@ -74,6 +76,11 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
     await assert.rejects(act(1, "course_save", courseData), /Role denied/);
     await assert.rejects(act(2, "course_save", courseData), /Role denied/);
     const course = (await act(0, "course_save", courseData)).id!;
+    assert.deepEqual(
+      (await db.query("select access_period,access_unit from courses where id=$1", [course]))
+        .rows[0],
+      { access_period: 3, access_unit: "months" },
+    );
     const emptyOverview = (
       await db.query<{ v: { sales: number; gross: number } }>(
         "select admin_overview($1,$2,'2000-01-01')as v",

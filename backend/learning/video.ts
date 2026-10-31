@@ -2,7 +2,11 @@ import "server-only";
 import { requireEnv } from "../config/env";
 import { AuthError } from "../auth/http";
 import { appOrigin } from "../auth/http";
-export async function playbackCredentials(videoId: string, watermark: string) {
+export async function playbackCredentials(
+  videoId: string,
+  watermark: string,
+  accessExpiresAt?: string | null,
+) {
   if (!/^[a-zA-Z0-9_-]{8,128}$/.test(videoId))
     throw new AuthError(503, "This lesson video is not configured.");
   try {
@@ -16,7 +20,12 @@ export async function playbackCredentials(videoId: string, watermark: string) {
         },
         body: JSON.stringify({
           // VdoCipher recommends at least five minutes for slower player startup.
-          ttl: 300,
+          ttl: accessExpiresAt
+            ? Math.max(
+                1,
+                Math.min(300, Math.floor((Date.parse(accessExpiresAt) - Date.now()) / 1000)),
+              )
+            : 300,
           // A copied OTP should not initialise a player on another site.
           whitelisthref: `^${appOrigin().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:/|$)`,
           annotate: JSON.stringify([

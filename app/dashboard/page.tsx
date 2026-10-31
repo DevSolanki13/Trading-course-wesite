@@ -11,7 +11,7 @@ export default async function Dashboard() {
   return (
     <PurchaseDashboard
       user={user}
-      courses={courses.filter((c) => c.owned)}
+      courses={courses.filter((c) => c.owned || c.accessExpiresAt)}
       orders={orders}
       local={localDemoEnabled()}
     />

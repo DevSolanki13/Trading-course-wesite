@@ -80,7 +80,7 @@ export async function learningRequest(request: Request) {
     if (action === "playback") {
       const input = parse(z.object({ lessonId: z.string().uuid() }).strict(), await body(request));
       const account = await optionalAccount();
-      const { lesson, admin } = await lessonAccess(input.lessonId, account);
+      const { lesson, admin, accessExpiresAt } = await lessonAccess(input.lessonId, account);
       await limit(request, "video-token", account?.context.user.id ?? "", 30, 900);
       if (!lesson.duration_seconds)
         throw new AuthError(503, "The lesson is awaiting video duration verification.");
@@ -105,6 +105,7 @@ export async function learningRequest(request: Request) {
       const tokens = await playbackCredentials(
         asset.provider_video_id,
         account?.context.user.email ?? "Market Method | Public preview",
+        lesson.is_preview ? null : accessExpiresAt,
       );
       // Provider calls can take seconds: recheck access and the current lease before disclosure.
       if (account) {

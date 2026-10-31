@@ -1,6 +1,7 @@
 export type Enrollment = {
   active: boolean;
   revoked_at: string | null;
+  expires_at?: string | null;
   source: string;
   course_id: string;
   order_id: string | null;
@@ -11,12 +12,15 @@ export function hasCourseAccess(
   orders: Purchase[],
   courseId: string,
   userId: string,
+  now = Date.now(),
 ) {
   return enrollments.some(
     (e) =>
       e.course_id === courseId &&
       e.active &&
       !e.revoked_at &&
+      !!e.expires_at &&
+      Date.parse(e.expires_at) > now &&
       (e.source === "manual" ||
         (e.source === "purchase" &&
           orders.some(

@@ -273,6 +273,7 @@ test("Phase 2 — Learner journey and course flow comprehensive test", async () 
         {
           active: true,
           revoked_at: null,
+          expires_at: new Date(Date.now() + 86400000).toISOString(),
           source: "purchase",
           course_id: course,
           order_id: orderId,
@@ -360,6 +361,7 @@ test("Phase 2 — Learner journey and course flow comprehensive test", async () 
         {
           active: true,
           revoked_at: null,
+          expires_at: new Date(Date.now() + 86400000).toISOString(),
           source: "purchase",
           course_id: course,
           order_id: orderId,
