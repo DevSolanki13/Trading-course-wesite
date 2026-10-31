@@ -47,7 +47,6 @@ body:has(.landing-page) {
     linear-gradient(var(--lp-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--lp-grid) 1px, transparent 1px);
   background-size: 72px 72px;
-  mask-image: linear-gradient(to bottom, #000 0%, #000 72%, transparent 100%);
 }
 .landing-page:before {
   display: none;
@@ -595,15 +594,41 @@ body:has(.landing-page) {
 }
 .landing-page .course-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  transform: translateX(28px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
 }
 .landing-page .course-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 14px;
+  background: var(--surface);
   border-radius: 24px;
   border: 1px solid var(--lp-border);
   box-shadow: var(--lp-shadow);
   overflow: hidden;
+}
+.landing-page .course-image-link {
+  border-radius: 16px;
+  overflow: hidden;
+}
+.landing-page .course-card-body {
+  padding: 26px 14px 16px;
+}
+.landing-page .course-tags {
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.landing-page .course-meta {
+  flex-wrap: wrap;
+  row-gap: 12px;
+  margin-top: 24px;
+}
+.landing-page .course-card-bottom {
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 22px;
 }
 .landing-page .course-card:hover {
   transform: translateY(-4px);
@@ -821,6 +846,10 @@ body:has(.landing-page) {
   }
   .landing-page .course-card {
     display: block;
+    padding: 12px;
+  }
+  .landing-page .course-card-body {
+    padding: 22px 12px 14px;
   }
   .landing-page .course-artwork {
     min-height: 200px;
