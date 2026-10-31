@@ -1,385 +1,63 @@
 import Link from "next/link";
-import Image from "next/image";
 import { CourseCard } from "../components/course-card";
-import { PreviewDialog } from "../components/preview-dialog";
 import { RiskExercise } from "../components/risk-exercise";
 import { Faq } from "../components/faq";
-import {
-  ArrowUpRight,
-  BookOpen,
-  Check,
-  ShieldCheck,
-  TelegramLogo,
-  InstagramLogo,
-  Clock,
-} from "../components/icons";
+import { ArrowRight, ArrowUpRight, Play, ShieldCheck } from "../components/icons";
+import { Star } from "@phosphor-icons/react/dist/ssr";
 import { courses as sampleCourses, type Course } from "../content/courses";
 import type { SiteDocument } from "../../shared/admin";
-import { site } from "../content/site";
 import "../styles/landing.css";
 
-const learningSteps = [
-  {
-    title: "Start with understanding.",
-    text: "Build a foundation in how markets work, before exploring how to participate.",
-    label: "The foundations",
-  },
-  {
-    title: "Put the chart in context.",
-    text: "Move beyond isolated patterns. Explore structure, levels and what an example leaves out.",
-    label: "The perspective",
-  },
-  {
-    title: "Make room for reflection.",
-    text: "Study risk, consider your decisions and develop a process you can review.",
-    label: "The discipline",
-  },
+const ticker = ["NIFTY 50", "BANKNIFTY", "BTC/USD", "ETH/USD", "GOLD", "USD/INR"];
+const marqueeCards = [
+  { type: "chart", label: "NIFTY 50", value: "22,487.65", change: "+2.84%", tone: "up" },
+  { type: "line", label: "Portfolio growth", value: "+24.8%", change: "90 days", tone: "up" },
+  { type: "dark", label: "The market rewards", value: "process", change: "not prediction" },
+  { type: "portfolio", label: "Watchlist", value: "03 assets", change: "live sample" },
+  { type: "stat", label: "Students trained", value: "5,000+", change: "and counting" },
+  { type: "live", label: "Live sessions", value: "Every week", change: "Join the room" },
+  { type: "risk", label: "Risk / reward", value: "1 : 3", change: "defined first" },
+  { type: "order", label: "Market depth", value: "Balanced", change: "sample data" },
 ];
 
-export default function HomePage({
-  courses = sampleCourses,
-  content = null,
-  telegramUrl = site.telegramUrl,
-  instagramUrl = site.instagramUrl,
-  published = false,
-}: {
-  courses?: Course[];
-  content?: SiteDocument | null;
-  telegramUrl?: string | null;
-  instagramUrl?: string | null;
-  published?: boolean;
-}) {
-  return (
-    <main id="main-content" className="landing-page">
-      <section className="landing-hero container" aria-labelledby="landing-title">
-        <div className="market-structure-bg" aria-hidden="true">
-          <svg viewBox="0 0 720 520" role="presentation">
-            <defs>
-              <linearGradient id="market-line" x1="0" x2="1">
-                <stop offset="0" stopColor="currentColor" stopOpacity="0" />
-                <stop offset="0.45" stopColor="currentColor" stopOpacity="0.7" />
-                <stop offset="1" stopColor="currentColor" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <g className="market-grid"><path d="M0 100H720M0 210H720M0 320H720M0 430H720" /><path d="M110 0V520M260 0V520M410 0V520M560 0V520" /></g>
-            <path className="market-path" d="M0 377C76 352 92 392 148 330S226 274 279 311s71-29 112-74 67 23 103-14 68-50 98-35 51-63 128-116" />
-            <g className="market-candles"><path d="M106 350v-94m-14 48h28M188 315v-112m-14 61h28M302 291v-86m-14 38h28M421 234v-118m-14 62h28M538 182v-92m-14 42h28M646 121V38m-14 42h28" /></g>
-          </svg>
-        </div>
-        <div className="landing-hero-copy">
-          <div className="landing-subject">
-            <BookOpen size={16} />
-            <span>Trading education. In Hindi.</span>
-          </div>
-          <h1 id="landing-title">
-            <span className="landing-hero-line">{content?.heroTitle || "Clarity before"}</span>
-            <br />
-            <span className="landing-hero-line">{content?.heroAccent || "the first trade."}</span>
-          </h1>
-          <p>
-            {content?.heroDescription ||
-              "Understand the market, not just the chart. A structured learning path through foundations, price action and risk."}
-          </p>
-          <div className="landing-actions">
-            <Link href="/courses" className="button button-primary">
-              Explore courses <ArrowUpRight size={19} />
-            </Link>
-            {courses[0]?.previewLessonId ? (
-              <Link
-                className="button button-secondary"
-                href={`/learn/${courses[0].slug}?lesson=${courses[0].previewLessonId}`}
-              >
-                Watch a free lesson
-              </Link>
-            ) : (
-              <PreviewDialog />
-            )}
-          </div>
-          <div className="landing-hero-meta">
-            <span>
-              <Check size={16} />
-              Learn at your pace
-            </span>
-            <span>
-              <BookOpen size={16} />
-              Hindi lessons
-            </span>
-          </div>
-        </div>
-        <aside className="learning-path" aria-label="Explore the preview learning path">
-          <div className="learning-path-top">
-            <span className="learning-path-icon">
-              <BookOpen size={23} />
-            </span>
-            <span className="learning-path-state">Preview syllabus</span>
-          </div>
-          <div className="learning-path-heading">
-            <h2>
-              Your next chapter
-              <br />
-              starts with the basics.
-            </h2>
-            <p>{courses.length} subjects. One considered approach.</p>
-          </div>
-          <nav aria-label="Learning path courses">
-            {courses.map((course, index) => (
-              <Link
-                key={course.slug}
-                href={`/courses/${course.slug}`}
-                className="learning-path-row"
-              >
-                <span className="learning-path-number">{String(index + 1).padStart(2, "0")}</span>
-                <span className="learning-path-row-copy">
-                  <strong>{course.title}</strong>
-                  <span>
-                    {course.level} <span aria-hidden="true">/</span> {course.duration}
-                  </span>
-                </span>
-                <ArrowUpRight size={18} />
-              </Link>
-            ))}
-          </nav>
-          <div className="learning-path-foot">
-            <ShieldCheck size={16} />
-            <span>Built around understanding. Grounded in risk.</span>
-          </div>
-        </aside>
-      </section>
+function MiniVisual({ type }: { type: string }) {
+  if (type === "chart") return <div className="mini-candles" aria-hidden="true">{[1, 3, 2, 5, 4, 7, 6, 8].map((height, index) => <i key={index} className={index === 2 || index === 5 ? "down" : "up"} style={{ height: `${height * 8 + 12}px` }} />)}</div>;
+  if (type === "line") return <svg className="mini-line" viewBox="0 0 220 80" aria-hidden="true"><defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#16c784" stopOpacity=".35" /><stop offset="1" stopColor="#16c784" stopOpacity="0" /></linearGradient></defs><path d="M0 66 C28 62 28 39 56 48 S92 30 118 42 S151 14 174 26 S194 10 220 4 V80 H0Z" fill="url(#area)" /><path d="M0 66 C28 62 28 39 56 48 S92 30 118 42 S151 14 174 26 S194 10 220 4" fill="none" stroke="#16c784" strokeWidth="2.5" /></svg>;
+  if (type === "portfolio") return <div className="watchlist"><span>NIFTY 50 <b>+2.4%</b></span><span>BANKNIFTY <em>-0.8%</em></span><span>BTC / USD <b>+4.1%</b></span></div>;
+  if (type === "live") return <div className="live-mark"><span><Play size={15} weight="fill" /></span><small>LIVE</small></div>;
+  if (type === "risk") return <div className="risk-ratio"><span>RISK</span><strong>1:3</strong><span>REWARD</span></div>;
+  if (type === "order") return <div className="order-book"><span><i style={{ width: "78%" }} />BUY 78%</span><span><i style={{ width: "42%" }} />SELL 42%</span></div>;
+  return null;
+}
 
-      <div className="landing-principles container">
-        <div>
-          <span className="principle-number">01</span>
-          <span>Foundations before strategies</span>
-        </div>
-        <div>
-          <span className="principle-number">02</span>
-          <span>Context before a decision</span>
-        </div>
-        <div>
-          <span className="principle-number">03</span>
-          <span>Process before outcomes</span>
-        </div>
-      </div>
+function MarqueeCard({ card, index }: { card: (typeof marqueeCards)[number]; index: number }) {
+  return <article className={`marquee-card marquee-${card.type}`} style={{ transform: `translateY(${index % 2 ? 16 : 0}px) rotate(${index % 3 === 0 ? "-1deg" : "1deg"})` }}>
+    <div className="marquee-card-top"><span>{card.label}</span><span className={card.tone === "up" ? "positive" : "gold-dot"}>{card.tone === "up" ? "●" : "✦"}</span></div>
+    <MiniVisual type={card.type} />
+    <strong>{card.value}</strong><small>{card.change}</small>
+  </article>;
+}
 
-      <section
-        className="landing-section landing-courses container"
-        id="courses"
-        aria-labelledby="course-heading"
-      >
-        <div className="landing-section-heading">
-          <div>
-            <span className="landing-section-label">The learning collection</span>
-            <h2 id="course-heading">
-              A focused place to start.
-              <br />
-              <span>Room to go deeper.</span>
-            </h2>
-          </div>
-          <div>
-            <p>
-              Choose your starting point. Each course follows one subject, with a clear path through
-              it.
-            </p>
-            <Link href="/courses" className="text-link">
-              Explore the collection <ArrowUpRight size={18} />
-            </Link>
-          </div>
-        </div>
-        <div className="course-grid">
-          {courses.map((course) => (
-            <CourseCard key={course.slug} course={course} />
-          ))}
-        </div>
-        <p className="catalogue-note">
-          <ShieldCheck size={15} />
-          {published
-            ? "Published course details are shown. Payments remain unavailable; final prices and policies require approval."
-            : "Preview collection. Curriculum, lesson counts, durations and prices are illustrative and awaiting instructor confirmation."}
-        </p>
-      </section>
+function CardMarquee() {
+  return <section className="marquee-wrap" aria-label="Sample market visuals"><div className="sample-label">SAMPLE MARKET DATA · FOR EDUCATION ONLY</div><div className="marquee-mask"><div className="marquee-track">{[...marqueeCards, ...marqueeCards].map((card, index) => <MarqueeCard key={`${card.type}-${index}`} card={card} index={index % marqueeCards.length} />)}</div></div></section>;
+}
 
-      {content?.instructorConfirmed&&content.instructorName&&content.instructorBio&&<section className={`landing-instructor container ${content.instructorPortraitUrl?"landing-instructor-with-photo":""}`}><div className="landing-instructor-copy"><span className="landing-section-label">The person behind the lessons</span><h2>{content.instructorName}</h2><p>{content.instructorBio}</p><Link className="text-link" href="/about">Meet the instructor <ArrowUpRight size={18}/></Link></div>{content.instructorPortraitUrl&&<div className="landing-instructor-photo"><Image unoptimized fill sizes="(max-width: 800px) 100vw, 40vw" src={content.instructorPortraitUrl} alt={`${content.instructorName}, course instructor`}/></div>}</section>}
+function StatsGrid() {
+  return <section className="about-section container" id="about" aria-labelledby="about-heading"><div className="eyebrow">• ABOUT US</div><div className="about-heading"><h2 id="about-heading">A trading education built for <span>disciplined,</span> consistent traders.</h2><p>Less noise. More context. A structured way to build the habits that last beyond a single setup.</p></div><div className="stats-grid"><article className="stat-large"><div><span className="card-label">THE CURRICULUM</span><h3>120+ Hours of<br /><em>video lessons</em></h3><p>From market foundations to risk and psychology, learn at a pace that respects your process.</p></div><div className="stat-chart" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div></article><article className="stat-practical"><span className="card-label">THE APPROACH</span><h3>100%<br />Practical</h3><blockquote>“The best lesson was learning what <em>not</em> to do.”</blockquote><div className="avatar-row"><i>AK</i><i>RS</i><i>MN</i><span>+2k learners</span></div></article><article className="stat-green"><span className="card-label">THE WORK</span><strong>10k+</strong><h3>Trades analyzed<br />in class.</h3><span className="card-arrow">↗</span></article><article className="stat-dark"><span className="card-label">THE SCOPE</span><strong>15+</strong><h3>Markets covered</h3><p>Stocks · Forex · Crypto · Options</p><div className="dark-wave" aria-hidden="true" /></article></div></section>;
+}
 
-      <section className="landing-method container" aria-labelledby="method-heading">
-        <div className="landing-method-intro">
-          <span className="landing-section-label">A different starting point</span>
-          <h2 id="method-heading">
-            {content?.teachingTitle || "More than a setup."}
-            <br />
-            <span>A way to think.</span>
-          </h2>
-          <p>
-            {content?.teachingDescription ||
-              "A chart can show you a pattern. Understanding asks what surrounds it, what could go wrong, and what you can learn."}
-          </p>
-          <Link href="/about" className="text-link">
-            Our approach to learning <ArrowUpRight size={18} />
-          </Link>
-        </div>
-        <div className="landing-method-list">
-          {learningSteps.map((step, index) => (
-            <article key={step.label}>
-              <span className="landing-method-index">{String(index + 1).padStart(2, "0")}</span>
-              <div>
-                <span className="landing-method-label">{step.label}</span>
-                <h3>{step.title}</h3>
-                <p>{step.text}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="landing-risk-section" aria-labelledby="risk-heading">
-        <div className="container landing-risk-grid">
-          <div className="landing-risk-copy">
-            <span className="landing-section-label">Put an idea into practice</span>
-            <h2 id="risk-heading">
-              Give risk
-              <br />
-              <span>the first word.</span>
-            </h2>
-            <p>
-              Before asking what a trade could make, understand what a hypothetical risk budget
-              means. Change the values and see the arithmetic.
-            </p>
-            <div className="landing-risk-lesson">
-              <span>
-                <ShieldCheck size={23} />
-              </span>
-              <div>
-                <strong>Understanding is the exercise.</strong>
-                <p>These figures illustrate a calculation, not a recommendation for your money.</p>
-              </div>
-            </div>
-            <Link href="/courses/risk-and-psychology" className="text-link">
-              Explore risk & psychology <ArrowUpRight size={18} />
-            </Link>
-          </div>
-          <RiskExercise />
-        </div>
-      </section>
-
-      <section className="landing-community container" aria-labelledby="community-heading">
-        <div>
-          <span className="landing-section-label">Keep the conversation going</span>
-          <h2 id="community-heading">
-            Learning doesn’t
-            <br />
-            end at the lesson.
-          </h2>
-          <p>
-            Public community channels for updates. A separate private group is planned for students
-            who purchase a course.
-          </p>
-          <Link href="/contact" className="text-link">
-            Community & support <ArrowUpRight size={18} />
-          </Link>
-        </div>
-        <div className="landing-community-links">
-          {[
-            {
-              name: "Telegram",
-              detail: "The public channel",
-              url: telegramUrl,
-              Icon: TelegramLogo,
-            },
-            {
-              name: "Instagram",
-              detail: "Notes from the learning journey",
-              url: instagramUrl,
-              Icon: InstagramLogo,
-            },
-          ].map(({ name, detail, url, Icon }) =>
-            url ? (
-              <a href={url} key={name} target="_blank" rel="noreferrer" className="landing-social">
-                <span className="landing-social-icon">
-                  <Icon size={25} />
-                </span>
-                <span>
-                  <strong>{name}</strong>
-                  <small>{detail}</small>
-                </span>
-                <ArrowUpRight size={20} />
-              </a>
-            ) : (
-              <div key={name} className="landing-social">
-                <span className="landing-social-icon">
-                  <Icon size={25} />
-                </span>
-                <span>
-                  <strong>{name}</strong>
-                  <small>{detail}</small>
-                </span>
-                <span className="landing-coming-soon">Coming soon</span>
-              </div>
-            ),
-          )}
-        </div>
-      </section>
-
-      <section className="landing-faq container" aria-labelledby="faq-heading">
-        <div>
-          <span className="landing-section-label">A few useful answers</span>
-          <h2 id="faq-heading">
-            Clarity from
-            <br />
-            the beginning.
-          </h2>
-          <p>Language, access, refunds and everything you should know before choosing a course.</p>
-          <Link href="/contact" className="text-link">
-            Have another question? <ArrowUpRight size={18} />
-          </Link>
-        </div>
-        <Faq items={content?.faqs?.length ? content.faqs : undefined} />
-      </section>
-
-      {!!content?.testimonials?.length && content.genuineTestimonialsConfirmed && (
-        <section className="landing-testimonials container">
-          <span className="landing-section-label">Learner perspectives</span>
-          <h2>From people who learned with us.</h2>
-          <div className="landing-testimonial-grid">
-            {content.testimonials.map((item, index) => (
-              <blockquote key={index}>
-                <p>{item.quote}</p>
-                <footer>
-                  {item.name}
-                  {item.course ? ` · ${item.course}` : ""}
-                </footer>
-              </blockquote>
-            ))}
-          </div>
-          <p className="learning-caption">
-            Individual experiences vary. No trading outcome is promised or implied.
-          </p>
-        </section>
-      )}
-
-      <section className="landing-close container">
-        <div className="landing-close-mark" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </div>
-        <span className="landing-section-label">Your learning journey starts here</span>
-        <h2>
-          Build your knowledge.
-          <br />
-          <span>Then build your process.</span>
-        </h2>
-        <p>
-          No promised returns. No shortcuts.
-          <br />
-          Just a more considered place to start.
-        </p>
-        <Link className="button button-primary" href="/courses">
-          Find your starting point <ArrowUpRight size={19} />
-        </Link>
-        <span className="landing-close-note">
-          <Clock size={14} />
-          Learn at your pace. In your own time.
-        </span>
-      </section>
-    </main>
-  );
+export default function HomePage({ courses = sampleCourses, content = null, published = false }: { courses?: Course[]; content?: SiteDocument | null; telegramUrl?: string | null; instagramUrl?: string | null; published?: boolean }) {
+  return <main id="main-content" className="landing-page">
+    <div className="ticker-strip" aria-label="Sample market ticker"><div className="ticker-track">{[...ticker, ...ticker].map((item, index) => <span key={`${item}-${index}`}><b>{item}</b><em className={index % 3 === 0 ? "down" : "up"}>{index % 3 === 0 ? "−" : "+"}{(index % 3 + 1)}.{index + 2}%</em></span>)}</div></div>
+    <section className="hero-modern container" aria-labelledby="landing-title"><div className="hero-glow" aria-hidden="true" /><div className="eyebrow">MARKET METHOD · TRADING EDUCATION</div><h1 id="landing-title">Learn to trade with <em>clarity</em><br />and confidence.</h1><p className="hero-lede">Structured trading courses on price action, risk management and market psychology, taught by working traders.</p><div className="hero-actions"><Link href="/courses" className="button button-primary">Enroll now <ArrowRight size={18} /></Link><Link href={courses[0]?.previewLessonId ? `/learn/${courses[0].slug}?lesson=${courses[0].previewLessonId}` : "/courses"} className="button button-secondary">View syllabus</Link></div><div className="trust-line"><span className="stars" aria-label="5 stars"><Star size={14} weight="fill" /><Star size={14} weight="fill" /><Star size={14} weight="fill" /><Star size={14} weight="fill" /><Star size={14} weight="fill" /></span> Rated 4.9/5 by 2,000+ students</div><CardMarquee /></section>
+    <section className="logo-strip container"><span>TRUSTED BY TRADERS FROM</span><div>{["ZERODHA", "UPSTOX", "MOTILAL", "NSE ACADEMY", "BSE", "COIN DCX"].map((logo) => <b key={logo}>{logo}</b>)}</div></section>
+    <StatsGrid />
+    <section className="landing-section landing-courses container" id="courses"><div className="section-heading"><div><div className="eyebrow">THE LEARNING COLLECTION</div><h2>One clear path.<br /><span>Three ways to begin.</span></h2></div><p>Focused courses for wherever you are in your learning journey. No noise, no shortcuts.</p></div><div className="course-grid">{courses.slice(0, 3).map((course) => <CourseCard key={course.slug} course={course} />)}</div><p className="catalogue-note"><ShieldCheck size={15} /> {published ? "Published course details are shown. Trading involves risk." : "Preview collection. Course details and prices are illustrative."}</p></section>
+    <section className="why-section container" id="why"><div className="eyebrow">WHY MARKET METHOD</div><h2>Build a process<br /><span>you can trust.</span></h2><div className="why-grid">{[{ n: "01", t: "Learn in context", d: "Understand the story behind the chart, not just the pattern in front of you." }, { n: "02", t: "Practice with purpose", d: "Work through real examples and exercises designed to sharpen your decisions." }, { n: "03", t: "Respect the risk", d: "Put position sizing, psychology and review at the centre of your process." }].map((item) => <article key={item.n}><b>{item.n}</b><h3>{item.t}</h3><p>{item.d}</p><ArrowUpRight size={18} /></article>)}</div></section>
+    <section className="landing-risk-section" aria-labelledby="risk-heading"><div className="container risk-modern"><div><div className="eyebrow">PUT IT INTO PRACTICE</div><h2 id="risk-heading">Risk gets<br /><span>the first word.</span></h2><p>Before asking what a trade could make, understand what a hypothetical risk budget means.</p><Link href="/courses/risk-and-psychology" className="text-link">Explore risk & psychology <ArrowUpRight size={18} /></Link></div><RiskExercise /></div></section>
+    <section className="testimonials-modern container"><div className="eyebrow">LEARNER PERSPECTIVES</div><h2>Quiet confidence<br /><span>speaks loudest.</span></h2><div className="testimonial-cards"><blockquote>“The structure helped me stop jumping between strategies and start reviewing my decisions.”<footer>— Aditi K. · Price Action</footer></blockquote><blockquote>“Clear, practical and honest about the risk. Exactly what I was looking for.”<footer>— Rohan S. · Market Foundations</footer></blockquote></div></section>
+    <section className="landing-faq container" id="faq"><div><div className="eyebrow">A FEW USEFUL ANSWERS</div><h2>Clarity from<br /><span>the beginning.</span></h2><p>Language, access, refunds and everything you should know before choosing a course.</p><Link href="/contact" className="text-link">Have another question? <ArrowUpRight size={18} /></Link></div><Faq items={content?.faqs?.length ? content.faqs : undefined} /></section>
+    <section className="landing-close container"><div className="eyebrow">YOUR LEARNING JOURNEY STARTS HERE</div><h2>Build your knowledge.<br /><span>Then build your process.</span></h2><p>No promised returns. No shortcuts.<br />Just a more considered place to start.</p><Link className="button button-primary" href="/courses">Find your starting point <ArrowUpRight size={19} /></Link></section>
+    <p className="risk-disclaimer container">Trading involves risk. Course content is for education only. No outcome is promised or implied.</p>
+  </main>;
 }
