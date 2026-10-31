@@ -1,6 +1,82 @@
 # Trading course website
 
-Next.js + TypeScript trading-course storefront for [the source brief](./course-website-requirements.md). The public storefront, account/device security, classroom and Admin workflows are implemented. Local Cashfree sandbox checkout/reconciliation, full refunds, private PDF/HTML billing, email queues and protected scheduler integration are delivered. Actual merchant/email/DRM acceptance, staging access and final content/tax approval remain open; live sales are disabled. Track evidence in [the plan](./IMPLEMENTATION-PLAN.md), [Phase 3](./docs/PHASE-3-STATUS.md) and [Phase 6](./docs/PHASE-6-STATUS.md).
+Next.js 16 / React 19 trading-course website using the existing Supabase/PostgreSQL, Radix and shared light/dark theme system. The purchase flow now includes an isolated zero-env local demo and a Razorpay provider selected by configuration. Existing Cashfree, account security, Admin and DRM integrations are retained. This implementation does not establish live merchant/content/tax/DRM acceptance.
+
+## Run locally with zero environment setup
+
+Requires Node **22.19.0 or newer** and npm. No gateway account, database account, SMTP account or `.env` file is needed:
+
+```powershell
+npm ci
+npm run db:seed
+npm run dev:demo
+```
+
+Open <http://127.0.0.1:3000>. If that port is already serving another app, use `npm run dev:demo -- --port 3001` instead. The demo runner uses a separate build directory and clears external-service credentials in its child process; it never edits your local environment file or contacts your Supabase project. With no existing environment configuration, `npm run dev` also chooses the local store automatically. `dev:demo` is the reliable choice when this checkout already contains real/staging configuration.
+
+The local store is an embedded PostgreSQL-compatible PGlite database, using the same ten SQL migrations as Supabase. It lives in ignored `.local-data/demo-v1/`; passwords use bcrypt and opaque session tokens are stored only as hashes. No Prisma/SQLite replacement was introduced. The sample video is an explicitly labelled public placeholder; paid instructor media continues through the production DRM integration.
+
+Test accounts (local development only):
+
+| Role          | Email               | Password     |
+| ------------- | ------------------- | ------------ |
+| Student       | `demo@example.com`  | `1234567890` |
+| Administrator | `admin@example.com` | `1234567890` |
+
+The first seed creates three sample courses and no purchases. Re-running it preserves existing purchases/progress. Demo credentials must not exist in a live sales database. Demo administrator access is limited to the isolated learning dashboard; production staff role/MFA checks remain unchanged. The development login hint can fill the credentials and be dismissed. New local signups are test accounts and do not require real email verification; configured Supabase signup retains its existing verification policy.
+
+## Test the complete journey
+
+1. Open a sample course and choose **Buy now**. Sign in with the student account or create a new local account. The login redirects back to that course's checkout.
+2. Confirm the summary and terms. The checkout shows **TEST MODE: no real money is charged**. Choose **Pay successfully**, **Simulate failure**, or **Cancel**.
+3. A successful payment opens `/checkout/success?orderId=...`. Use **Start learning** or visit `/dashboard`.
+4. Open a lesson, read the sample notes, play the placeholder video and choose **Mark as complete**. Return to the dashboard to see saved progress and continue learning.
+5. Open `/dashboard/orders` and the private printable receipt. A failed/cancelled test never creates enrollment. Buying an owned course instead offers **Go to course**.
+6. Without Resend configuration, development confirmation emails are logged once in the server console as **DEV EMAIL — not delivered**, including the receipt and course links. A mail error never rolls back paid access. Production queues delivery instead of logging personal email content.
+
+The local sample video requires network access, but lesson notes/completion do not. Direct paid lesson requests without entitlement redirect to the course with **Purchase to unlock**; free previews remain public. No native-video fallback is offered for protected production lessons.
+
+```powershell
+npx playwright install chromium
+npm run test:purchase
+npm run check
+npm run test:unit
+npm run build
+```
+
+Purchase browser tests use a fresh local test store on port 3102; they never alter your development purchases or external services. The original release browser suite remains available as `npm run test:release`.
+
+## Switch to Razorpay and prepare production
+
+Stop the isolated demo runner and start the normal app with these protected settings:
+
+```dotenv
+PAYMENT_PROVIDER=razorpay
+RAZORPAY_KEY_ID=your_test_or_live_key_id
+RAZORPAY_KEY_SECRET=your_key_secret
+RAZORPAY_WEBHOOK_SECRET=your_independent_webhook_secret
+ALLOW_MOCK_PAYMENTS=false
+SEED_DEMO_USERS=false
+LOCAL_DEMO=false
+NEXT_PUBLIC_APP_URL=https://your-approved-domain.example
+```
+
+Use Razorpay **test keys first**. With the selector and both keys present, the provider factory uses Razorpay without code changes. Production with missing keys fails closed with **Payments temporarily unavailable** and a server warning. Explicit `ALLOW_MOCK_PAYMENTS=true` is for a dedicated test deployment only; it does not provision a production database or approve demo users. Mock APIs return 404 whenever the real provider is selected or production mock use is not permitted.
+
+Configure the existing Supabase project URL/publishable key/service key and database operator URL from [.env.example](./.env.example). Resolve the recorded trust/ledger mismatch and review/apply migrations 009–011 on an authorised staging target before production schema changes. Local/demo users are never copied into Supabase. Production needs durable hosted PostgreSQL/Supabase; do not deploy the file-backed demo store across serverless replicas. `AUTH_SECRET` is not required by the existing Supabase/opaque-session implementation and does not replace Supabase credentials.
+
+Register **`https://your-domain/api/webhooks/razorpay`** with the independent webhook secret and subscribe to captured/failed payment and refund events as appropriate. Checkout signatures and webhook HMACs are checked on the server; fulfillment additionally requires an API-confirmed captured payment matching the saved order, currency and amount. Authorized-but-uncaptured payments remain locked. See [Razorpay integration](https://razorpay.com/docs/payments/server-integration/nodejs/integration-steps/) and [webhook validation](https://razorpay.com/docs/webhooks/validate-test/).
+
+Before live sales:
+
+- [ ] Authorised schema migration and verified production Supabase/auth configuration; no demo users or mock flags.
+- [ ] Razorpay merchant approval, test purchase/webhook/replay verification, capture configuration and reconciliation/recovery acceptance.
+- [ ] Real course content/video mappings and supported-device DRM acceptance.
+- [ ] Approved prices, business details, tax treatment and policies. Live GST checkout remains gated pending the required invoice configuration; the printable acknowledgement is not a GST invoice.
+- [ ] Verified Resend sender and actual confirmation delivery/retry acceptance; production scheduler/alerts configured.
+- [ ] Correct domain/HTTPS, OAuth redirects, WAF, backup/restore and production smoke checks.
+
+Earlier foundation/setup notes below describe the retained staging services; they are not prerequisites for running the isolated local demo.
 
 ## Requirements
 
@@ -102,3 +178,9 @@ Use `/login`, `/signup`, `/account` and `/admin/login` for the new flows. Test s
 After verifying the owner's staging account, an authorised operator can run `npm run admin:bootstrap -- --user-id YOUR_VERIFIED_USER_UUID --apply`. The owner then signs in at `/admin/login`, enrolls/verifies their authenticator and opens `/admin`. Course publishing uses real approved metadata, ready VdoCipher video and explicit Admin action. Support can inspect students/orders/refunds and grant access but cannot change prices, content, settings or staff. See [the Phase 5 report](./docs/PHASE-5-STATUS.md) before publishing or testing with real owner content.
 
 `npm run test:admin` uses disposable staging identities and a temporary course/order. Explicit notification commands send real queued messages and were not invoked against students. `npm run operations:run` is a dry run; `-- --run` explicitly calls the protected staging worker after configuration. Notification delivery has a separate opt-in. Hosted scheduling/alerts, actual merchant/email acceptance and production enablement are still pending.
+
+### Course access periods
+
+Courses have a finite access period, configured in the administrator course editor in days or calendar months (default: one month). Video duration and access duration are separate. Successful payment starts access; checkout snapshots its period and a later course edit does not change an existing enrollment. The dashboard, confirmation and receipt show the end date in IST. After expiry, paid lessons/progress APIs deny access and the student can buy a fresh period while retaining learning progress. Free previews and private receipts remain available. There are no automatic recurring charges.
+
+[Migration 011](./backend/database/migrations/202610310011_course_access_expiry.sql) is additive and is applied automatically only by the isolated local demo on initialization. Shared databases require reviewed deployment after outstanding migrations. It gives existing courses a one-month default and backfills enrollment expiry from the original payment/grant time; older enrollments may expire immediately. Review legacy-customer treatment and course periods before applying it to shared staging/production. No shared migration was run for this change.
