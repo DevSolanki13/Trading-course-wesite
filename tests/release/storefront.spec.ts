@@ -73,8 +73,8 @@ test("catalogue search, filter and disabled purchase", async ({ page }) => {
 });
 
 test("keyboard dialog closes and restores focus; theme persists", async ({ page }) => {
-  await page.goto("/");
-  const trigger = page.getByRole("button", { name: "Inside the lessons", exact: true });
+  await page.goto("/courses/market-foundations");
+  const trigger = page.getByRole("button", { name: "Preview the lesson format", exact: true });
   await trigger.focus();
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog");
