@@ -137,7 +137,7 @@ body main:not(.landing-page) .course-card {
 }
 
 body main:not(.landing-page) .course-card-body {
-  padding: 26px 14px 16px;
+  padding: 26px 16px 18px;
 }
 
 body main:not(.landing-page) :is(.course-tags, .course-meta, .course-card-bottom) {
