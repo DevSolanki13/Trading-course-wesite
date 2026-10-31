@@ -52,6 +52,13 @@ export const purchaseOrder = (id: string, userId: string) =>
     p_user: userId,
     p_ref: id,
   });
+export async function purchaseConfirmation(id: string, userId: string) {
+  const order = await purchaseOrder(id, userId);
+  return {
+    order,
+    expired: !!order?.accessExpiresAt && Date.parse(order.accessExpiresAt) <= Date.now(),
+  };
+}
 export const purchaseOrders = (userId: string) =>
   purchaseRpc<PurchaseOrder[]>("purchase_read", {
     p_action: "orders",
