@@ -1,21 +1,6 @@
-const { Client } = require('pg');
-async function main() {
-  const c = new Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-  await c.connect();
-  
-  // Get exact constraint definition
-  const r = await c.query(`
-    SELECT conname, pg_get_constraintdef(oid) as def
-    FROM pg_constraint 
-    WHERE conname='webhook_events_provider_check'
-  `);
-  console.log('Constraint def:', JSON.stringify(r.rows));
-  
-  // Check what providers are in existing webhook_events
-  const r2 = await c.query("SELECT DISTINCT provider FROM public.webhook_events LIMIT 20");
-  console.log('Existing providers:', JSON.stringify(r2.rows));
-  
-  await c.end();
-}
-main().catch(e => { console.error(e.message); process.exit(1); });
-
+﻿// Retired ad-hoc verifier: the supported verifier is read-only, project-scoped,
+// validates TLS, and never creates fixed-ID users or persistent test courses.
+void import("./verify-database.mjs").catch(() => {
+  console.error("Database verification failed; sensitive details withheld.");
+  process.exitCode = 1;
+});

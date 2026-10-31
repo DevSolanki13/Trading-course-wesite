@@ -2,9 +2,19 @@ import Link from "next/link";
 import { Faq } from "../components/faq";
 import { ArrowUpRight, TelegramLogo, InstagramLogo } from "../components/icons";
 import { site } from "../content/site";
-import type{SiteDocument}from"../../shared/admin";
+import type { SiteDocument } from "../../shared/admin";
 
-export default function ContactPage({supportEmail=site.supportEmail,telegramUrl=site.telegramUrl,instagramUrl=site.instagramUrl,content=null}:{supportEmail?:string|null;telegramUrl?:string|null;instagramUrl?:string|null;content?:SiteDocument|null}) {
+export default function ContactPage({
+  supportEmail = site.supportEmail,
+  telegramUrl = site.telegramUrl,
+  instagramUrl = site.instagramUrl,
+  content = null,
+}: {
+  supportEmail?: string | null;
+  telegramUrl?: string | null;
+  instagramUrl?: string | null;
+  content?: SiteDocument | null;
+}) {
   return (
     <main id="main-content" className="container contact-page">
       <div className="page-intro">
@@ -68,7 +78,7 @@ export default function ContactPage({supportEmail=site.supportEmail,telegramUrl=
         </section>
         <section>
           <h2>Often, the answer is here.</h2>
-          <Faq items={content?.faqs?.length?content.faqs:undefined}/>
+          <Faq items={content?.faqs?.length ? content.faqs : undefined} />
         </section>
       </div>
       <div className="contact-policy-links">

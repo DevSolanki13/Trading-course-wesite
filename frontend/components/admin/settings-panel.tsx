@@ -126,7 +126,7 @@ export function SettingsPanel() {
                   name="deviceLimit"
                   type="number"
                   min="1"
-                    max="2"
+                  max="2"
                   defaultValue={data.device_limit}
                 />
               </label>

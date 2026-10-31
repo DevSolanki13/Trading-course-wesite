@@ -7,6 +7,9 @@ import { databaseError, getCourse, orderQuery, overview } from "../admin/data";
 import { pageNumber, csvRows } from "../admin/policy";
 import { videoStatus, videoUpload } from "../admin/video";
 import { requireEnv } from "../config/env";
+import { CashfreeClient, cashfreeSandboxEnabled } from "../payments/cashfree";
+import { commerceStore } from "../payments/data";
+import { reconcilePayment, reconcileRefund } from "../payments/workflow";
 const uuid = z.string().uuid();
 function parse<T>(schema: z.ZodType<T>, input: unknown): T {
   const result = schema.safeParse(input);
@@ -97,8 +100,14 @@ export async function adminRequest(request: Request) {
       }
       if (action === "orders") return json(await orderQuery(context, url));
       if (action === "order-filters") {
-        const rows=await context.admin.from("courses").select("id,title").in("status",["published","archived"]).order("title").limit(200);
-        databaseError(rows.error);return json({courses:rows.data});
+        const rows = await context.admin
+          .from("courses")
+          .select("id,title")
+          .in("status", ["published", "archived"])
+          .order("title")
+          .limit(200);
+        databaseError(rows.error);
+        return json({ courses: rows.data });
       }
       if (action === "order") {
         const id = parse(uuid, url.searchParams.get("id"));
@@ -117,7 +126,9 @@ export async function adminRequest(request: Request) {
           order: order.data,
           payments: payments.data,
           evidence: refund.data,
-          providerActionsAvailable: false,
+          providerActionsAvailable:
+            cashfreeSandboxEnabled() &&
+            order.data?.provider_order_id?.startsWith("cf_sbx_") === true,
         });
       }
       if (action === "export") {
@@ -151,7 +162,7 @@ export async function adminRequest(request: Request) {
             "Content-Disposition": "attachment; filename=orders.csv",
             "Cache-Control": "private, no-store",
             "X-Export-Limit": "1000",
-            "X-Export-Truncated": String(result.total>result.items.length),
+            "X-Export-Truncated": String(result.total > result.items.length),
           },
         });
       }
@@ -176,7 +187,11 @@ export async function adminRequest(request: Request) {
             return { ...r, current_evidence: e.data };
           }),
         );
-        return json({ items, total: result.count, providerActionsAvailable: false });
+        return json({
+          items,
+          total: result.count,
+          providerActionsAvailable: cashfreeSandboxEnabled(),
+        });
       }
       if (action === "settings") {
         const r = await context.admin.from("site_settings").select("*").eq("id", true).single();
@@ -214,15 +229,43 @@ export async function adminRequest(request: Request) {
           .order("created_at", { ascending: false })
           .limit(100);
         databaseError(r.error);
-        if(!r.data?.length)return json({items:[]});
-        const ids=[...new Set(r.data.map(task=>task.user_id))];
-        const enrollments=await context.admin.from("enrollments").select("user_id,course_id,order_id").in("user_id",ids).eq("source","purchase").eq("active",true).is("revoked_at",null);
+        if (!r.data?.length) return json({ items: [] });
+        const ids = [...new Set(r.data.map((task) => task.user_id))];
+        const enrollments = await context.admin
+          .from("enrollments")
+          .select("user_id,course_id,order_id")
+          .in("user_id", ids)
+          .eq("source", "purchase")
+          .eq("active", true)
+          .is("revoked_at", null);
         databaseError(enrollments.error);
-        const orderIds=(enrollments.data??[]).map(e=>e.order_id).filter((id):id is string=>!!id);
-        const orders=orderIds.length?await context.admin.from("orders").select("id,user_id,course_id,status").in("id",orderIds).eq("status","paid"):{data:[],error:null};
+        const orderIds = (enrollments.data ?? [])
+          .map((e) => e.order_id)
+          .filter((id): id is string => !!id);
+        const orders = orderIds.length
+          ? await context.admin
+              .from("orders")
+              .select("id,user_id,course_id,status")
+              .in("id", orderIds)
+              .eq("status", "paid")
+          : { data: [], error: null };
         databaseError(orders.error);
-        const buyers=new Set((enrollments.data??[]).filter(e=>orders.data?.some(o=>o.id===e.order_id&&o.user_id===e.user_id&&o.course_id===e.course_id)).map(e=>e.user_id));
-        return json({items:r.data.map(task=>({...task,qualifyingPaidAccessNow:buyers.has(task.user_id)}))});
+        const buyers = new Set(
+          (enrollments.data ?? [])
+            .filter((e) =>
+              orders.data?.some(
+                (o) =>
+                  o.id === e.order_id && o.user_id === e.user_id && o.course_id === e.course_id,
+              ),
+            )
+            .map((e) => e.user_id),
+        );
+        return json({
+          items: r.data.map((task) => ({
+            ...task,
+            qualifyingPaidAccessNow: buyers.has(task.user_id),
+          })),
+        });
       }
       if (action === "notifications") {
         const r = await context.admin
@@ -237,6 +280,49 @@ export async function adminRequest(request: Request) {
     }
     if (request.method !== "POST") throw new AuthError(405, "Method not allowed.");
     await limit(request, "admin-mutation", context.user.id, 100, 60);
+    if (action === "cashfree-reconcile" || action === "refund-process") {
+      if (!cashfreeSandboxEnabled())
+        throw new AuthError(404, "Sandbox provider actions are disabled.");
+      const input = parse(z.object({ id: uuid }).strict(), await body(request));
+      const store = commerceStore(context.admin);
+      const client = new CashfreeClient();
+      let state;
+      if (action === "cashfree-reconcile") {
+        const order = await context.admin
+          .from("orders")
+          .select("provider_order_id")
+          .eq("id", input.id)
+          .single();
+        databaseError(order.error);
+        if (!order.data?.provider_order_id?.startsWith("cf_sbx_"))
+          throw new AuthError(400, "Not a sandbox Cashfree order.");
+        state = await reconcilePayment(client, store, order.data.provider_order_id);
+      } else {
+        const requestRow = await context.admin
+          .from("refund_requests")
+          .select("provider_reference,order_id")
+          .eq("id", input.id)
+          .single();
+        databaseError(requestRow.error);
+        const order = await context.admin
+          .from("orders")
+          .select("provider_order_id")
+          .eq("id", requestRow.data!.order_id)
+          .single();
+        databaseError(order.error);
+        if (!order.data?.provider_order_id?.startsWith("cf_sbx_"))
+          throw new AuthError(400, "Not a sandbox Cashfree order.");
+        state = await reconcileRefund(
+          client,
+          store,
+          order.data.provider_order_id,
+          requestRow.data!.provider_reference,
+          true,
+        );
+      }
+      await audit(context, action, input.id);
+      return json({ state, message: `Sandbox provider state: ${state}.` });
+    }
     if (action === "video-status") {
       const input = parse(
         z.object({ videoId: z.string().regex(/^[A-Za-z0-9_-]{8,128}$/) }).strict(),
@@ -268,7 +354,7 @@ export async function adminRequest(request: Request) {
           data: z.unknown(),
         })
         .strict(),
-      await body(request,65536),
+      await body(request, 65536),
     );
     if (context.profile.role !== "admin" && !["grant", "refund_decide"].includes(envelope.action))
       throw new AuthError(403, "This action requires an administrator.", "FORBIDDEN");
@@ -276,10 +362,15 @@ export async function adminRequest(request: Request) {
       operationSchemas[envelope.action] as z.ZodType<Record<string, unknown>>,
       envelope.data,
     );
-    if(context.profile.role==="support"&&envelope.action==="grant"){
-      const target=await context.admin.from("profiles").select("role,blocked").eq("id",String(data.userId)).single();
+    if (context.profile.role === "support" && envelope.action === "grant") {
+      const target = await context.admin
+        .from("profiles")
+        .select("role,blocked")
+        .eq("id", String(data.userId))
+        .single();
       databaseError(target.error);
-      if(!target.data||target.data.role!=="student"||target.data.blocked)throw new AuthError(403,"Support can grant access to active students only.","FORBIDDEN");
+      if (!target.data || target.data.role !== "student" || target.data.blocked)
+        throw new AuthError(403, "Support can grant access to active students only.", "FORBIDDEN");
     }
     if (envelope.action === "lesson_save" && data.videoId) {
       const status = await videoStatus(String(data.videoId));
@@ -297,11 +388,12 @@ export async function adminRequest(request: Request) {
     if (envelope.action === "lesson_save" && data.published && !data.videoId)
       throw new AuthError(400, "Add a ready video before publishing this lesson.");
     if (envelope.action === "lesson_save" && data.published === false && data.id) {
-      const course=await getCourse(context,String(data.courseId));
-      if(course.version!==data.version)throw new AuthError(409,"Reload this course before changing lessons.","STALE_RECORD");
-      const live=course.modules.flatMap(m=>m.lessons).filter(l=>l.published);
-      if(course.status==="published"&&live.length===1&&live[0].id===data.id)
-        throw new AuthError(400,"Unpublish the course before removing its last published lesson.");
+      const course = await getCourse(context, String(data.courseId));
+      if (course.version !== data.version)
+        throw new AuthError(409, "Reload this course before changing lessons.", "STALE_RECORD");
+      const live = course.modules.flatMap((m) => m.lessons).filter((l) => l.published);
+      if (course.status === "published" && live.length === 1 && live[0].id === data.id)
+        throw new AuthError(400, "Unpublish the course before removing its last published lesson.");
     }
     if (envelope.action === "course_state" && data.status === "published") {
       const course = await getCourse(context, String(data.courseId));
@@ -329,7 +421,12 @@ export async function adminRequest(request: Request) {
       p_action: envelope.action,
       p_data: data,
     });
-    if(envelope.action==="task_done"&&result.error?.code==="22023")throw new AuthError(409,"This task changed or the learner has qualifying paid access. Refresh before taking action.","TASK_CHANGED");
+    if (envelope.action === "task_done" && result.error?.code === "22023")
+      throw new AuthError(
+        409,
+        "This task changed or the learner has qualifying paid access. Refresh before taking action.",
+        "TASK_CHANGED",
+      );
     databaseError(result.error);
     return json({ message: "Saved successfully.", ...result.data });
   } catch (error) {

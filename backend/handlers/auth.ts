@@ -19,6 +19,8 @@ import { isPrivileged, safeNext } from "../auth/policy";
 import { deliverAuthEmail } from "../auth/email";
 import { openToken, tokenDigest } from "../auth/crypto";
 import { cookiePolicy } from "../auth/cookies";
+import { localDemoEnabled } from "../purchase/mode";
+import { localAuthRequest } from "../local/http";
 
 const email = z
   .string()
@@ -61,6 +63,7 @@ async function options() {
 }
 
 export async function authRequest(request: Request) {
+  if (localDemoEnabled()) return localAuthRequest(request);
   try {
     const action = new URL(request.url).pathname.replace(/^\/api\/auth\//, "");
     if (request.method !== "GET") sameOrigin(request);

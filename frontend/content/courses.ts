@@ -1,4 +1,5 @@
 export type Course = {
+  id?: string;
   thumbnailUrl?: string | null;
   provisional?: boolean;
   previewLessonId?: string;
@@ -8,6 +9,8 @@ export type Course = {
   summary: string;
   level: string;
   duration: string;
+  accessPeriod?: number;
+  accessUnit?: "days" | "months";
   lessons: number;
   price: number;
   artwork: string;

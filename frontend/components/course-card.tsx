@@ -39,6 +39,17 @@ export function CourseCard({ course }: { course: Course }) {
           <Link href={`/courses/${course.slug}`}>{course.title}</Link>
         </h3>
         <p>{course.summary}</p>
+        <p>
+          Access: {course.accessPeriod ?? 1}{" "}
+          {(course.accessUnit ?? "months") === "months"
+            ? course.accessPeriod === 1 || !course.accessPeriod
+              ? "month"
+              : "months"
+            : course.accessPeriod === 1
+              ? "day"
+              : "days"}{" "}
+          from payment
+        </p>
         <div className="course-meta">
           <span>
             <BookOpen size={15} />

@@ -25,6 +25,8 @@ export const courseSchema = z
     description: text(2000),
     price_paise: z.number().int().min(0).max(100000000),
     sale_price_paise: z.number().int().min(0).max(100000000).nullable(),
+    access_period: z.number().int().min(1).max(3650).default(1),
+    access_unit: z.enum(["days", "months"]).default("months"),
     level: z.enum(["beginner", "intermediate", "advanced"]),
     language: text(30).min(1),
     thumbnail_url: url,
@@ -90,10 +92,10 @@ export const contentSchema = z
         heroDescription: text(500),
         teachingTitle: text(140),
         teachingDescription: text(1000),
-        instructorName:text(100),
-        instructorBio:text(1200),
-        instructorPortraitUrl:url,
-        instructorConfirmed:z.boolean(),
+        instructorName: text(100),
+        instructorBio: text(1200),
+        instructorPortraitUrl: url,
+        instructorConfirmed: z.boolean(),
         faqs: z
           .array(z.object({ question: text(180).min(3), answer: text(800).min(3) }).strict())
           .max(12),
@@ -112,7 +114,17 @@ export const contentSchema = z
   .refine(
     (v) => !v.document.testimonials.length || v.document.genuineTestimonialsConfirmed,
     "Confirm permission and authenticity before publishing testimonials.",
-  ).refine(v=>!(v.document.instructorName||v.document.instructorBio||v.document.instructorPortraitUrl)||(!!v.document.instructorName&&!!v.document.instructorBio&&v.document.instructorConfirmed),"Confirm the instructor's identity, biography and media permission before publishing.");
+  )
+  .refine(
+    (v) =>
+      !(
+        v.document.instructorName ||
+        v.document.instructorBio ||
+        v.document.instructorPortraitUrl
+      ) ||
+      (!!v.document.instructorName && !!v.document.instructorBio && v.document.instructorConfirmed),
+    "Confirm the instructor's identity, biography and media permission before publishing.",
+  );
 export const operationSchemas = {
   course_save: courseSchema,
   course_state: z

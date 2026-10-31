@@ -18,7 +18,7 @@ export const faqs = [
   {
     question: "How long will I have access?",
     answer:
-      "The planned purchase includes lifetime online access to the course you buy. Videos are streamed through your account and are not available for download.",
+      "Each course includes online access for the period shown at checkout, starting when payment succeeds. Access expires automatically; no course includes lifetime access. Videos are streamed through your account and are not available for download.",
   },
   {
     question: "Do I need trading experience?",

@@ -5,6 +5,16 @@ export const metadata = pageMetadata(
   "/contact",
 );
 import ContactPage from "@/frontend/pages/contact-page";
-import{publicCatalog}from"@/backend/public/catalogue";
-export const dynamic="force-dynamic";
-export default async function Contact(){const data=await publicCatalog();return <ContactPage supportEmail={data.supportEmail} telegramUrl={data.telegramUrl} instagramUrl={data.instagramUrl} content={data.content}/>;}
+import { publicCatalog } from "@/backend/public/catalogue";
+export const dynamic = "force-dynamic";
+export default async function Contact() {
+  const data = await publicCatalog();
+  return (
+    <ContactPage
+      supportEmail={data.supportEmail}
+      telegramUrl={data.telegramUrl}
+      instagramUrl={data.instagramUrl}
+      content={data.content}
+    />
+  );
+}

@@ -23,7 +23,7 @@ An online course site where an instructor sells trading-strategy and trading-bas
 | Devices | Max **2** active devices per account |
 | Telegram | Public channel for everyone + **private group for paid students only** |
 | Branding | **Developer decides** logo, colours, and fonts |
-| Access | Lifetime access after purchase |
+| Access | Access for the configured days or calendar months from successful payment; no lifetime access |
 | Downloads | Not allowed. Streaming only |
 
 ---

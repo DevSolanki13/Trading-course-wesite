@@ -2,6 +2,14 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Run zero-env course demo",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev:demo", "--", "--port", "3001"],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
       "label": "Build application",
       "type": "shell",
       "command": "npm",

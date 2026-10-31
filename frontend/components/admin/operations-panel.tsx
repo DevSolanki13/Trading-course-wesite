@@ -9,7 +9,7 @@ type Task = {
   request_id: string;
   created_at: string;
   note: string | null;
-  qualifyingPaidAccessNow:boolean;
+  qualifyingPaidAccessNow: boolean;
 };
 type Outbox = {
   id: string;
@@ -88,7 +88,7 @@ export function OperationsPanel({ view }: { view: "operations" | "audit" }) {
       await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Task could not save.");
-      void load().catch(()=>{});
+      void load().catch(() => {});
     } finally {
       setPending(false);
     }
@@ -171,7 +171,12 @@ export function OperationsPanel({ view }: { view: "operations" | "audit" }) {
                     <span className="admin-break">Student {t.user_id}</span>
                     <span>Opened {when(t.created_at)}</span>
                   </div>
-                  {t.state==="open"&&t.qualifyingPaidAccessNow&&<p className="admin-help">This learner has qualifying paid access again. Keep their group membership; do not complete the removal task.</p>}
+                  {t.state === "open" && t.qualifyingPaidAccessNow && (
+                    <p className="admin-help">
+                      This learner has qualifying paid access again. Keep their group membership; do
+                      not complete the removal task.
+                    </p>
+                  )}
                   {t.state === "open" && !t.qualifyingPaidAccessNow && (
                     <form className="admin-inline-form" onSubmit={(e) => complete(e, t.id)}>
                       <label>

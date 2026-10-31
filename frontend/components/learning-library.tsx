@@ -20,6 +20,13 @@ function LearningCard({ course }: { course: CourseView }) {
       </div>
       <div className="learning-card-body">
         <h2>{course.title}</h2>
+        {course.accessExpiresAt && (
+          <p>
+            Access {course.owned ? "until" : "ended"}:{" "}
+            {new Date(course.accessExpiresAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}{" "}
+            IST
+          </p>
+        )}
         <p>{total} published lessons</p>
         <progress aria-label={`${course.title} completion`} max={100} value={course.progress} />
         <div className="learning-card-meta">
@@ -237,9 +244,32 @@ export function LearningLibrary() {
                         }
                         request={refunds.find((r) => r.orderId === o.id)?.request ?? null}
                       />
-                      <p className="learning-caption">
-                        Invoices and provider refund processing will open with the payment service.
-                      </p>
+                      {["paid", "refunded"].includes(o.status) && (
+                        <p className="learning-caption">
+                          <a className="text-link" href={`/api/orders/${o.id}/document`}>
+                            Download billing PDF
+                          </a>
+                          {" · "}
+                          <a
+                            className="text-link"
+                            href={`/api/orders/${o.id}/document?format=html`}
+                          >
+                            Accessible HTML copy
+                          </a>
+                          {o.status === "refunded" && (
+                            <>
+                              {" "}
+                              ·{" "}
+                              <a
+                                className="text-link"
+                                href={`/api/orders/${o.id}/document?kind=credit_note`}
+                              >
+                                Refund credit note
+                              </a>
+                            </>
+                          )}
+                        </p>
+                      )}
                     </article>
                   ))}
                 </div>

@@ -1,14 +1,19 @@
 import "server-only";
-import {cache}from"react";
+import { cache } from "react";
 import { createAdminClient } from "../database/supabase";
 import type { SiteDocument } from "../../shared/admin";
+import { localDemoEnabled } from "../purchase/mode";
+import { purchaseCatalog } from "../purchase/repository";
 type RawCourse = {
+  id: string;
   slug: string;
   title: string;
   description: string;
   level: string;
   language: string;
   price_paise: number;
+  access_period: number;
+  access_unit: "days" | "months";
   thumbnail_url: string | null;
   artwork: string;
   outcomes: unknown;
@@ -40,13 +45,57 @@ function social(raw: unknown, hosts: string[]) {
   }
 }
 export const publicCatalog = cache(async function publicCatalog() {
+  if (localDemoEnabled()) {
+    const list = await purchaseCatalog();
+    return {
+      courses: list.map((c) => ({
+        id: c.id,
+        slug: c.slug,
+        title: c.title,
+        shortTitle: c.description,
+        summary: c.description,
+        level: c.level[0].toUpperCase() + c.level.slice(1),
+        duration: `${c.modules.flatMap((m) => m.lessons).reduce((sum, l) => sum + l.duration, 0) / 60}m`,
+        lessons: c.modules.flatMap((m) => m.lessons).length,
+        price: c.price / 100,
+        accessPeriod: c.accessPeriod,
+        accessUnit: c.accessUnit,
+        artwork:
+          c.slug === "price-action"
+            ? "structure"
+            : c.slug === "market-foundations"
+              ? "foundations"
+              : "psychology",
+        color: "mint",
+        outcomes: ["Test a complete purchase and learning journey"],
+        audience: "Local demo learners",
+        prerequisites: "Sample content for testing only",
+        modules: c.modules.map((m) => ({
+          title: m.title,
+          lessons: m.lessons.map((l) => ({
+            id: l.id,
+            title: l.title,
+            duration: `${Math.floor(l.duration / 60)}:${String(l.duration % 60).padStart(2, "0")}`,
+            preview: l.preview,
+          })),
+        })),
+        thumbnailUrl: c.thumbnail,
+        provisional: false,
+        previewLessonId: c.modules.flatMap((m) => m.lessons).find((l) => l.preview)?.id,
+      })),
+      content: null,
+      telegramUrl: null,
+      instagramUrl: null,
+      supportEmail: null,
+    };
+  }
   try {
     const admin = createAdminClient();
     const [courses, content, settings] = await Promise.all([
       admin
         .from("courses")
         .select(
-          "slug,title,description,level,language,price_paise,thumbnail_url,artwork,outcomes,audience,prerequisites,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
+          "id,slug,title,description,level,language,price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
         )
         .eq("status", "published")
         .order("created_at")
@@ -80,6 +129,7 @@ export const publicCatalog = cache(async function publicCatalog() {
         .filter((l) => l.published)
         .reduce((n, l) => n + l.duration_seconds, 0);
       return {
+        id: raw.id,
         slug: raw.slug,
         title: raw.title,
         shortTitle: raw.description.split(".")[0]?.slice(0, 100) ?? raw.title,
@@ -88,6 +138,8 @@ export const publicCatalog = cache(async function publicCatalog() {
         duration: `${Math.floor(seconds / 3600)}h ${String(Math.round((seconds % 3600) / 60)).padStart(2, "0")}m`,
         lessons: lessons.length,
         price: raw.price_paise / 100,
+        accessPeriod: raw.access_period,
+        accessUnit: raw.access_unit,
         artwork: ["foundations", "structure", "risk"].includes(raw.artwork)
           ? raw.artwork
           : "foundations",
@@ -112,9 +164,19 @@ export const publicCatalog = cache(async function publicCatalog() {
         "instagram.com",
         "www.instagram.com",
       ]),
-      supportEmail:typeof settings.data.support_email==="string"&&/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)?settings.data.support_email:null,
+      supportEmail:
+        typeof settings.data.support_email === "string" &&
+        /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)
+          ? settings.data.support_email
+          : null,
     };
   } catch {
-    return { courses: [], content: null, telegramUrl: null, instagramUrl: null,supportEmail:null };
+    return {
+      courses: [],
+      content: null,
+      telegramUrl: null,
+      instagramUrl: null,
+      supportEmail: null,
+    };
   }
 });

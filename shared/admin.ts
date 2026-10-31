@@ -26,6 +26,8 @@ export type AdminCourse = {
   status: "draft" | "published" | "archived";
   price_paise: number;
   sale_price_paise: number | null;
+  access_period: number;
+  access_unit: "days" | "months";
   thumbnail_url: string | null;
   outcomes: string[];
   audience: string;
@@ -127,10 +129,10 @@ export type SettingsView = {
   private_invite_expires_at: string | null;
 };
 export type SiteDocument = {
-  instructorName:string;
-  instructorBio:string;
-  instructorPortraitUrl:string;
-  instructorConfirmed:boolean;
+  instructorName: string;
+  instructorBio: string;
+  instructorPortraitUrl: string;
+  instructorConfirmed: boolean;
   heroTitle: string;
   heroAccent: string;
   heroDescription: string;

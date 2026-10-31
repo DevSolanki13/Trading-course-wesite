@@ -40,8 +40,8 @@ export function SiteFooter() {
             of capital. No outcome or return is guaranteed.
           </p>
           <p>
-            Course information is under review. Instructor details, final prices and
-            policies require confirmation before launch.
+            Course information is under review. Instructor details, final prices and policies
+            require confirmation before launch.
           </p>
         </div>
         <div className="footer-bottom">

@@ -1,11 +1,16 @@
 node_modules
 .agents/
 .next
+.next-demo
+.local-data
 package-lock.json
+pnpm-lock.yaml
 *.tsbuildinfo
 .env.local
 .env.*.local
 artifacts
+test-results
+playwright-report
 .vercel
 supabase/.temp
 course-website-requirements.md

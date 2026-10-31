@@ -1,4 +1,4 @@
-import { test } from "node:test";
+﻿import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
@@ -28,7 +28,7 @@ test("admin SQL: course publishing, role fences, grants, refund evidence and ide
   try {
     await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;
 alter default privileges in schema public grant all on tables to anon,authenticated,service_role;
-create schema auth;create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb not null default '{}');
+create schema auth;create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz default now(),raw_user_meta_data jsonb not null default '{}');
 create table auth.sessions(id uuid primary key,user_id uuid,created_at timestamptz default now(),not_after timestamptz);
 create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
 create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;
@@ -63,6 +63,8 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
       description: "Test only",
       price_paise: 10000,
       sale_price_paise: null,
+      access_period: 3,
+      access_unit: "months",
       level: "beginner",
       language: "Hindi",
       thumbnail_url: "",
@@ -74,6 +76,11 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
     await assert.rejects(act(1, "course_save", courseData), /Role denied/);
     await assert.rejects(act(2, "course_save", courseData), /Role denied/);
     const course = (await act(0, "course_save", courseData)).id!;
+    assert.deepEqual(
+      (await db.query("select access_period,access_unit from courses where id=$1", [course]))
+        .rows[0],
+      { access_period: 3, access_unit: "months" },
+    );
     const emptyOverview = (
       await db.query<{ v: { sales: number; gross: number } }>(
         "select admin_overview($1,$2,'2000-01-01')as v",
@@ -123,14 +130,39 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
       act(0, "course_save", { ...courseData, courseId: course, version: 4 }),
       /Version conflict/,
     );
-    const secondModule=(await act(0,"module_save",{courseId:course,version:5,title:"Second module"})).id!;
-    await act(0,"reorder",{courseId:course,version:6,kind:"modules",ids:[secondModule,mod]});
-    const moduleOrder=(await db.query<{id:string}>("select id from modules where course_id=$1 order by position",[course])).rows.map(r=>r.id);
-    assert.deepEqual(moduleOrder,[secondModule,mod]);
-    const secondLesson=(await act(0,"lesson_save",{...badLesson,version:7,title:"Second draft lesson"})).id!;
-    await act(0,"reorder",{courseId:course,version:8,kind:"lessons",moduleId:mod,ids:[secondLesson,lesson]});
-    const lessonOrder=(await db.query<{id:string}>("select id from lessons where module_id=$1 order by position",[mod])).rows.map(r=>r.id);
-    assert.deepEqual(lessonOrder,[secondLesson,lesson]);
+    const secondModule = (
+      await act(0, "module_save", { courseId: course, version: 5, title: "Second module" })
+    ).id!;
+    await act(0, "reorder", {
+      courseId: course,
+      version: 6,
+      kind: "modules",
+      ids: [secondModule, mod],
+    });
+    const moduleOrder = (
+      await db.query<{ id: string }>(
+        "select id from modules where course_id=$1 order by position",
+        [course],
+      )
+    ).rows.map((r) => r.id);
+    assert.deepEqual(moduleOrder, [secondModule, mod]);
+    const secondLesson = (
+      await act(0, "lesson_save", { ...badLesson, version: 7, title: "Second draft lesson" })
+    ).id!;
+    await act(0, "reorder", {
+      courseId: course,
+      version: 8,
+      kind: "lessons",
+      moduleId: mod,
+      ids: [secondLesson, lesson],
+    });
+    const lessonOrder = (
+      await db.query<{ id: string }>(
+        "select id from lessons where module_id=$1 order by position",
+        [mod],
+      )
+    ).rows.map((r) => r.id);
+    assert.deepEqual(lessonOrder, [secondLesson, lesson]);
     await act(1, "grant", { userId: ids[2], courseId: course, note: "Authorised offline access" });
     assert.equal(
       (
@@ -202,7 +234,15 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
       ).rows[0].id,
       reqId,
     );
-    assert.equal((await db.query<{n:number}>("select count(*)::int as n from notification_outbox where dedupe_key=$1",[`refund:${reqId}:requested`])).rows[0].n,1);
+    assert.equal(
+      (
+        await db.query<{ n: number }>(
+          "select count(*)::int as n from notification_outbox where dedupe_key=$1",
+          [`refund:${reqId}:requested`],
+        )
+      ).rows[0].n,
+      1,
+    );
     await act(1, "refund_decide", {
       id: reqId,
       version: 1,
@@ -272,41 +312,230 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
     assert.equal(refundedOverview.gross, 10000);
     assert.equal(refundedOverview.refunded, 10000);
     assert.equal(refundedOverview.net, 0);
-    await act(0,"settings",{version:1,gst_enabled:false,gst_rate_bps:1800,gstin:"",device_limit:2,refund_window_days:0,refund_watch_limit_percent:10,business_name:"Staging test",business_address:"",support_email:"",public_telegram_url:"",public_instagram_url:"",private_telegram_url:"",private_invite_expires_at:null});
-    assert.equal((await db.query<{refund_window_days:number}>("select refund_window_days from site_settings where id=true")).rows[0].refund_window_days,0);
-    const siteDocument={heroTitle:"",heroAccent:"",heroDescription:"",teachingTitle:"",teachingDescription:"",instructorName:"",instructorBio:"",instructorPortraitUrl:"",instructorConfirmed:false,faqs:[],testimonials:[],genuineTestimonialsConfirmed:false};
-    await act(0,"content",{version:1,document:siteDocument});
-    assert.equal((await db.query<{version:number}>("select version from site_content where id=true")).rows[0].version,2);
-    const couponId=(await act(0,"coupon",{code:"STAGING10",kind:"percent",value:1000,courseId:course,expiresAt:null,totalLimit:10,perUserLimit:1,active:false})).id!;
-    await act(0,"coupon",{id:couponId,version:1,code:"STAGING10",kind:"percent",value:1000,courseId:course,expiresAt:null,totalLimit:10,perUserLimit:1,active:true});
-    assert.equal((await db.query<{active:boolean;version:number}>("select active,version from coupons where id=$1",[couponId])).rows[0].version,2);
-    const secondOrder=(await db.query<{id:string}>("insert into orders(user_id,course_id,status,base_paise,total_paise,paid_at,course_snapshot,refund_policy_snapshot) select user_id,course_id,'paid',base_paise,total_paise,now()-interval '20 seconds',course_snapshot,refund_policy_snapshot from orders where id=$1 returning id",[order])).rows[0].id;
-    await db.query("insert into enrollments(user_id,course_id,source,order_id)values($1,$2,'purchase',$3)",[ids[2],course,secondOrder]);
-    const removalTask=(await db.query<{id:string}>("select id from operations_tasks where request_id=$1",[reqId])).rows[0].id;
-    await assert.rejects(act(0,"task_done",{id:removalTask,note:"Do not remove a current buyer"}),/Buyer has qualifying paid access/);
-    const lease=(await db.query<{value:{leaseId:string}}>("select learning_start($1,$2,$3)as value",[ids[2],sessions[2],lesson])).rows[0].value.leaseId;
-    await db.query("select learning_heartbeat($1,$2,$3,1,0,true,false,1)",[ids[2],sessions[2],lease]);
+    await act(0, "settings", {
+      version: 1,
+      gst_enabled: false,
+      gst_rate_bps: 1800,
+      gstin: "",
+      device_limit: 2,
+      refund_window_days: 0,
+      refund_watch_limit_percent: 10,
+      business_name: "Staging test",
+      business_address: "",
+      support_email: "",
+      public_telegram_url: "",
+      public_instagram_url: "",
+      private_telegram_url: "",
+      private_invite_expires_at: null,
+    });
+    assert.equal(
+      (
+        await db.query<{ refund_window_days: number }>(
+          "select refund_window_days from site_settings where id=true",
+        )
+      ).rows[0].refund_window_days,
+      0,
+    );
+    const siteDocument = {
+      heroTitle: "",
+      heroAccent: "",
+      heroDescription: "",
+      teachingTitle: "",
+      teachingDescription: "",
+      instructorName: "",
+      instructorBio: "",
+      instructorPortraitUrl: "",
+      instructorConfirmed: false,
+      faqs: [],
+      testimonials: [],
+      genuineTestimonialsConfirmed: false,
+    };
+    await act(0, "content", { version: 1, document: siteDocument });
+    assert.equal(
+      (await db.query<{ version: number }>("select version from site_content where id=true"))
+        .rows[0].version,
+      2,
+    );
+    const couponId = (
+      await act(0, "coupon", {
+        code: "STAGING10",
+        kind: "percent",
+        value: 1000,
+        courseId: course,
+        expiresAt: null,
+        totalLimit: 10,
+        perUserLimit: 1,
+        active: false,
+      })
+    ).id!;
+    await act(0, "coupon", {
+      id: couponId,
+      version: 1,
+      code: "STAGING10",
+      kind: "percent",
+      value: 1000,
+      courseId: course,
+      expiresAt: null,
+      totalLimit: 10,
+      perUserLimit: 1,
+      active: true,
+    });
+    assert.equal(
+      (
+        await db.query<{ active: boolean; version: number }>(
+          "select active,version from coupons where id=$1",
+          [couponId],
+        )
+      ).rows[0].version,
+      2,
+    );
+    const secondOrder = (
+      await db.query<{ id: string }>(
+        "insert into orders(user_id,course_id,status,base_paise,total_paise,paid_at,course_snapshot,refund_policy_snapshot) select user_id,course_id,'paid',base_paise,total_paise,now()-interval '20 seconds',course_snapshot,refund_policy_snapshot from orders where id=$1 returning id",
+        [order],
+      )
+    ).rows[0].id;
+    await db.query(
+      "insert into enrollments(user_id,course_id,source,order_id)values($1,$2,'purchase',$3)",
+      [ids[2], course, secondOrder],
+    );
+    const removalTask = (
+      await db.query<{ id: string }>("select id from operations_tasks where request_id=$1", [reqId])
+    ).rows[0].id;
+    await assert.rejects(
+      act(0, "task_done", { id: removalTask, note: "Do not remove a current buyer" }),
+      /Buyer has qualifying paid access/,
+    );
+    const lease = (
+      await db.query<{ value: { leaseId: string } }>("select learning_start($1,$2,$3)as value", [
+        ids[2],
+        sessions[2],
+        lesson,
+      ])
+    ).rows[0].value.leaseId;
+    await db.query("select learning_heartbeat($1,$2,$3,1,0,true,false,1)", [
+      ids[2],
+      sessions[2],
+      lease,
+    ]);
     await db.exec("update learning_playbacks set last_at=clock_timestamp()-interval '5.1 seconds'");
-    await db.query("select learning_heartbeat($1,$2,$3,2,9990,true,false,1)",[ids[2],sessions[2],lease]);
-    const beforeLimit=(await db.query<{value:{watchedPercent:number;eligible:boolean}}>("select refund_evidence($1)as value",[secondOrder])).rows[0].value;
-    assert.equal(Number(beforeLimit.watchedPercent),9.99);assert.equal(beforeLimit.eligible,true);
-    const secondRequest=(await db.query<{id:string}>("select refund_request($1,$2,$3,'Please review again')as id",[ids[2],sessions[2],secondOrder])).rows[0].id;
+    await db.query("select learning_heartbeat($1,$2,$3,2,9990,true,false,1)", [
+      ids[2],
+      sessions[2],
+      lease,
+    ]);
+    const beforeLimit = (
+      await db.query<{ value: { watchedPercent: number; eligible: boolean } }>(
+        "select refund_evidence($1)as value",
+        [secondOrder],
+      )
+    ).rows[0].value;
+    assert.equal(Number(beforeLimit.watchedPercent), 9.99);
+    assert.equal(beforeLimit.eligible, true);
+    const secondRequest = (
+      await db.query<{ id: string }>("select refund_request($1,$2,$3,'Please review again')as id", [
+        ids[2],
+        sessions[2],
+        secondOrder,
+      ])
+    ).rows[0].id;
     await db.exec("update learning_playbacks set last_at=clock_timestamp()-interval '2 seconds'");
-    await db.query("select learning_heartbeat($1,$2,$3,3,10000,true,false,1)",[ids[2],sessions[2],lease]);
-    const consumed=(await db.query<{v:{watchedPercent:number;eligible:boolean}}>("select refund_evidence($1)as v",[secondOrder])).rows[0].v;
-    assert.equal(Number(consumed.watchedPercent),10);assert.equal(consumed.eligible,false);
-    await assert.rejects(act(1,"refund_decide",{id:secondRequest,version:1,decision:"approve",note:"No exception authority",goodwill:false}),/Current refund evidence is not eligible/);
-    await assert.rejects(act(1,"refund_decide",{id:secondRequest,version:1,decision:"approve",note:"Support goodwill attempted",goodwill:true}),/Only Admin can override|Current refund evidence is not eligible/);
-    await act(0,"refund_decide",{id:secondRequest,version:1,decision:"approve",note:"Approved exceptional goodwill after review",goodwill:true});
-    assert.equal((await db.query<{goodwill:boolean}>("select goodwill from refund_decisions where request_id=$1",[secondRequest])).rows[0].goodwill,true);
-    const retryReference=(await db.query<{provider_reference:string}>("select provider_reference from refund_requests where id=$1",[secondRequest])).rows[0].provider_reference;
-    assert.equal((await db.query<{ok:boolean}>("select refund_settled($1,false)as ok",[retryReference])).rows[0].ok,false);
-    assert.equal((await db.query<{status:string}>("select status from orders where id=$1",[secondOrder])).rows[0].status,"paid");
-    assert.equal((await db.query<{n:number}>("select count(*)::int as n from notification_outbox where dedupe_key=$1",[`refund:${secondRequest}:failed`])).rows[0].n,1);
-    assert.equal((await db.query<{ok:boolean}>("select refund_settled($1,false)as ok",[retryReference])).rows[0].ok,false);
-    assert.equal((await db.query<{ok:boolean}>("select refund_settled($1,true)as ok",[retryReference])).rows[0].ok,true);
-    await act(0,"task_done",{id:removalTask,note:"Confirmed removal after paid access ended"});
-    assert.equal((await db.query<{state:string}>("select state from operations_tasks where id=$1",[removalTask])).rows[0].state,"done");
+    await db.query("select learning_heartbeat($1,$2,$3,3,10000,true,false,1)", [
+      ids[2],
+      sessions[2],
+      lease,
+    ]);
+    const consumed = (
+      await db.query<{ v: { watchedPercent: number; eligible: boolean } }>(
+        "select refund_evidence($1)as v",
+        [secondOrder],
+      )
+    ).rows[0].v;
+    assert.equal(Number(consumed.watchedPercent), 10);
+    assert.equal(consumed.eligible, false);
+    await assert.rejects(
+      act(1, "refund_decide", {
+        id: secondRequest,
+        version: 1,
+        decision: "approve",
+        note: "No exception authority",
+        goodwill: false,
+      }),
+      /Current refund evidence is not eligible/,
+    );
+    await assert.rejects(
+      act(1, "refund_decide", {
+        id: secondRequest,
+        version: 1,
+        decision: "approve",
+        note: "Support goodwill attempted",
+        goodwill: true,
+      }),
+      /Only Admin can override|Current refund evidence is not eligible/,
+    );
+    await act(0, "refund_decide", {
+      id: secondRequest,
+      version: 1,
+      decision: "approve",
+      note: "Approved exceptional goodwill after review",
+      goodwill: true,
+    });
+    assert.equal(
+      (
+        await db.query<{ goodwill: boolean }>(
+          "select goodwill from refund_decisions where request_id=$1",
+          [secondRequest],
+        )
+      ).rows[0].goodwill,
+      true,
+    );
+    const retryReference = (
+      await db.query<{ provider_reference: string }>(
+        "select provider_reference from refund_requests where id=$1",
+        [secondRequest],
+      )
+    ).rows[0].provider_reference;
+    assert.equal(
+      (await db.query<{ ok: boolean }>("select refund_settled($1,false)as ok", [retryReference]))
+        .rows[0].ok,
+      false,
+    );
+    assert.equal(
+      (await db.query<{ status: string }>("select status from orders where id=$1", [secondOrder]))
+        .rows[0].status,
+      "paid",
+    );
+    assert.equal(
+      (
+        await db.query<{ n: number }>(
+          "select count(*)::int as n from notification_outbox where dedupe_key=$1",
+          [`refund:${secondRequest}:failed`],
+        )
+      ).rows[0].n,
+      1,
+    );
+    assert.equal(
+      (await db.query<{ ok: boolean }>("select refund_settled($1,false)as ok", [retryReference]))
+        .rows[0].ok,
+      false,
+    );
+    assert.equal(
+      (await db.query<{ ok: boolean }>("select refund_settled($1,true)as ok", [retryReference]))
+        .rows[0].ok,
+      true,
+    );
+    await act(0, "task_done", {
+      id: removalTask,
+      note: "Confirmed removal after paid access ended",
+    });
+    assert.equal(
+      (
+        await db.query<{ state: string }>("select state from operations_tasks where id=$1", [
+          removalTask,
+        ])
+      ).rows[0].state,
+      "done",
+    );
     await db.exec("set role authenticated");
     await assert.rejects(
       db.exec("update refund_requests set state='refunded'"),

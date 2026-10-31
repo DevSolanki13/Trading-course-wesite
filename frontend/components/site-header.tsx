@@ -66,6 +66,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [localPreview, setLocalPreview] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     let active = true;
@@ -73,6 +74,7 @@ export function SiteHeader() {
       .then((response) => response.json())
       .then((data) => {
         if (active) setSignedIn(data.authenticated === true);
+        if (active) setLocalPreview(data.localDemo === true);
       })
       .catch(() => {});
     return () => {
@@ -97,7 +99,11 @@ export function SiteHeader() {
       </a>
       <aside className="preview-notice" aria-label="Development preview">
         Preview edition{" "}
-        <span>Course information and prices may change. Enrolment is not open.</span>
+        <span>
+          {localPreview
+            ? "Local demo. Sample courses and test payments only."
+            : "Course information and prices may change. Enrolment is not open."}
+        </span>
       </aside>
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="container header-inner">
@@ -115,7 +121,7 @@ export function SiteHeader() {
           </nav>
           <div className="header-actions">
             <ThemeToggle />
-            <Link className="login-link" href={signedIn ? "/account" : "/login"}>
+            <Link className="login-link" href={signedIn ? "/dashboard" : "/login"}>
               {signedIn ? "My account" : "Log in"} <ArrowUpRight size={15} />
             </Link>
             <Dialog.Root open={open} onOpenChange={setOpen}>

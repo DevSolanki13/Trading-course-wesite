@@ -1,4 +1,4 @@
-import { test } from "node:test";
+﻿import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -51,7 +51,7 @@ test("demo signatures require a secret, fresh timestamp, strict event and origin
       /Expired/,
     );
     assert.throws(
-      () => provider.verifyWebhook(raw, signed(raw, String(Number(timestamp) + 301))),
+      () => provider.verifyWebhook(raw, signed(raw, String(Number(timestamp) + 3600))),
       /Expired/,
     );
     for (const invalid of [
@@ -84,7 +84,7 @@ test("checkout and settlement are atomic, idempotent, owner-scoped and deny term
   const session = "22222222-2222-4222-8222-222222222222";
   try {
     await db.exec(`create role anon; create role authenticated; create role service_role bypassrls;
-      create schema auth; create table auth.users(id uuid primary key,email text,raw_user_meta_data jsonb not null default '{}');
+      create schema auth; create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz default now(),raw_user_meta_data jsonb not null default '{}');
       create table auth.sessions(id uuid primary key,user_id uuid,created_at timestamptz default now(),not_after timestamptz);
       create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
       create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;

@@ -1,7 +1,21 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  distDir: process.env.LOCAL_DEMO === "true" ? ".next-demo" : ".next",
+  turbopack: {},
+  webpack(config) {
+    if (process.env.LOCAL_DEMO === "true")
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored:
+          /[\\/](?:node_modules|\.next(?:-demo)?|\.local-data)[\\/]|[\\/](?:next-env\.d\.ts|tsconfig\.json)$/,
+      };
+    return config;
+  },
   poweredByHeader: false,
+  serverExternalPackages: ["@electric-sql/pglite"],
+  outputFileTracingIncludes: { "/api/orders/*/document": ["./backend/assets/fonts/*.ttf"] },
+  outputFileTracingExcludes: { "/*": ["./.local-data/**/*", "./.next-demo/**/*"] },
   async headers() {
     return [
       {

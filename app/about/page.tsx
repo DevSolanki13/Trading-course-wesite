@@ -5,6 +5,9 @@ export const metadata = pageMetadata(
   "/about",
 );
 import AboutPage from "@/frontend/pages/about-page";
-import{publicCatalog}from"@/backend/public/catalogue";
-export const dynamic="force-dynamic";
-export default async function About(){const data=await publicCatalog();return <AboutPage content={data.content}/>;}
+import { publicCatalog } from "@/backend/public/catalogue";
+export const dynamic = "force-dynamic";
+export default async function About() {
+  const data = await publicCatalog();
+  return <AboutPage content={data.content} />;
+}

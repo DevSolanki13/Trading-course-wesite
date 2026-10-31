@@ -38,5 +38,16 @@ export default defineConfig([
       ],
     },
   },
-  globalIgnores([".next/**", ".agents/**", "out/**", "dist/**", "next-env.d.ts", "artifacts/**"]),
+  globalIgnores([
+    ".next/**",
+    ".next-demo/**",
+    ".local-data/**",
+    ".agents/**",
+    "out/**",
+    "dist/**",
+    "next-env.d.ts",
+    "artifacts/**",
+    "test-results/**",
+    "playwright-report/**",
+  ]),
 ]);

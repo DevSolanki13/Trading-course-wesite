@@ -5,6 +5,9 @@ import { learningAccount, library, loadCourse, lessonAccess } from "../learning/
 import { playbackCredentials } from "../learning/video";
 import { admitted } from "../auth/session";
 import type { LearningAccount } from "../learning/data";
+import { localDemoEnabled } from "../purchase/mode";
+import { purchaseUser } from "../purchase/session";
+import { purchaseCourse } from "../purchase/repository";
 
 function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);
@@ -32,6 +35,18 @@ function rpcError(error: { code?: string } | null) {
   throw new AuthError(503, "Learning progress could not be saved.");
 }
 export async function learningRequest(request: Request) {
+  if (localDemoEnabled()) {
+    if (request.method === "GET" && new URL(request.url).pathname === "/api/learning/course") {
+      const user = await purchaseUser(false);
+      return json({
+        course: await purchaseCourse(
+          new URL(request.url).searchParams.get("slug") ?? "",
+          user?.id ?? null,
+        ),
+      });
+    }
+    return json({ error: "Use the local demo classroom routes." }, 404);
+  }
   try {
     const url = new URL(request.url);
     const action = url.pathname.replace(/^\/api\/learning\//, "");
@@ -65,7 +80,7 @@ export async function learningRequest(request: Request) {
     if (action === "playback") {
       const input = parse(z.object({ lessonId: z.string().uuid() }).strict(), await body(request));
       const account = await optionalAccount();
-      const { lesson, admin } = await lessonAccess(input.lessonId, account);
+      const { lesson, admin, accessExpiresAt } = await lessonAccess(input.lessonId, account);
       await limit(request, "video-token", account?.context.user.id ?? "", 30, 900);
       if (!lesson.duration_seconds)
         throw new AuthError(503, "The lesson is awaiting video duration verification.");
@@ -90,6 +105,7 @@ export async function learningRequest(request: Request) {
       const tokens = await playbackCredentials(
         asset.provider_video_id,
         account?.context.user.email ?? "Market Method | Public preview",
+        lesson.is_preview ? null : accessExpiresAt,
       );
       // Provider calls can take seconds: recheck access and the current lease before disclosure.
       if (account) {

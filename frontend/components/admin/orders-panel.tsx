@@ -19,17 +19,47 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
   const [status, setStatus] = useState("");
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
-  const [from,setFrom]=useState("");const[to,setTo]=useState("");const[courseId,setCourseId]=useState("");const[studentId,setStudentId]=useState("");const[courses,setCourses]=useState<{id:string;title:string}[]>([]);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
   const [page, setPage] = useState(0);
   const [data, setData] = useState<{ items: AdminOrder[]; total: number } | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState("");
-  const params = new URLSearchParams({ page: String(page), status, q: search, from, to, courseId, userId:studentId });
-  useEffect(()=>{adminApi<{courses:{id:string;title:string}[]}>("order-filters").then(d=>setCourses(d.courses)).catch(()=>{});},[]);
+  const [providerBusy, setProviderBusy] = useState(false);
+  async function reconcile() {
+    if (!detail || providerBusy) return;
+    setProviderBusy(true);
+    setError("");
+    try {
+      await adminApi("cashfree-reconcile", { id: detail.order.id });
+      setDetail(await adminApi<Detail>(`order?id=${detail.order.id}`));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Provider check failed.");
+    } finally {
+      setProviderBusy(false);
+    }
+  }
+  const params = new URLSearchParams({
+    page: String(page),
+    status,
+    q: search,
+    from,
+    to,
+    courseId,
+    userId: studentId,
+  });
+  useEffect(() => {
+    adminApi<{ courses: { id: string; title: string }[] }>("order-filters")
+      .then((d) => setCourses(d.courses))
+      .catch(() => {});
+  }, []);
   useEffect(() => {
     let live = true;
     adminApi<{ items: AdminOrder[]; total: number }>(
-      `orders?${new URLSearchParams({ page: String(page), status, q: search, from, to, courseId, userId:studentId })}`,
+      `orders?${new URLSearchParams({ page: String(page), status, q: search, from, to, courseId, userId: studentId })}`,
     )
       .then((d) => {
         if (live) setData(d);
@@ -40,7 +70,7 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
     return () => {
       live = false;
     };
-  }, [page, status, search,from,to,courseId,studentId]);
+  }, [page, status, search, from, to, courseId, studentId]);
   async function open(id: string) {
     try {
       setDetail(await adminApi<Detail>(`order?id=${id}`));
@@ -61,17 +91,68 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
           </a>
         )}
       </div>
-      {role==="admin"&&<p className="admin-help">CSV contains up to 1,000 matching orders. Narrow the filters when exporting larger histories.</p>}
+      {role === "admin" && (
+        <p className="admin-help">
+          CSV contains up to 1,000 matching orders. Narrow the filters when exporting larger
+          histories.
+        </p>
+      )}
       {error && (
         <p className="auth-error" role="alert">
           {error}
         </p>
       )}
       <div className="admin-filter-row">
-        <label>From (IST)<input type="date" value={from} onChange={e=>{setPage(0);setFrom(e.target.value);}}/></label>
-        <label>To (IST)<input type="date" value={to} onChange={e=>{setPage(0);setTo(e.target.value);}}/></label>
-        <label>Course<select value={courseId} onChange={e=>{setPage(0);setCourseId(e.target.value);}}><option value="">All courses</option>{courses.map(c=><option value={c.id} key={c.id}>{c.title}</option>)}</select></label>
-        <label>Student UUID<input value={studentId} onChange={e=>{setPage(0);setStudentId(e.target.value);}} placeholder="Optional student ID"/></label>
+        <label>
+          From (IST)
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => {
+              setPage(0);
+              setFrom(e.target.value);
+            }}
+          />
+        </label>
+        <label>
+          To (IST)
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => {
+              setPage(0);
+              setTo(e.target.value);
+            }}
+          />
+        </label>
+        <label>
+          Course
+          <select
+            value={courseId}
+            onChange={(e) => {
+              setPage(0);
+              setCourseId(e.target.value);
+            }}
+          >
+            <option value="">All courses</option>
+            {courses.map((c) => (
+              <option value={c.id} key={c.id}>
+                {c.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Student UUID
+          <input
+            value={studentId}
+            onChange={(e) => {
+              setPage(0);
+              setStudentId(e.target.value);
+            }}
+            placeholder="Optional student ID"
+          />
+        </label>
         <label>
           Status
           <select
@@ -191,8 +272,14 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
           )}
           <h4>Refund eligibility</h4>
           <p>{detail.evidence.reason}</p>
+          {detail.providerActionsAvailable && role === "admin" && (
+            <button className="button button-secondary" onClick={reconcile} disabled={providerBusy}>
+              {providerBusy ? "Checking provider…" : "Reconcile sandbox payment"}
+            </button>
+          )}
           <p className="admin-help">
-            Invoice resend and provider reconciliation become available with Cashfree Phase 3.
+            Billing documents are generated with confirmed payment. Provider actions require sandbox
+            configuration and verified Admin MFA.
           </p>
         </div>
       )}

@@ -60,13 +60,13 @@ export function checkConfiguration(service: Service, env: Environment): Configur
     }
   }
   if (service === "cashfree" && env.CASHFREE_ENV !== "sandbox")
-    invalid.push("CASHFREE_ENV must remain sandbox during Phase 0");
+    invalid.push("CASHFREE_ENV must remain sandbox until live acceptance is implemented");
   if (
     service === "cashfree" &&
     env.CASHFREE_API_VERSION &&
-    !/^\d{4}-\d{2}-\d{2}$/.test(env.CASHFREE_API_VERSION)
+    env.CASHFREE_API_VERSION !== "2026-01-01"
   )
-    invalid.push("CASHFREE_API_VERSION must be YYYY-MM-DD");
+    invalid.push("CASHFREE_API_VERSION must be 2026-01-01 for this adapter");
   if (service === "email") {
     for (const key of ["RESEND_FROM_EMAIL", "PROVIDER_TEST_EMAIL"]) {
       if (env[key] && !/^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(env[key]!))

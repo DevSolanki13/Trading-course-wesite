@@ -152,6 +152,8 @@ function CourseEditor({
       description: formText(f, "description"),
       price_paise: Math.round(formNumber(f, "price") * 100),
       sale_price_paise: formText(f, "sale") ? Math.round(formNumber(f, "sale") * 100) : null,
+      access_period: formNumber(f, "access_period"),
+      access_unit: formText(f, "access_unit"),
       level: formText(f, "level"),
       language: formText(f, "language"),
       thumbnail_url: formText(f, "thumbnail"),
@@ -313,6 +315,31 @@ function CourseEditor({
               />
             </label>
           </div>
+          <div className="admin-form-grid">
+            <label>
+              Access period
+              <input
+                name="access_period"
+                type="number"
+                min="1"
+                max="3650"
+                step="1"
+                required
+                defaultValue={course?.access_period ?? 1}
+              />
+            </label>
+            <label>
+              Access period unit
+              <select name="access_unit" defaultValue={course?.access_unit ?? "months"}>
+                <option value="months">Calendar months</option>
+                <option value="days">Days</option>
+              </select>
+            </label>
+          </div>
+          <p className="admin-help">
+            Access starts when payment succeeds. Changing this period affects future orders;
+            existing expiry dates stay unchanged. No lifetime access or automatic recurring charges.
+          </p>
           <label>
             Course description
             <textarea
@@ -462,7 +489,7 @@ function CourseEditor({
               className="admin-inline-form admin-panel"
               onSubmit={async (e) => {
                 e.preventDefault();
-                const form=e.currentTarget;
+                const form = e.currentTarget;
                 const f = new FormData(form);
                 if (
                   await run("module_save", {
@@ -841,7 +868,8 @@ function LessonEditor({
         </div>
         <p className="admin-help">
           Published previews are playable without a purchase. Existing consumed video versions
-          cannot be replaced; add a new lesson instead. Unpublish a course before removing its final published lesson.
+          cannot be replaced; add a new lesson instead. Unpublish a course before removing its final
+          published lesson.
         </p>
         <button className="button button-primary" disabled={pending || busy}>
           Save lesson

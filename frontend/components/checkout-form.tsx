@@ -9,16 +9,19 @@ export function CheckoutForm({
   totals,
   refundDays,
   refundWatchLimit,
+  sandbox = false,
 }: {
   course: { slug: string; title: string; description: string };
   totals: { basePaise: number; taxPaise: number; totalPaise: number };
   refundDays: number;
   refundWatchLimit: number;
+  sandbox?: boolean;
 }) {
   const router = useRouter();
   const [terms, setTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [phone, setPhone] = useState("");
   async function submit() {
     setBusy(true);
     setError("");
@@ -26,7 +29,7 @@ export function CheckoutForm({
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: course.slug, terms }),
+        body: JSON.stringify({ slug: course.slug, terms, ...(sandbox ? { phone } : {}) }),
       });
       const data = await response.json();
       if (response.status === 401) {
@@ -46,7 +49,9 @@ export function CheckoutForm({
   }
   return (
     <section className="checkout-card" aria-labelledby="checkout-title">
-      <div className="demo-banner">DEMO MODE — no real payment</div>
+      <div className="demo-banner">
+        {sandbox ? "CASHFREE SANDBOX — test payment only" : "DEMO MODE — no real payment"}
+      </div>
       <h1 id="checkout-title">Review your course</h1>
       <div className="checkout-course">
         <div>
@@ -72,6 +77,24 @@ export function CheckoutForm({
         Refund window: {refundDays} days, with less than {refundWatchLimit}% watched. Read the
         policy for conditions.
       </p>
+      {sandbox && (
+        <label className="auth-field">
+          Indian mobile number
+          <input
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
+            maxLength={10}
+            pattern="[6-9][0-9]{9}"
+            aria-describedby="checkout-phone-help"
+          />
+          <small id="checkout-phone-help">
+            Ten digits, without +91. Required by the payment provider.
+          </small>
+        </label>
+      )}
       <label className="terms-check">
         <input
           type="checkbox"
@@ -91,14 +114,18 @@ export function CheckoutForm({
       )}
       <button
         className="button button-primary checkout-submit"
-        disabled={!terms || busy}
+        disabled={!terms || busy || (sandbox && !/^[6-9][0-9]{9}$/.test(phone))}
         onClick={submit}
       >
-        {busy ? "Preparing your order…" : "Continue to demo payment"}
+        {busy
+          ? "Preparing your order…"
+          : sandbox
+            ? "Continue to sandbox payment"
+            : "Continue to demo payment"}
       </button>
       <p className="checkout-note">
         No money will be collected. The next screen shows the saved order total before you confirm a
-        simulated outcome.
+        {sandbox ? "sandbox outcome." : "simulated outcome."}
       </p>
     </section>
   );

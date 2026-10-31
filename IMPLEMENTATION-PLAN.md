@@ -1,10 +1,10 @@
 # Trading Course Website: Implementation Plan and Project Status
 
-**Last updated:** 30 October 2026 (Asia/Kolkata)  
+**Last updated:** 31 October 2026 (Asia/Kolkata)\
 **Requested delivery:** Friday, 30 October 2026, end of day IST (working assumption; exact handover time unconfirmed)  
 **Original launch:** Monday, 2 November 2026, with work finished by 1 November  
 **Source:** [Course website requirements](./course-website-requirements.md)  
-**Current stage:** Phase 5 Admin/course/refund-review implementation in progress; Cashfree and DRM acceptance pending  
+**Current stage:** Phase 6 local verification plus sandbox commerce/refund/billing/email/scheduler implementation delivered; staging trust/ledger, deployment, provider and DRM acceptance pending\
 **Delivery confidence:** At risk for the full requirements by tomorrow
 
 ## 1. What this document controls
@@ -26,15 +26,15 @@ Status values: **DONE**, **IN PROGRESS**, **NOT STARTED**, **AWAITING INPUT**, *
 | Initial desk research | DONE | Public sources reviewed; findings and limitations in section 4 |
 | Implementation plan and tracker | DONE | This document |
 | Brand, wireframes, visual assets | IN PROGRESS | Provisional Market Method identity, tokens, original artwork/covers and 364 KB ambient video implemented; owner identity/photo approval pending |
-| App foundation and database | DONE | All three staging migrations applied; checksums, 15 RLS tables, private auth-table and nine auth-RPC grants, triggers and defaults verified |
+| App foundation and database | IN PROGRESS | Nine migrations pass isolated local tests. Migration 009 is unapplied to shared staging. Fresh staging trust/ledger acceptance remains blocked; inspect drift before applying anything |
 | Authentication and device limit | IN PROGRESS | Implementation and live staging device/password/MFA tests pass; Resend operator message delivered using testing sender; Google enabled and app PKCE initiation passed. General-recipient sender verification and Google consent/callback acceptance remain open |
 | Public website and legal content | IN PROGRESS | Homepage, catalogue, three course previews, approach/contact and draft policy pages implemented; real content/approval pending |
-| Payments, receipts and refunds | NOT STARTED | Phase 0 signed webhook inbox prepared; order processing, receipts and refunds remain unimplemented |
+| Payments, receipts and refunds | IN PROGRESS | Cashfree sandbox checkout/API confirmation/reconciliation, full refunds, private PDF/HTML billing/credit notes and transactional email queues are implemented and locally tested. Actual merchant/email acceptance, approved tax invoice inputs, coupon redemption and live enablement remain open |
 | DRM player and watch tracking | IN PROGRESS | Backend VdoCipher integration, leases, resume and unique watched ranges implemented; actual automated playback blocked by unavailable Widevine. Physical-browser acceptance pending |
 | Student dashboard and community | IN PROGRESS | Library, classroom, progress, private orders and eligibility-gated community implemented; real content/invites and Phase 3 receipts remain pending |
 | Admin and support workflows | IN PROGRESS | Phase 5 Admin/course/student/refund-review code, migrations 005–006 and staging browser/accessibility acceptance verified. Cashfree refunds and reconciliation remain deferred |
-| QA, performance and accessibility | IN PROGRESS | Build/checks/18 tests and live staging auth/learning access tests pass; 12 learning layout/theme combinations plus earlier storefront/auth checks pass. Actual DRM playback is unverified in the automated browser. Landing local Lighthouse 99 performance/100 accessibility, LCP 0.9s; field/deployment acceptance remains open |
-| Deployment and live readiness | IN PROGRESS | Dedicated Vercel staging project created/linked; no deployment or live-sales readiness yet |
+| QA, performance and accessibility | IN PROGRESS | Fresh build/lint/type/format checks, 35 Node tests, 10 React tests and 32 production-browser tests pass. Prior Phase 6 mobile Lighthouse 100/100 was not repeated for this follow-up; hosted/provider/DRM/restore acceptance remains open |
+| Deployment and live readiness | IN PROGRESS | Local staging link exists but connector returns 404 for the saved team/project and CLI has no credentials. No deployment or live-sales readiness verified |
 | Owner content and service readiness | AWAITING INPUT | Checklist in section 3; availability unconfirmed |
 
 **Progress reporting:** planning, foundation, staging migrations, storefront and account/security implementation are delivered. Full Phase 2 acceptance requires email delivery and Google browser verification. Owner content approval and commerce/video launch integrations remain pending. Do not turn these into an invented percentage.
@@ -50,7 +50,9 @@ The implementer updates this file at the start and end of every work session and
 5. Update the handover section with working features and remaining gaps.
 6. If scope or timing changes, update this document explicitly; keep the original requirement mapped.
 
-**Next task:** finish supported-browser DRM and real-course content acceptance using the [Phase 4 report](./docs/PHASE-4-STATUS.md). Cashfree/Phase 3 remains deferred by the owner; receipts, financial snapshots and real purchase-to-playback acceptance depend on it. Email/Google/owner content and all remaining launch gates still apply.
+**Next task:** follow [Phase 3 implementation/acceptance](./docs/PHASE-3-STATUS.md), [Phase 6](./docs/PHASE-6-STATUS.md) and [the runbook](./docs/OPERATIONS-RUNBOOK.md): restore trusted staging access, investigate ledger drift, restore the saved Vercel project, then review/apply migration 009 with shared-database authorisation and run actual sandbox purchase/refund/billing/email acceptance. Approved tax inputs, courses/videos, physical-device DRM, email/Google and production operations remain launch gates. Live payment and domain purchase are not enabled by this work.
+
+**31 October evidence supersedes earlier status summaries:** lint, TypeScript, formatting, build, 35 Node tests, 10 React tests and 32 isolated production-browser tests pass. Cashfree responses in tests are controlled fixtures, not actual merchant acceptance. The previous local Lighthouse measurement remains historical evidence for the Phase 6 baseline. Shared staging trust/ledger and hosting access remain unresolved; no shared migration, real transaction/email or deployment was performed. Migration 009 is local only.
 
 ## 3. Inputs and external dependencies
 
@@ -275,20 +277,20 @@ Effort ranges below are rough focused engineering hours, not a guarantee or an e
 
 ### Phase 3: Cashfree orders, GST, receipts and coupons
 
-**Estimate:** 10–15 hours. **Status:** NOT STARTED. **Depends on:** course data, Phase 2.
+**Estimate:** 10–15 hours. **Status:** IN PROGRESS — local sandbox commerce implementation delivered; actual provider, GST and coupon gates open. **Depends on:** course data, Phase 2. See [Phase 3 status](./docs/PHASE-3-STATUS.md).
 
-- [ ] Build authenticated checkout and server-side course price/ownership validation.
-- [ ] Snapshot price, discount, GST setting/rate, tax breakdown and business billing details on the order.
+- [x] Build authenticated sandbox checkout and server-side course price/ownership validation; local guard/SQL tests pass.
+- [x] Snapshot order price, tax settings, course, refund policy and supplied billing details; immutability tested locally. Final GST classification/inputs still require owner/accountant approval.
 - [ ] Apply fixed/percentage coupons with scope, expiry, total/per-user limits and atomic usage accounting.
 - [ ] Compute discount first, then GST on the applicable taxable amount, with documented rounding. Confirm final invoice treatment with the accountant.
-- [ ] Create Cashfree orders on the server with immutable totals and safe retry keys; guard concurrent duplicate checkouts.
-- [ ] Verify webhook signatures against the raw request body; check order mapping, amount, currency and successful provider status.
-- [ ] Persist events durably and make event processing idempotent; grant enrollment only from verified server confirmation.
-- [ ] Support pending, failed, cancelled and successful UI states. A failed attempt does not permanently fail an order that later succeeds.
-- [ ] Prevent later/out-of-order failure events from downgrading a confirmed purchase.
-- [ ] Build retry/reconciliation for delayed events, abandoned redirects and paid-but-not-unlocked cases.
-- [ ] Generate GST invoice or non-tax receipt as appropriate; email confirmation and supply secure order-history viewing/download.
-- [ ] Retry email/invoice delivery independently; a failed email must not undo a paid enrollment.
+- [x] Implement sandbox server order creation with stable retry keys and atomic pending-order reuse. Actual provider/multi-connection acceptance remains the exit gate.
+- [x] Verify raw-body signatures and API-confirmed order/customer/amount/currency/success mapping; tested locally with controlled provider responses.
+- [x] Persist minimal event references and idempotently settle payment/enrollment/billing/email in one SQL transaction; rollback tested.
+- [x] Implement pending/closed/success states and failed-attempt retry semantics; local React and contract tests pass.
+- [x] Prevent later failure events from downgrading or refund events from reactivating confirmed purchases; isolated SQL tests pass.
+- [x] Implement durable delayed-event/abandoned-redirect reconciliation and protected scheduler integration; hosted scheduling/alerts still pending.
+- [x] Generate private sandbox billing PDF/HTML snapshots and confirmed-refund credit notes; ownership and Hindi rendering tested. Production GST invoices are not accepted and GST-enabled checkout remains gated.
+- [x] Queue purchase/refund emails independently with bounded retries and stale-claim protection; real inbox delivery and scheduling remain external acceptance.
 
 **Exit gate:** sandbox payment succeeds once, one enrollment is created, and duplicate events do not double-grant access or duplicate receipts. A forged redirect/signature cannot unlock content. Existing ownership shows Go to course.
 
@@ -348,18 +350,18 @@ Effort ranges below are rough focused engineering hours, not a guarantee or an e
 
 ### Phase 6: Verification, deployment and handover
 
-**Estimate:** 6–9 hours. **Status:** NOT STARTED. **Depends on:** all launch-critical functionality.
+**Estimate:** 6–9 hours. **Status:** IN PROGRESS — local verification and handover delivered, external launch gates open. **Depends on:** all launch-critical functionality. Current evidence: [Phase 6 status](./docs/PHASE-6-STATUS.md).
 
-- [ ] Run lint, type checks, production build and targeted automated tests for money, access and refund rules.
+- [x] Run lint, type checks, production build and targeted automated tests for money, access and refund rules. Fresh local checks pass, including 35 Node and 10 React tests.
 - [ ] Complete the critical end-to-end tests in section 11 on an isolated staging dataset.
-- [ ] Check mobile and desktop layouts, both themes, form errors, keyboard focus and reduced-motion behavior.
-- [ ] Measure performance on a production build with a defined mobile/4G profile; record the actual report.
+- [x] Check public mobile and desktop layouts, both themes, form validation, keyboard focus and reduced-motion behavior. 32 production-browser tests cover 48 route/theme checks and 16 Axe audits. Authenticated hosted/player acceptance remains below.
+- [x] Measure performance on a production build with a defined mobile/4G profile; record the actual report. Lighthouse 13.6.0: 100 performance/100 accessibility, LCP 1064ms, CLS 0.0039, TBT 64ms, 312936 transfer bytes; local synthetic catalogue, not hosted/field acceptance.
 - [ ] Validate social previews, public indexing, legal links and authentication of invoice URLs.
 - [ ] Configure production secrets, real webhooks, DNS, HTTPS, production redirects and preview isolation.
 - [ ] Enable database backups, verify a restore procedure, monitoring, alerts, reconciliation and durable email retries.
 - [ ] Run an owner-authorised low-value live payment/refund smoke test if providers are approved. Keep sandbox and live records separate.
-- [ ] Complete all launch gates, or disable real checkout and document remaining blockers.
-- [ ] Provide administrator onboarding, operational runbook, environment/setup documentation, known issues and this updated status file.
+- [x] Complete all launch gates, or disable real checkout and document remaining blockers. Real checkout remains disabled and the current blockers are recorded in the Phase 6 report.
+- [x] Provide administrator onboarding, operational runbook, environment/setup documentation, known issues and this updated status file. See [operational runbook](./docs/OPERATIONS-RUNBOOK.md) and [environment template](./.env.example). Owner access and hosted handover acceptance are still required by the exit gate.
 
 **Exit gate:** owner can review the deployed release, real course content and acceptance evidence. A successful build alone does not mean ready to sell.
 
@@ -433,20 +435,20 @@ Use meaningful automated tests for financial, role and entitlement logic, plus b
 | Login from Buy now | Returns to the same course checkout using a safe internal URL | Safe path tests PASS; live checkout remains Phase 3 |
 | Invalid/expired coupon and concurrent last-use redemption | Server rejects invalid codes and prevents exceeding the usage limit | NOT RUN |
 | GST on/off, discount, rounding, later setting edits | Exact server totals; historical invoices unchanged | NOT RUN |
-| Forged redirect, tampered total and invalid webhook | No enrollment or paid state | NOT RUN |
-| Duplicate/out-of-order events and late SUCCESS after FAILED | Exactly one paid enrollment; paid order never downgraded | NOT RUN |
+| Forged redirect, tampered total and invalid webhook | No enrollment or paid state | PASS locally for safe redirects, demo HMAC/schema/amount checks and atomic grant. Cashfree settlement acceptance open |
+| Duplicate/out-of-order events and late SUCCESS after FAILED | Exactly one paid enrollment; paid order never downgraded | PASS for isolated demo SQL terminal/idempotency tests; Cashfree retry/reconciliation open |
 | Browser closes after payment; webhook delayed | Reconciliation resolves status without charging twice | NOT RUN |
-| Email fails after purchase | Course stays unlocked; email retries safely | NOT RUN |
+| Email fails after purchase | Course stays unlocked; email retries safely | PASS locally for atomic purchase outbox and independent sender/backoff/claim/idempotency-window guards; actual inbox acceptance open |
 | Non-buyer, revoked buyer and preview lesson | Only authorised content receives playback tokens | PASS for live staging authorisation/token tests; actual DRM/browser acceptance remains open |
 | Seek/replay/2x playback/multiple tabs | Watch consumption counts validated unique content time and is capped | PASS for SQL watch ledger and lease replacement; actual DRM telemetry acceptance pending |
-| Refund at 9.99%, 10%, before/at seven days | Boundary behavior matches approved policy | NOT RUN |
-| Duplicate refund approval; provider timeout/failure | No double refund; explicit processing/retry/failure state | NOT RUN |
+| Refund at 9.99%, 10%, before/at seven days | Boundary behavior matches approved policy | PASS locally for exact policy/SQL boundaries; business wording approval and provider acceptance open |
+| Duplicate refund approval; provider timeout/failure | No double refund; explicit processing/retry/failure state | PARTIAL: local review/settlement idempotency and failure tests pass; real provider dispatch/timeout acceptance open |
 | Multiple purchases and one refunded course | Other entitlements remain; community eligibility recalculated correctly | NOT RUN |
 | Support direct endpoint calls | Cannot alter prices, content, settings, staff or other Admin-only resources | Staff API role/MFA boundary PASS; future business endpoints need Phase 5 tests |
 | Add fourth course and unpublished lesson | No code change needed; drafts are not publicly accessible | NOT RUN |
-| Invoice access and CSV injection | Orders are private; exported spreadsheet formulas are neutralised | NOT RUN |
-| Reduced motion, video failure, touch, keyboard and both themes | All core flows usable without decorative motion | NOT RUN |
-| Production build and performance | Build passes; actual reports recorded, not assumed | NOT RUN |
+| Invoice access and CSV injection | Orders are private; exported spreadsheet formulas are neutralised | PASS locally for private billing authorization, PDF/escaped HTML and CSV injection. Approved production tax invoice details and hosted acceptance remain open |
+| Reduced motion, video failure, touch, keyboard and both themes | All core flows usable without decorative motion | PASS for public Chromium matrix; authenticated hosted flows and actual DRM remain open |
+| Production build and performance | Build passes; actual reports recorded, not assumed | PASS locally, 31 Oct: build and defined mobile/4G Lighthouse; hosted/field acceptance open. See Phase 6 report |
 | Launch spike and restore drill | Declared target load handled; database restore procedure demonstrated | NOT RUN |
 
 **Performance acceptance:** preserve the requested under-two-second landing experience as a measured target on an agreed representative 4G profile. Record Lighthouse mobile score (target at least 90), LCP (target at most 2 seconds for the requested experience), CLS (at most 0.1), transfer sizes and environment. Evaluate INP from representative interaction testing and field data when available (target at most 200 ms). Do not claim one lab score guarantees all devices or networks. Load-test an agreed target, initially 200 concurrent browsing sessions and a smaller realistic sandbox checkout burst, within provider limits.
@@ -488,6 +490,8 @@ Missing information is marked unverified until confirmed. It is not evidence tha
 | B08 | Direct Supabase database endpoint required unavailable IPv6 | Business owner + developer | RESOLVED | Session pooler connection verified; staging migration committed and schema checks passed |
 | B09 | General-recipient Resend sender verification | Business owner | PARTIALLY RESOLVED | Operator test now delivered with testing sender; verify a business domain before emailing students and finish real auth email acceptance |
 | B10 | Google browser consent/callback acceptance | Business owner + developer | PARTIALLY RESOLVED | Provider is enabled; app PKCE initiation returns 200. Complete real sign-in/callback and same-email behavior |
+| B11 | Fresh staging schema acceptance fails | Database owner + developer | OPEN | Initial read-only recheck failed migration ledger matching; strict TLS now requires trusted Supabase CA. Restore trust, inspect drift and verify without reapplying migrations blindly |
+| B12 | Saved Vercel staging project unavailable to current credentials | Hosting owner + developer | OPEN | Connector returns 404 for saved name and project ID in saved team; CLI has no credentials. Restore exact target access before deployment |
 
 ## 14. Skill guidance
 
@@ -499,11 +503,13 @@ For implementation, use available frontend-quality, authentication, deployment a
 
 ### Latest handover state
 
+**31 October update:** [Phase 6 verification and handover](./docs/PHASE-6-STATUS.md) is the current acceptance record. Local quality gates pass; new browser/accessibility/404 fixes, safe operator tooling and notification lease protection are delivered. Shared staging, hosted deployment and live commerce/DRM/content gates remain open. [The runbook](./docs/OPERATIONS-RUNBOOK.md) records the next steps and operational ownership.
+
 - **Delivered:** Phase 0 foundation/staging schema, Phase 1 storefront, Phase 2 account/security and Phase 4 library/classroom with protected provider integration, persistent progress and unique watch ranges. Full DRM/browser and real-content acceptance remains open.
 - **Website preview URL:** <http://localhost:3000> while the production preview task runs; no hosted deployment verified.
 - **Website features implemented:** storefront/catalogue/previews, theme/menu/dialog/risk controls, updated draft policies, signup/login/recovery/profile/devices, atomic device admission and revocation, staff MFA/roles/management, Google callback, Resend link transport and durable auth limits. Enrolment remains disabled.
 - **Tests run:** lint/typecheck/format, 18 automated SQL/security tests, production build, four-migration/18-table remote verification, live staging auth and learning access/progress checks, 12 learning layout/Axe combinations and 48 storefront checks pass. The SDK contract simulation saved real server progress and exercised auto-next. Actual DRM remains unverified due to unavailable Widevine in isolated browser profiles. Disposable test records cleaned up. Earlier landing Lighthouse: 99 performance/100 accessibility, LCP 0.9s (local lab only).
-- **Next milestone:** supported-browser DRM and real learning-content acceptance. Cashfree/Phase 3 is deferred by the owner; actual purchase/receipt/refund paths and all launch gates remain open.
+- **Next milestone:** authorised staging migration 009 and actual sandbox purchase/refund/billing/email acceptance after restoring trust/ledger and hosting access. Local commerce implementation has resumed and is delivered; supported-browser DRM, approved content/tax data and production enablement remain open.
 - **Live-sales decision:** not ready; launch gates remain open.
 
 ### Change log

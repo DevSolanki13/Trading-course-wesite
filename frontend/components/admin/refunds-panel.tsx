@@ -5,21 +5,29 @@ import type { RefundRow } from "../../../shared/admin";
 export function RefundsPanel({ role }: { role: "admin" | "support" }) {
   const [state, setState] = useState("");
   const [page, setPage] = useState(0);
-  const [data, setData] = useState<{ items: RefundRow[]; total: number } | null>(null);
+  const [data, setData] = useState<{
+    items: RefundRow[];
+    total: number;
+    providerActionsAvailable?: boolean;
+  } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
   const [current, setCurrent] = useState(0);
   async function load() {
-    const d = await adminApi<{ items: RefundRow[]; total: number }>(
-      `refunds?state=${state}&page=${page}`,
-    );
+    const d = await adminApi<{
+      items: RefundRow[];
+      total: number;
+      providerActionsAvailable?: boolean;
+    }>(`refunds?state=${state}&page=${page}`);
     setData(d);
   }
   useEffect(() => {
     let live = true;
-    adminApi<{ items: RefundRow[]; total: number }>(`refunds?state=${state}&page=${page}`)
+    adminApi<{ items: RefundRow[]; total: number; providerActionsAvailable?: boolean }>(
+      `refunds?state=${state}&page=${page}`,
+    )
       .then((d) => {
         if (live) setData(d);
       })
@@ -70,6 +78,20 @@ export function RefundsPanel({ role }: { role: "admin" | "support" }) {
       setCurrent((n) => n + 1);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Request failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+  async function processRefund(id: string) {
+    setPending(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await adminApi<{ message: string }>("refund-process", { id });
+      setMessage(result.message);
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Provider check failed.");
     } finally {
       setPending(false);
     }
@@ -145,6 +167,17 @@ export function RefundsPanel({ role }: { role: "admin" | "support" }) {
                   </div>
                 </div>
                 {r.review_note && <p className="admin-help">Review note: {r.review_note}</p>}
+                {data.providerActionsAvailable &&
+                  role === "admin" &&
+                  ["approved", "processing"].includes(r.state) && (
+                    <button
+                      className="button button-secondary"
+                      disabled={pending}
+                      onClick={() => processRefund(r.id)}
+                    >
+                      Process/check sandbox refund
+                    </button>
+                  )}
                 {["requested", "failed"].includes(r.state) && (
                   <>
                     <button
