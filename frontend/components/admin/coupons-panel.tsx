@@ -41,7 +41,7 @@ export function CouponsPanel() {
       });
       await load();
       setEditing(null);
-      setMessage("Coupon saved. Codes will apply only when checkout is connected.");
+      setMessage("Coupon saved. Students can use it at checkout.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Coupon could not save.");
     } finally {
@@ -53,7 +53,7 @@ export function CouponsPanel() {
       <div className="admin-section-head">
         <div>
           <h2>Coupons</h2>
-          <p>Prepare discounts and scope. Checkout redemption is deferred with Phase 3.</p>
+          <p>Generate course-specific or general discounts for students at checkout.</p>
         </div>
       </div>
       {error && (

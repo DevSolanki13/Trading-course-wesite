@@ -6,6 +6,7 @@ export async function createPurchase(
   user: PurchaseUser,
   course: string,
   origin: string,
+  coupon?: string,
 ): Promise<PurchaseOrder> {
   const provider = getPaymentProvider();
   const id = await purchaseRpc<string>("purchase_create_order", {
@@ -13,6 +14,7 @@ export async function createPurchase(
     p_course: course,
     p_provider: provider.name,
     p_origin: origin,
+    ...(coupon ? { p_coupon: coupon } : {}),
   });
   let order = (await purchaseOrder(id, user.id))!;
   if (!order.providerOrderId) {
