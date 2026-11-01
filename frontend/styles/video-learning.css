@@ -1,0 +1,1232 @@
+/* ============================================================================
+   VIDEO LEARNING PLAYER STYLESHEET
+   Matching GlobalBulls Dark Design System (#07090C / #111111 / #00df8f)
+   ============================================================================ */
+
+/* Hide global storefront header/footer/spacers inside the dedicated learning portal */
+body:has(.video-learning-page) .site-header,
+body:has(.video-learning-page) .site-footer,
+body:has(.video-learning-page) .site-header-spacer {
+  display: none !important;
+}
+
+.video-learning-page {
+  min-height: 100vh;
+  background-color: #07090c;
+  color: #f3f4f6;
+  font-family: var(--font-body, system-ui, -apple-system, sans-serif);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================================
+   TOP PORTAL NAVIGATION HEADER
+   ============================================================================ */
+.vlp-header {
+  height: 64px;
+  background-color: #07090c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.vlp-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.vlp-brand-mark {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.vlp-brand-text {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.vlp-brand-text span {
+  color: #00df8f;
+}
+
+.vlp-center-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 64px;
+}
+
+.vlp-nav-item {
+  display: inline-flex;
+  align-items: center;
+  height: 64px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration: none;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.vlp-nav-item:hover {
+  color: #ffffff;
+}
+
+.vlp-nav-item.is-active {
+  color: #ffffff;
+}
+
+.vlp-nav-item.is-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 14px;
+  right: 14px;
+  height: 2px;
+  background-color: #00df8f;
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 10px rgba(0, 223, 143, 0.5);
+}
+
+.vlp-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.vlp-icon-btn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.vlp-icon-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vlp-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.vlp-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: rgba(0, 223, 143, 0.12);
+  border: 1.5px solid #00df8f;
+  color: #00df8f;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vlp-avatar-caret {
+  color: #9ca3af;
+}
+
+.vlp-user-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 220px;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vlp-dropdown-user-info {
+  padding: 8px 10px 10px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.vlp-dropdown-user-info strong {
+  display: block;
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.vlp-dropdown-user-info small {
+  display: block;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vlp-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #d1d5db;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vlp-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+/* ============================================================================
+   MAIN TWO-COLUMN PORTAL LAYOUT
+   ============================================================================ */
+.vlp-portal-body {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  min-height: calc(100vh - 64px);
+  flex: 1;
+}
+
+/* ============================================================================
+   LEFT SIDEBAR (CURRICULUM & PROGRESS)
+   ============================================================================ */
+.vlp-sidebar {
+  background-color: #07090c;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for sidebar */
+.vlp-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.vlp-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.vlp-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.vlp-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.vlp-back-link:hover {
+  color: #ffffff;
+}
+
+/* Course banner card */
+.vlp-course-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 110px;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+
+.vlp-course-card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+
+.vlp-course-card-artwork {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.7;
+}
+
+.vlp-course-card-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 9, 12, 0.2) 0%, rgba(7, 9, 12, 0.85) 100%);
+}
+
+.vlp-course-card-title {
+  position: relative;
+  z-index: 1;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.3;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Progress block */
+.vlp-progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vlp-progress-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.vlp-progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vlp-progress-bar {
+  height: 100%;
+  background: #00df8f;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Content label */
+.vlp-content-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-top: 4px;
+}
+
+/* Module Accordion */
+.vlp-curriculum-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vlp-module-accordion {
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.vlp-module-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.vlp-module-header:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.vlp-module-title-box strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.vlp-module-title-box span {
+  display: block;
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.vlp-module-chevron {
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+
+.vlp-module-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.vlp-lesson-list {
+  padding: 4px 8px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vlp-lesson-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  color: #9ca3af;
+}
+
+.vlp-lesson-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+}
+
+.vlp-lesson-item.is-active {
+  background: rgba(0, 223, 143, 0.08);
+  border-color: rgba(0, 223, 143, 0.25);
+  color: #ffffff;
+}
+
+.vlp-lesson-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.vlp-lesson-icon.is-active {
+  background: #00df8f;
+  color: #07090c;
+}
+
+.vlp-lesson-icon.is-completed {
+  color: #00df8f;
+}
+
+.vlp-lesson-icon.is-unwatched {
+  color: #6b7280;
+}
+
+.vlp-lesson-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.vlp-lesson-item.is-active .vlp-lesson-name {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vlp-lesson-duration {
+  font-size: 11px;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.vlp-lesson-item.is-active .vlp-lesson-duration {
+  color: #00df8f;
+}
+
+/* Sidebar Bottom Pin */
+.vlp-sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* ============================================================================
+   RIGHT MAIN CONTENT AREA
+   ============================================================================ */
+.vlp-main {
+  padding: 28px 44px 60px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1240px;
+  width: 100%;
+}
+
+.vlp-breadcrumbs {
+  font-size: 12px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vlp-breadcrumbs a {
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.vlp-breadcrumbs a:hover {
+  color: #ffffff;
+}
+
+.vlp-breadcrumbs span {
+  color: #ffffff;
+}
+
+.vlp-lesson-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.vlp-lesson-header h1 {
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.vlp-lesson-meta {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-top: 6px;
+}
+
+.vlp-secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(0, 223, 143, 0.08);
+  border: 1px solid rgba(0, 223, 143, 0.25);
+  color: #00df8f;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   VIDEO PLAYER CONTAINER & OVERLAY CONTROLS
+   ============================================================================ */
+.vlp-player-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.vlp-video-element {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  background: #000;
+}
+
+/* Watermark */
+.vlp-watermark {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.vlp-watermark span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* Big center play button */
+.vlp-center-play-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.vlp-center-play-wrap:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.vlp-center-play-btn {
+  width: 68px;
+  height: 68px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.vlp-center-play-wrap:hover .vlp-center-play-btn {
+  transform: scale(1.08);
+  border-color: #00df8f;
+  color: #00df8f;
+}
+
+/* Bottom Controls Overlay Bar */
+.vlp-player-controls-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 70%, rgba(0, 0, 0, 0.95) 100%);
+  padding: 24px 18px 12px 18px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+}
+
+.vlp-player-container.is-playing:not(:hover) .vlp-player-controls-overlay {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Scrubber / Progress track */
+.vlp-scrubber-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  position: relative;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+
+.vlp-scrubber-track:hover {
+  height: 7px;
+}
+
+.vlp-scrubber-fill {
+  height: 100%;
+  background: #00df8f;
+  border-radius: 3px;
+  position: relative;
+}
+
+.vlp-scrubber-thumb {
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) scale(0);
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(0, 223, 143, 0.8);
+  transition: transform 0.15s ease;
+}
+
+.vlp-scrubber-track:hover .vlp-scrubber-thumb {
+  transform: translateY(-50%) scale(1);
+}
+
+/* Controls bottom row */
+.vlp-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vlp-controls-left,
+.vlp-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vlp-ctrl-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.vlp-ctrl-btn:hover {
+  color: #00df8f;
+  transform: scale(1.08);
+}
+
+.vlp-time-readout {
+  font-size: 12px;
+  color: #d1d5db;
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+.vlp-speed-dropdown {
+  position: relative;
+}
+
+.vlp-speed-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.vlp-speed-btn:hover {
+  color: #00df8f;
+}
+
+.vlp-speed-menu {
+  position: absolute;
+  bottom: 28px;
+  right: 0;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 75px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 30;
+}
+
+.vlp-speed-option {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s ease;
+}
+
+.vlp-speed-option:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.vlp-speed-option.is-active {
+  color: #00df8f;
+  font-weight: 700;
+}
+
+/* Demo watermark banner */
+.vlp-demo-badge {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   LESSON NAVIGATION & ACTION BUTTONS BAR
+   ============================================================================ */
+.vlp-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.vlp-prev-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e5e7eb;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.vlp-prev-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.vlp-prev-btn:disabled,
+.vlp-prev-btn.is-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.vlp-complete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 26px;
+  border-radius: 9999px;
+  background: #00df8f;
+  border: none;
+  color: #07090c;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 14px rgba(0, 223, 143, 0.25);
+}
+
+.vlp-complete-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.vlp-complete-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.vlp-complete-btn.is-completed {
+  background: rgba(0, 223, 143, 0.15);
+  color: #00df8f;
+  border: 1px solid rgba(0, 223, 143, 0.3);
+  box-shadow: none;
+}
+
+/* ============================================================================
+   LESSON TABS & CARD CONTENT
+   ============================================================================ */
+.vlp-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 14px;
+}
+
+.vlp-tab-btn {
+  background: none;
+  border: none;
+  padding: 14px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9ca3af;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.vlp-tab-btn:hover {
+  color: #ffffff;
+}
+
+.vlp-tab-btn.is-active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vlp-tab-btn.is-active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #00df8f;
+  border-radius: 2px 2px 0 0;
+}
+
+.vlp-card-panel {
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.vlp-summary-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.vlp-summary-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #d1d5db;
+  margin-bottom: 24px;
+}
+
+.vlp-learn-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 14px;
+}
+
+.vlp-takeaways-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.vlp-takeaway-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #d1d5db;
+}
+
+.vlp-takeaway-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: rgba(0, 223, 143, 0.15);
+  color: #00df8f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Tab: Notes Panel */
+.vlp-notes-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vlp-notes-textarea {
+  width: 100%;
+  min-height: 180px;
+  background: #07090c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 16px;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.vlp-notes-textarea:focus {
+  outline: none;
+  border-color: #00df8f;
+  box-shadow: 0 0 0 1px #00df8f;
+}
+
+.vlp-notes-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Tab: Resources Panel */
+.vlp-resources-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vlp-resource-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #07090c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.vlp-resource-item:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.vlp-resource-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vlp-resource-info strong {
+  display: block;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.vlp-resource-info small {
+  display: block;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.vlp-resource-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #d1d5db;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vlp-resource-dl-btn:hover {
+  background: rgba(0, 223, 143, 0.12);
+  border-color: rgba(0, 223, 143, 0.3);
+  color: #00df8f;
+}
+
+/* ============================================================================
+   RESPONSIVENESS
+   ============================================================================ */
+@media (max-width: 1024px) {
+  .vlp-portal-body {
+    grid-template-columns: 1fr;
+  }
+
+  .vlp-sidebar {
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .vlp-main {
+    padding: 24px 20px 48px 20px;
+  }
+
+  .vlp-takeaways-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+
+
+/* ============================================================================
+   EMBEDDED INSIDE STUDENT DASHBOARD WORKSPACE (IN THE MAIN CONTENT AREA)
+   ============================================================================ */
+.student-dashboard-page .video-learning-page {
+  min-height: auto;
+  background: transparent;
+}
+
+.student-dashboard-page .vlp-portal-body {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 28px;
+  min-height: auto;
+}
+
+.student-dashboard-page .vlp-sidebar {
+  background-color: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 22px 18px;
+  position: sticky;
+  top: 24px;
+  height: fit-content;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.student-dashboard-page .vlp-main {
+  padding: 0;
+  max-width: none;
+}
+
+@media (max-width: 1200px) {
+  .student-dashboard-page .vlp-portal-body {
+    grid-template-columns: 1fr;
+  }
+
+  .student-dashboard-page .vlp-sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
+/* ============================================================================
+   LIGHT MODE OVERRIDES FOR VIDEO LEARNING PORTAL & CURRICULUM
+   ============================================================================ */
+:root[data-theme="light"] .video-learning-page {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .student-dashboard-page .vlp-sidebar {
+  background-color: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="light"] .vlp-module-header {
+  background: var(--raised, #f0f4f2);
+  border-color: var(--line, rgba(0, 0, 0, 0.1));
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-lesson-item {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-lesson-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-lesson-item.is-active {
+  background: rgba(8, 120, 79, 0.1);
+  color: var(--accent, #08784f);
+}
+
+:root[data-theme="light"] .vlp-lesson-header h1 {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-tab-content {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="light"] .vlp-notes-textarea {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.12));
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-resource-item {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.08));
+}
+
+:root[data-theme="light"] .vlp-resource-info strong {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-prev-btn {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.12));
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-takeaway-item {
+  background: var(--raised, #f0f4f2);
+  border-color: var(--line, rgba(0, 0, 0, 0.08));
+}
+
+:root[data-theme="light"] .vlp-takeaway-item p {
+  color: var(--foreground, #131b19);
+}
+

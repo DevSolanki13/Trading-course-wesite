@@ -4,9 +4,17 @@ import { localDemoEnabled } from "@/backend/purchase/mode";
 import { PurchaseDashboard } from "@/frontend/components/purchase-dashboard";
 import { redirect } from "next/navigation";
 import "@/frontend/styles/learning.css";
+import "@/frontend/styles/admin.css";
+import "@/frontend/styles/student-dashboard.css";
+import "@/frontend/styles/video-learning.css";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "My courses", robots: { index: false, follow: false } };
-export default async function Dashboard() {
+export const metadata = { title: "Student Dashboard | GlobalBulls", robots: { index: false, follow: false } };
+export default async function Dashboard({
+  searchParams,
+}: {
+  searchParams?: Promise<{ course?: string; lesson?: string; view?: string }>;
+}) {
+  const query = searchParams ? await searchParams : {};
   const user = await requirePurchaseUser("/dashboard");
   if (user.role === "admin") {
     redirect("/admin");
@@ -16,8 +24,11 @@ export default async function Dashboard() {
     <PurchaseDashboard
       user={user}
       courses={courses.filter((c) => c.owned || c.accessExpiresAt)}
+      allCourses={courses}
       orders={orders}
       local={localDemoEnabled()}
+      initialCourseSlug={query.course}
+      initialLessonId={query.lesson}
     />
   );
 }

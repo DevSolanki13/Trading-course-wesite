@@ -11,6 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <SiteHeader />
+      <div className="site-header-spacer" aria-hidden="true" />
       {children}
       <SiteFooter />
       <PurchaseToaster />

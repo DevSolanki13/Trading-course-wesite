@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowUpRight,
   List,
-  Moon,
-  Sun,
   X,
   User as UserIcon,
   SignOut,
@@ -28,36 +26,8 @@ type HeaderUser = {
   role?: "admin" | "student" | "support";
 };
 
-const subscribe = (callback: () => void) => {
-  window.addEventListener("theme-change", callback);
-  return () => window.removeEventListener("theme-change", callback);
-};
-const getTheme = () => document.documentElement.dataset.theme ?? "dark";
-const getServerTheme = () => "dark";
-
-export function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribe, getTheme, getServerTheme);
-  function toggle() {
-    const next = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("market-method-theme", next);
-    } catch {
-      /* Storage is optional. */
-    }
-    window.dispatchEvent(new Event("theme-change"));
-  }
-  return (
-    <button
-      className="icon-button theme-toggle"
-      onClick={toggle}
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-    >
-      <Sun size={19} className="sun-icon" />
-      <Moon size={19} className="moon-icon" />
-    </button>
-  );
-}
+import { ThemeToggle } from "./theme-toggle";
+export { ThemeToggle };
 
 export function Brand({ footer = false }: { footer?: boolean }) {
   return (
@@ -87,7 +57,6 @@ export function SiteHeader() {
   const [signedIn, setSignedIn] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [user, setUser] = useState<HeaderUser | null>(null);
-  const [localPreview, setLocalPreview] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -108,7 +77,6 @@ export function SiteHeader() {
           setSignedIn(true);
           setUser(data.user);
           setRole(data.user.role ?? null);
-          setLocalPreview(data.localDemo === true);
         }
       })
       .catch(() => {
@@ -183,14 +151,6 @@ export function SiteHeader() {
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <aside className="preview-notice" aria-label="Development preview">
-        Preview edition{" "}
-        <span>
-          {localPreview
-            ? "Local demo. Sample courses and test payments only."
-            : "Course information and prices may change. Enrolment is not open."}
-        </span>
-      </aside>
       <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <div className="container header-inner">
           <Brand />

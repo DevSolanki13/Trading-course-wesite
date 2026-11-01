@@ -9,6 +9,7 @@ import { createPurchase, settlePurchase } from "../purchase/service";
 import {
   purchaseCatalog,
   purchaseCourse,
+  purchaseLesson,
   purchaseOrder,
   purchaseOrders,
   purchaseRpc,
@@ -35,6 +36,12 @@ export async function purchaseRequest(request: Request) {
             user?.id ?? null,
           ),
         });
+      }
+      if (action === "lesson") {
+        const user = await purchaseUser(false);
+        const lessonId = z.string().uuid().parse(url.searchParams.get("id"));
+        const lesson = await purchaseLesson(lessonId, user?.id ?? null);
+        return json({ lesson });
       }
       const user = (await purchaseUser())!;
       if (action === "dashboard") {

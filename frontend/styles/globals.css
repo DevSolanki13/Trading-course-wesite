@@ -354,9 +354,32 @@ main {
   color: #3c5082;
 }
 .site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
   border-bottom: 1px solid var(--line);
-  position: relative;
-  z-index: 20;
+  background: color-mix(in srgb, var(--background) 90%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition:
+    box-shadow 0.25s,
+    background 0.25s;
+}
+.site-header-spacer {
+  height: 88px;
+  width: 100%;
+  pointer-events: none;
+}
+@media (max-width: 768px) {
+  .site-header-spacer {
+    height: 71px;
+  }
+}
+body:has(.admin-page) .site-header-spacer {
+  display: none;
 }
 .header-inner {
   display: flex;
@@ -437,13 +460,13 @@ main {
   color: var(--muted);
 }
 .moon-icon {
-  display: none;
+  display: none !important;
 }
 :root[data-theme="light"] .sun-icon {
-  display: none;
+  display: none !important;
 }
 :root[data-theme="light"] .moon-icon {
-  display: block;
+  display: inline-block !important;
 }
 .login-link {
   display: flex;
@@ -3039,17 +3062,9 @@ h3 {
 .method-step-number {
   font-family: var(--mono);
 }
-.site-header {
-  position: sticky;
-  top: 0;
-  background: color-mix(in srgb, var(--background) 84%, transparent);
-  backdrop-filter: blur(18px);
-  transition:
-    box-shadow 0.25s,
-    background 0.25s;
-}
 .site-header.is-scrolled {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  background: color-mix(in srgb, var(--background) 96%, transparent);
 }
 .header-inner {
   transition: height 0.25s;

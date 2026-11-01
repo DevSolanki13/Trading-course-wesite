@@ -119,8 +119,8 @@ export async function setRemember(remember: boolean) {
   (await cookies()).set("mm_remember", remember ? "1" : "0", cookiePolicy(remember));
 }
 export function destination(state: string, next: unknown, context: Identity) {
-  if (state === "limit") return `/auth/devices?next=${encodeURIComponent(safeNext(next))}`;
-  return safeNext(next, isPrivileged(context.profile.role) ? "/admin" : "/account");
+  if (state === "limit") return `/auth/devices?next=${encodeURIComponent(safeNext(next, "/dashboard"))}`;
+  return safeNext(next, isPrivileged(context.profile.role) ? "/admin" : "/dashboard");
 }
 export async function audit(context: Identity, action: string, target: string) {
   const { error } = await context.admin

@@ -352,7 +352,7 @@ export async function adminRequest(request: Request) {
       if (request.method === "GET" && action === "courses") {
         const db = await localDatabase();
         const courses = await db.query(
-          "select id,title,slug,status,price_paise,sale_price_paise,access_period,access_unit,created_at,updated_at,coalesce(version, 1) as version from courses order by updated_at desc limit 200",
+          'select id,title,slug,status,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,thumbnail_url as "thumbnailUrl",artwork,created_at,updated_at,coalesce(version, 1) as version from courses order by updated_at desc limit 200',
         );
         return json({ items: courses.rows });
       }
@@ -461,7 +461,7 @@ export async function adminRequest(request: Request) {
         const r = await context.admin
           .from("courses")
           .select(
-            "id,title,slug,status,price_paise,sale_price_paise,access_period,access_unit,created_at,updated_at,version",
+            "id,title,slug,status,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,artwork,created_at,updated_at,version",
           )
           .order("updated_at", { ascending: false })
           .limit(200);

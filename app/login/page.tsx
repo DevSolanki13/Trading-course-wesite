@@ -15,7 +15,7 @@ export default async function Login({
           ? query.redirect
           : typeof query.next === "string"
             ? query.next
-            : undefined
+            : "/dashboard"
       }
       error={
         query.error === "oauth"

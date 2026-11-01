@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MfaPanel } from "../mfa-panel";
 import { BullMark } from "../bull-mark";
+import { ThemeToggle } from "../theme-toggle";
 import { CourseManager } from "./course-manager";
 import { OverviewPanel } from "./overview-panel";
 import { StudentsPanel } from "./students-panel";
@@ -20,7 +21,6 @@ import {
   Receipt,
   ArrowUUpLeft,
   Gear,
-  Plus,
   CaretDown,
   Fingerprint,
   Ticket,
@@ -174,8 +174,17 @@ export function AdminWorkspace() {
         </div>
       </aside>
       <div className="admin-content">
+        <header className="admin-top">
+          <div className="admin-breadcrumb">
+            <span>Admin</span>
+            <span>/</span>
+            <strong>{views.find((v) => v.id === view)?.label ?? "Workspace"}</strong>
+          </div>
+          <div className="admin-top-actions">
+            <ThemeToggle />
+          </div>
+        </header>
         <div className="admin-main">
-          {view === "courses" && user.role === "admin" && <div className="admin-page-heading"><div><h1>Courses</h1><p>Manage your curriculum, pricing and publishing.</p></div><button className="button button-primary" onClick={() => setView("courses")}><Plus size={19} /> New course</button></div>}
           {view === "overview" && <OverviewPanel />}
           {view === "courses" && user.role === "admin" && <CourseManager />}
           {view === "students" && <StudentsPanel role={user.role as "admin" | "support"} />}

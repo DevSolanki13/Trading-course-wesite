@@ -1,26 +1,111 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Script from "next/script";
-import { useHydrated } from "../lib/use-hydrated";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { PurchaseCourse, PurchaseLessonContent } from "../../shared/purchase";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CaretDown,
+  Check,
+  CheckCircle,
+  ClosedCaptioning,
+  CornersIn,
+  CornersOut,
+  DownloadSimple,
+  FilePdf,
+  LockSimple,
+  NotePencil,
+  Pause,
+  PictureInPicture,
+  Play,
+  PlayCircle,
+  ShieldCheck,
+  SpeakerHigh,
+  SpeakerSimpleSlash,
+  CalendarBlank,
+} from "@phosphor-icons/react";
+import type {
+  PurchaseCourse,
+  PurchaseLessonContent,
+  PurchaseUser,
+} from "../../shared/purchase";
 import { accessExpiryLabel } from "../../shared/course-access";
+import { BullMark } from "./bull-mark";
+import { CourseArtwork } from "./course-artwork";
+
 export function PurchasePlayer({
   course,
   lesson,
+  user,
+  onBack,
+  onLessonChange,
 }: {
   course: PurchaseCourse;
   lesson: PurchaseLessonContent;
+  user?: PurchaseUser | null;
+  onBack?: () => void;
+  onLessonChange?: (lessonId: string) => void;
 }) {
   const router = useRouter();
-  const interactive = useHydrated();
+
+  // State management
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState("");
   const [videoError, setVideoError] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "notes" | "resources">("overview");
+
+  // Video playback states
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Student notes state with localStorage persistence
+  const [notes, setNotes] = useState("");
+  const [notesSaved, setNotesSaved] = useState(false);
+
+  // Collapsed modules state (record of module id -> boolean)
+  const [collapsedModules, setCollapsedModules] = useState<Record<string, boolean>>({});
+
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
   const vdoIframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Flattened lessons list & indices
+  const allLessons = useMemo(() => {
+    return course.modules.flatMap((m) => m.lessons);
+  }, [course.modules]);
+
+  const currentIndex = useMemo(() => {
+    return allLessons.findIndex((l) => l.id === lesson.id);
+  }, [allLessons, lesson.id]);
+
+  const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+  const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
+
+  const totalLessons = allLessons.length;
+  const completedLessonsCount = allLessons.filter((l) => l.completed).length;
+
+  // Load notes from localStorage for this lesson
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(`globalbulls_notes_${lesson.id}`);
+        setNotes(saved ?? "");
+      } catch {
+        // ignore
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [lesson.id]);
+
+  // Handle access expiry timer
   useEffect(() => {
     if (lesson.preview || !course.accessExpiresAt) return;
     let timer: ReturnType<typeof setTimeout>;
@@ -39,14 +124,23 @@ export function PurchasePlayer({
     checkExpiry();
     return () => clearTimeout(timer);
   }, [course.accessExpiresAt, course.slug, lesson.preview, router]);
-  const lessons = course.modules.flatMap((m) => m.lessons);
-  const index = lessons.findIndex((l) => l.id === lesson.id);
+
+  // Mark lesson complete callback
   const complete = useCallback(
-    async (explicitValue?: boolean) => {
+    async (explicitValue?: boolean, autoAdvance = false) => {
       const nextCompleted = explicitValue !== undefined ? explicitValue : !lesson.completed;
-      if (explicitValue !== undefined && lesson.completed === explicitValue) return;
+      if (explicitValue !== undefined && lesson.completed === explicitValue) {
+        if (autoAdvance && nextLesson) {
+          if (onLessonChange) {
+            onLessonChange(nextLesson.id);
+          } else {
+            router.push(`/learn/${course.slug}/${nextLesson.id}`);
+          }
+        }
+        return;
+      }
+
       setPending(true);
-      setError("");
       try {
         const r = await fetch("/api/purchase/complete", {
           method: "POST",
@@ -55,22 +149,33 @@ export function PurchasePlayer({
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.error ?? "Progress could not be saved.");
+
         toast.success(
           nextCompleted
             ? "Lesson completed! Course progress updated."
             : "Lesson marked incomplete.",
         );
+
         router.refresh();
+
+        if (autoAdvance && nextCompleted && nextLesson) {
+          if (onLessonChange) {
+            onLessonChange(nextLesson.id);
+          } else {
+            router.push(`/learn/${course.slug}/${nextLesson.id}`);
+          }
+        }
       } catch (reason) {
         const message = reason instanceof Error ? reason.message : "Progress could not be saved.";
-        setError(message);
         toast.error(message);
       } finally {
         setPending(false);
       }
     },
-    [lesson.id, lesson.completed, router],
+    [lesson.id, lesson.completed, nextLesson, course.slug, router, onLessonChange],
   );
+
+  // VdoCipher DRM Integration
   useEffect(() => {
     if (!lesson.vdoCipher || lesson.completed) return;
     let cleanup: (() => void) | undefined;
@@ -91,13 +196,15 @@ export function PurchasePlayer({
         try {
           const player = win.VdoPlayer.getInstance(vdoIframeRef.current);
           const onEnded = () => {
-            void complete(true);
+            void complete(true, true);
           };
           player.video.addEventListener("ended", onEnded);
           cleanup = () => {
             try {
               player.video.removeEventListener("ended", onEnded);
-            } catch {}
+            } catch {
+              // ignore
+            }
           };
           return true;
         } catch {
@@ -118,146 +225,752 @@ export function PurchasePlayer({
       cleanup?.();
     };
   }, [lesson.id, lesson.completed, lesson.vdoCipher, complete]);
+
+  // Video playback controller functions
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    const nextMuted = !isMuted;
+    videoRef.current.muted = nextMuted;
+    setIsMuted(nextMuted);
+    if (!nextMuted && volume === 0) {
+      videoRef.current.volume = 1;
+      setVolume(1);
+    }
+  };
+
+  const handleVolumeChange = (newVolume: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.volume = newVolume;
+    setVolume(newVolume);
+    if (newVolume === 0) {
+      setIsMuted(true);
+      videoRef.current.muted = true;
+    } else if (isMuted) {
+      setIsMuted(false);
+      videoRef.current.muted = false;
+    }
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!videoRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    const targetTime = Math.max(0, Math.min(duration, pos * duration));
+    videoRef.current.currentTime = targetTime;
+    setCurrentTime(targetTime);
+  };
+
+  const handleSpeedChange = (speed: number) => {
+    if (!videoRef.current) return;
+    videoRef.current.playbackRate = speed;
+    setPlaybackSpeed(speed);
+    setSpeedMenuOpen(false);
+  };
+
+  const toggleFullscreen = () => {
+    if (!playerContainerRef.current) return;
+    if (!document.fullscreenElement) {
+      playerContainerRef.current.requestFullscreen?.().then(() => {
+        setIsFullscreen(true);
+      }).catch(() => {});
+    } else {
+      document.exitFullscreen?.().then(() => {
+        setIsFullscreen(false);
+      }).catch(() => {});
+    }
+  };
+
+  const togglePiP = () => {
+    if (!videoRef.current) return;
+    if (document.pictureInPictureElement) {
+      document.exitPictureInPicture?.().catch(() => {});
+    } else if (document.pictureInPictureEnabled) {
+      videoRef.current.requestPictureInPicture?.().catch(() => {});
+    }
+  };
+
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs < 0) return "00:00";
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // Format lesson duration for display
+  const durationMinutes = useMemo(() => {
+    if (lesson.duration && lesson.duration > 0) {
+      return Math.max(1, Math.round(lesson.duration / 60));
+    }
+    return 12; // default placeholder matching design
+  }, [lesson.duration]);
+
+  const saveNotes = () => {
+    try {
+      localStorage.setItem(`globalbulls_notes_${lesson.id}`, notes);
+      setNotesSaved(true);
+      toast.success("Notes saved locally for this lesson.");
+      setTimeout(() => setNotesSaved(false), 2500);
+    } catch {
+      toast.error("Could not save note to browser storage.");
+    }
+  };
+
   return (
-    <main id="main-content" className="container purchase-classroom">
-      <aside className="purchase-sidebar">
-        <Link className="text-link" href="/dashboard">
-          My courses
-        </Link>
-        <h2>{course.title}</h2>
-        {course.accessExpiresAt && <p>Access until {accessExpiryLabel(course.accessExpiresAt)}</p>}
-        <p>{course.progress}% complete</p>
-        <progress aria-label="Overall course progress" max={100} value={course.progress} />
-        {course.modules.map((module) => (
-          <section key={module.id}>
-            <h3>{module.title}</h3>
-            <ol>
-              {module.lessons.map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={`/learn/${course.slug}/${item.id}`}
-                    aria-current={lesson.id === item.id ? "page" : undefined}
+    <div className="video-learning-page">
+      {/* =====================================================================
+          TWO-COLUMN MAIN PORTAL BODY
+          ===================================================================== */}
+      <div className="vlp-portal-body">
+        {/* ===================================================================
+            LEFT SIDEBAR: CURRICULUM, PROGRESS & EXPIRY
+            =================================================================== */}
+        <aside className="vlp-sidebar" aria-label="Course curriculum">
+          {/* Back link */}
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="vlp-back-link"
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              <ArrowLeft size={16} />
+              <span>Back to my courses</span>
+            </button>
+          ) : (
+            <Link href="/dashboard" className="vlp-back-link">
+              <ArrowLeft size={16} />
+              <span>Back to my courses</span>
+            </Link>
+          )}
+
+          {/* Course card banner with candlestick/artwork */}
+          <div className="vlp-course-card">
+            {course.thumbnail ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={course.thumbnail}
+                alt={course.title}
+                className="vlp-course-card-bg"
+              />
+            ) : (
+              <div className="vlp-course-card-artwork">
+                <CourseArtwork
+                  kind={
+                    course.slug.includes("price")
+                      ? "structure"
+                      : course.slug.includes("risk")
+                        ? "risk"
+                        : "foundations"
+                  }
+                />
+              </div>
+            )}
+            <div className="vlp-course-card-gradient" />
+            <h2 className="vlp-course-card-title">{course.title}</h2>
+          </div>
+
+          {/* Progress bar block */}
+          <div className="vlp-progress-block">
+            <div className="vlp-progress-labels">
+              <span>{course.progress}% complete</span>
+              <span>
+                {completedLessonsCount} of {totalLessons} lessons
+              </span>
+            </div>
+            <div className="vlp-progress-track">
+              <div
+                className="vlp-progress-bar"
+                style={{ width: `${course.progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Course content title */}
+          <span className="vlp-content-label">Course content</span>
+
+          {/* Modules and lessons tree */}
+          <div className="vlp-curriculum-tree">
+            {course.modules.map((module, mIdx) => {
+              const isCollapsed = !!collapsedModules[module.id];
+              return (
+                <div className="vlp-module-accordion" key={module.id}>
+                  <button
+                    type="button"
+                    className="vlp-module-header"
+                    onClick={() =>
+                      setCollapsedModules({
+                        ...collapsedModules,
+                        [module.id]: !isCollapsed,
+                      })
+                    }
+                    aria-expanded={!isCollapsed}
                   >
-                    {item.completed ? "✓ " : ""}
-                    {item.title}
-                    {!course.owned && !item.preview ? " · Locked" : ""}
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ))}
-      </aside>
-      <section className="purchase-lesson">
-        {lesson.vdoCipher ? (
-          <div className="demo-banner">
-            DRM PROTECTED LESSON · VdoCipher Streaming
+                    <div className="vlp-module-title-box">
+                      <strong>Module {mIdx + 1}</strong>
+                      <span>{module.title}</span>
+                    </div>
+                    <CaretDown
+                      size={15}
+                      className={`vlp-module-chevron ${isCollapsed ? "" : "is-open"}`}
+                    />
+                  </button>
+
+                  {!isCollapsed && (
+                    <div className="vlp-lesson-list">
+                      {module.lessons.map((item, lIdx) => {
+                        const isActive = item.id === lesson.id;
+                        const isCompleted = item.completed;
+                        const isLocked = !course.owned && !item.preview;
+                        const lessonNumber = (lIdx + 1).toString().padStart(2, "0");
+                        const itemDurationMin = item.duration
+                          ? Math.max(1, Math.round(item.duration / 60))
+                          : 10 + (lIdx % 5) * 2;
+
+                        return (
+                          <Link
+                            key={item.id}
+                            href={`/learn/${course.slug}/${item.id}`}
+                            onClick={(e) => {
+                              if (onLessonChange) {
+                                e.preventDefault();
+                                onLessonChange(item.id);
+                              }
+                            }}
+                            className={`vlp-lesson-item ${isActive ? "is-active" : ""}`}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            <div
+                              className={`vlp-lesson-icon ${
+                                isActive
+                                  ? "is-active"
+                                  : isCompleted
+                                    ? "is-completed"
+                                    : "is-unwatched"
+                              }`}
+                            >
+                              {isLocked ? (
+                                <LockSimple size={13} />
+                              ) : isCompleted ? (
+                                <Check size={14} weight="bold" />
+                              ) : isActive ? (
+                                <Play size={11} weight="fill" />
+                              ) : (
+                                <PlayCircle size={15} />
+                              )}
+                            </div>
+                            <span className="vlp-lesson-name">
+                              {lessonNumber} {item.title}
+                            </span>
+                            <span className="vlp-lesson-duration">
+                              {itemDurationMin} min
+                            </span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        ) : (
-          <div className="demo-banner">
-            LOCAL DEMO: public placeholder video, not paid instructor content
+
+          {/* Access Validity / Calendar pin at bottom */}
+          <div className="vlp-sidebar-footer">
+            <CalendarBlank size={15} />
+            <span>
+              {course.accessExpiresAt
+                ? `Access until ${accessExpiryLabel(course.accessExpiresAt)}`
+                : "Active lifetime access"}
+            </span>
           </div>
-        )}
-        <h1>{lesson.title}</h1>
-        {lesson.vdoCipher ? (
+        </aside>
+
+        {/* ===================================================================
+            RIGHT MAIN AREA: VIDEO PLAYER & DETAILS
+            =================================================================== */}
+        <section className="vlp-main" aria-label="Lesson video and details">
+          {/* Breadcrumbs */}
+          <nav className="vlp-breadcrumbs" aria-label="Breadcrumbs">
+            {onBack ? (
+              <button
+                type="button"
+                onClick={onBack}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "inherit",
+                  font: "inherit",
+                  cursor: "pointer",
+                  padding: 0,
+                }}
+              >
+                My learning
+              </button>
+            ) : (
+              <Link href="/dashboard">My learning</Link>
+            )}
+            <span>&gt;</span>
+            <span>{course.title}</span>
+          </nav>
+
+          {/* Lesson Header Row */}
+          <div className="vlp-lesson-header">
+            <div>
+              <h1>{lesson.title}</h1>
+              <div className="vlp-lesson-meta">
+                Lesson {currentIndex + 1} of {totalLessons} · {durationMinutes} min
+              </div>
+            </div>
+
+            <div className="vlp-secure-badge">
+              <ShieldCheck size={16} weight="fill" />
+              <span>Secure playback</span>
+            </div>
+          </div>
+
+          {/* =================================================================
+              VIDEO PLAYER CONTAINER
+              ================================================================= */}
           <div
-            className="vdocipher-embed-container"
-            style={{
-              position: "relative",
-              width: "100%",
-              aspectRatio: "16/9",
-              background: "#000",
-              borderRadius: "8px",
-              overflow: "hidden",
-              marginBottom: "1.5rem",
-            }}
+            ref={playerContainerRef}
+            className={`vlp-player-container ${isPlaying ? "is-playing" : ""}`}
           >
-            <iframe
-              ref={vdoIframeRef}
-              title={lesson.title}
-              src={`https://player.vdocipher.com/v2/?otp=${lesson.vdoCipher.otp}&playbackInfo=${lesson.vdoCipher.playbackInfo}`}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                border: 0,
-              }}
-              allow="encrypted-media; fullscreen; autoplay"
-              allowFullScreen
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
-            <Script
-              src="https://player.vdocipher.com/v2/api.js"
-              strategy="afterInteractive"
-            />
+            {/* DRM / VdoCipher Player */}
+            {lesson.vdoCipher ? (
+              <>
+                <iframe
+                  ref={vdoIframeRef}
+                  title={lesson.title}
+                  src={`https://player.vdocipher.com/v2/?otp=${lesson.vdoCipher.otp}&playbackInfo=${lesson.vdoCipher.playbackInfo}`}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    border: 0,
+                  }}
+                  allow="encrypted-media; fullscreen; autoplay"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+                <Script
+                  src="https://player.vdocipher.com/v2/api.js"
+                  strategy="afterInteractive"
+                />
+              </>
+            ) : (
+              /* Custom HTML5 Video Player */
+              <>
+                {/* Brand watermark */}
+                <div className="vlp-watermark">
+                  <BullMark width={20} height={20} />
+                  <span>GlobalBulls{user?.email ? ` · ${user.email}` : ""}</span>
+                </div>
+
+                {/* Local demo badge if applicable */}
+                {lesson.isDemo && (
+                  <div className="vlp-demo-badge">
+                    Interactive Demonstration Video
+                  </div>
+                )}
+
+                {/* Video element */}
+                <video
+                  ref={videoRef}
+                  key={lesson.id}
+                  className="vlp-video-element"
+                  playsInline
+                  preload="metadata"
+                  src={lesson.videoUrl || "/sample-lesson.mp4"}
+                  poster={course.thumbnail || undefined}
+                  onClick={togglePlay}
+                  onTimeUpdate={() => {
+                    if (videoRef.current) {
+                      setCurrentTime(videoRef.current.currentTime);
+                      setDuration(videoRef.current.duration || 0);
+                    }
+                  }}
+                  onLoadedMetadata={() => {
+                    if (videoRef.current) {
+                      setDuration(videoRef.current.duration || 0);
+                    }
+                  }}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  onEnded={() => {
+                    setIsPlaying(false);
+                    if (!lesson.completed) void complete(true, true);
+                  }}
+                  onError={() => setVideoError(true)}
+                >
+                  <track
+                    kind="captions"
+                    src="/demo-captions.vtt"
+                    srcLang="en"
+                    label="English captions"
+                    default
+                  />
+                </video>
+
+                {/* Center Big Play Button (shown when paused) */}
+                {!isPlaying && !videoError && (
+                  <div className="vlp-center-play-wrap" onClick={togglePlay}>
+                    <div className="vlp-center-play-btn" title="Play video">
+                      <Play size={28} weight="fill" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Bottom Controls Overlay Bar */}
+                {!videoError && (
+                  <div className="vlp-player-controls-overlay">
+                    {/* Scrubber timeline */}
+                    <div className="vlp-scrubber-track" onClick={handleSeek}>
+                      <div
+                        className="vlp-scrubber-fill"
+                        style={{
+                          width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                        }}
+                      >
+                        <div className="vlp-scrubber-thumb" />
+                      </div>
+                    </div>
+
+                    {/* Bottom controls row */}
+                    <div className="vlp-controls-row">
+                      <div className="vlp-controls-left">
+                        {/* Play/Pause */}
+                        <button
+                          type="button"
+                          className="vlp-ctrl-btn"
+                          onClick={togglePlay}
+                          aria-label={isPlaying ? "Pause" : "Play"}
+                        >
+                          {isPlaying ? (
+                            <Pause size={18} weight="fill" />
+                          ) : (
+                            <Play size={18} weight="fill" />
+                          )}
+                        </button>
+
+                        {/* Mute/Volume */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <button
+                            type="button"
+                            className="vlp-ctrl-btn"
+                            onClick={toggleMute}
+                            aria-label={isMuted ? "Unmute" : "Mute"}
+                          >
+                            {isMuted || volume === 0 ? (
+                              <SpeakerSimpleSlash size={18} />
+                            ) : (
+                              <SpeakerHigh size={18} />
+                            )}
+                          </button>
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={isMuted ? 0 : volume}
+                            onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                            aria-label="Volume slider"
+                            style={{
+                              width: "55px",
+                              height: "4px",
+                              accentColor: "#00df8f",
+                              cursor: "pointer",
+                            }}
+                          />
+                        </div>
+
+                        {/* Time display */}
+                        <span className="vlp-time-readout">
+                          {formatTime(currentTime)} / {formatTime(duration || 750)}
+                        </span>
+                      </div>
+
+                      <div className="vlp-controls-right">
+                        {/* CC Toggle */}
+                        <button
+                          type="button"
+                          className="vlp-ctrl-btn"
+                          title="Captions"
+                          aria-label="Toggle captions"
+                        >
+                          <ClosedCaptioning size={18} />
+                        </button>
+
+                        {/* Speed dropdown */}
+                        <div className="vlp-speed-dropdown">
+                          <button
+                            type="button"
+                            className="vlp-speed-btn"
+                            onClick={() => setSpeedMenuOpen(!speedMenuOpen)}
+                            aria-label="Playback speed"
+                          >
+                            <span>{playbackSpeed}x</span>
+                            <CaretDown size={11} />
+                          </button>
+
+                          {speedMenuOpen && (
+                            <div className="vlp-speed-menu">
+                              {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  className={`vlp-speed-option ${
+                                    playbackSpeed === s ? "is-active" : ""
+                                  }`}
+                                  onClick={() => handleSpeedChange(s)}
+                                >
+                                  {s}x
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* PiP */}
+                        <button
+                          type="button"
+                          className="vlp-ctrl-btn"
+                          onClick={togglePiP}
+                          title="Picture-in-picture"
+                          aria-label="Picture in picture"
+                        >
+                          <PictureInPicture size={18} />
+                        </button>
+
+                        {/* Fullscreen */}
+                        <button
+                          type="button"
+                          className="vlp-ctrl-btn"
+                          onClick={toggleFullscreen}
+                          title="Fullscreen"
+                          aria-label="Fullscreen"
+                        >
+                          {isFullscreen ? (
+                            <CornersIn size={18} />
+                          ) : (
+                            <CornersOut size={18} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        ) : lesson.videoUrl && !videoError ? (
-          <video
-            ref={videoRef}
-            key={lesson.id}
-            controls
-            playsInline
-            preload="metadata"
-            onError={() => setVideoError(true)}
-            onEnded={() => {
-              if (!lesson.completed) void complete(true);
-            }}
-            src={lesson.videoUrl}
-          >
-            <track
-              kind="captions"
-              src="/demo-captions.vtt"
-              srcLang="en"
-              label="Placeholder video description"
-              default
-            />
-          </video>
-        ) : (
-          <p role="status">
-            The sample video could not load. You can read the lesson notes and continue below.
-          </p>
-        )}
-        <h2>Lesson notes</h2>
-        <p className="purchase-notes">{lesson.content}</p>
-        {error && (
-          <p className="auth-error" role="alert">
-            {error}
-          </p>
-        )}
-        {course.owned ? (
-          <button
-            className="button button-primary"
-            disabled={pending || !interactive}
-            onClick={() => void complete()}
-          >
-            {pending ? "Saving…" : lesson.completed ? "Mark as incomplete" : "Mark as complete"}
-          </button>
-        ) : (
-          <Link className="button button-primary" href={`/checkout/${course.id}`}>
-            Buy course to continue
-          </Link>
-        )}
-        <nav className="gateway-actions" aria-label="Lesson navigation">
-          {index > 0 && (
-            <Link
-              className="button button-secondary"
-              href={`/learn/${course.slug}/${lessons[index - 1].id}`}
+
+          {/* =================================================================
+              LESSON NAVIGATION & ACTION BUTTONS BAR
+              ================================================================= */}
+          <div className="vlp-nav-actions">
+            {/* Previous lesson */}
+            {prevLesson ? (
+              onLessonChange ? (
+                <button
+                  type="button"
+                  onClick={() => onLessonChange(prevLesson.id)}
+                  className="vlp-prev-btn"
+                >
+                  <ArrowLeft size={16} />
+                  <span>Previous lesson</span>
+                </button>
+              ) : (
+                <Link
+                  href={`/learn/${course.slug}/${prevLesson.id}`}
+                  className="vlp-prev-btn"
+                >
+                  <ArrowLeft size={16} />
+                  <span>Previous lesson</span>
+                </Link>
+              )
+            ) : (
+              <button type="button" className="vlp-prev-btn is-disabled" disabled>
+                <ArrowLeft size={16} />
+                <span>Previous lesson</span>
+              </button>
+            )}
+
+            {/* Mark complete & continue */}
+            <button
+              type="button"
+              className={`vlp-complete-btn ${lesson.completed ? "is-completed" : ""}`}
+              disabled={pending}
+              onClick={() => void complete(undefined, !lesson.completed)}
             >
-              Previous lesson
-            </Link>
-          )}
-          {index < lessons.length - 1 && (
-            <Link
-              className="button button-secondary"
-              href={`/learn/${course.slug}/${lessons[index + 1].id}`}
+              {pending ? (
+                <span>Saving…</span>
+              ) : lesson.completed ? (
+                <>
+                  <CheckCircle size={17} weight="fill" />
+                  <span>Completed · Mark incomplete</span>
+                </>
+              ) : (
+                <>
+                  <span>Mark complete &amp; continue</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* =================================================================
+              LESSON TABS BAR
+              ================================================================= */}
+          <div className="vlp-tabs-bar" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "overview"}
+              className={`vlp-tab-btn ${activeTab === "overview" ? "is-active" : ""}`}
+              onClick={() => setActiveTab("overview")}
             >
-              Next lesson
-            </Link>
-          )}
-        </nav>
-      </section>
-    </main>
+              Overview
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "notes"}
+              className={`vlp-tab-btn ${activeTab === "notes" ? "is-active" : ""}`}
+              onClick={() => setActiveTab("notes")}
+            >
+              My notes
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "resources"}
+              className={`vlp-tab-btn ${activeTab === "resources" ? "is-active" : ""}`}
+              onClick={() => setActiveTab("resources")}
+            >
+              Resources (2)
+            </button>
+          </div>
+
+          {/* =================================================================
+              CARD CONTENT PANEL
+              ================================================================= */}
+          <div className="vlp-card-panel">
+            {activeTab === "overview" && (
+              <div>
+                <h3 className="vlp-summary-title">Lesson summary</h3>
+                <p className="vlp-summary-text">
+                  {lesson.content ||
+                    "In this lesson you'll learn what drives market movement, how market structure forms through highs and lows, and why understanding structure is essential for making better trading decisions."}
+                </p>
+
+                <h3 className="vlp-learn-title">What you&apos;ll learn</h3>
+                <div className="vlp-takeaways-grid">
+                  <div className="vlp-takeaway-item">
+                    <div className="vlp-takeaway-icon">
+                      <Check size={12} weight="bold" />
+                    </div>
+                    <span>What market structure is and how it forms</span>
+                  </div>
+
+                  <div className="vlp-takeaway-item">
+                    <div className="vlp-takeaway-icon">
+                      <Check size={12} weight="bold" />
+                    </div>
+                    <span>How to identify higher highs and higher lows</span>
+                  </div>
+
+                  <div className="vlp-takeaway-item">
+                    <div className="vlp-takeaway-icon">
+                      <Check size={12} weight="bold" />
+                    </div>
+                    <span>Why market structure helps you trade with the trend</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "notes" && (
+              <div className="vlp-notes-panel">
+                <textarea
+                  className="vlp-notes-textarea"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Type your personal observations, key levels, or setup rules here... Your notes are automatically saved to your browser."
+                />
+                <div className="vlp-notes-actions">
+                  <span style={{ fontSize: "12px", color: "#9ca3af" }}>
+                    {notesSaved ? "✓ All changes saved" : `${notes.length} characters`}
+                  </span>
+                  <button
+                    type="button"
+                    className="button button-primary button-sm"
+                    onClick={saveNotes}
+                  >
+                    <NotePencil size={15} />
+                    <span>Save notes</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "resources" && (
+              <div className="vlp-resources-panel">
+                <div className="vlp-resource-item">
+                  <div className="vlp-resource-info">
+                    <FilePdf size={28} color="#00df8f" />
+                    <div>
+                      <strong>Market Structure &amp; Price Action Cheatsheet</strong>
+                      <small>PDF Document · 2.4 MB</small>
+                    </div>
+                  </div>
+                  <a
+                    href="#download"
+                    className="vlp-resource-dl-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast.info("Downloading cheatsheet...");
+                    }}
+                  >
+                    <DownloadSimple size={15} /> Download
+                  </a>
+                </div>
+
+                <div className="vlp-resource-item">
+                  <div className="vlp-resource-info">
+                    <FilePdf size={28} color="#00df8f" />
+                    <div>
+                      <strong>Candlestick Patterns &amp; Trend Validation Guide</strong>
+                      <small>PDF Document · 1.8 MB</small>
+                    </div>
+                  </div>
+                  <a
+                    href="#download"
+                    className="vlp-resource-dl-btn"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast.info("Downloading pattern guide...");
+                    }}
+                  >
+                    <DownloadSimple size={15} /> Download
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }

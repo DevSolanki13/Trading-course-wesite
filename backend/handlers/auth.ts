@@ -361,7 +361,7 @@ export async function authRequest(request: Request) {
         );
       await setRemember(input.remember);
       const store = await cookies();
-      store.set("mm_oauth_next", safeNext(input.next, input.admin ? "/admin" : "/account"), {
+      store.set("mm_oauth_next", safeNext(input.next, input.admin ? "/admin" : "/dashboard"), {
         ...cookiePolicy(),
         maxAge: 600,
       });
