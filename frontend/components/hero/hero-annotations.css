@@ -1,0 +1,234 @@
+:root {
+  --chart-ink: #aeb8c6;
+  --chart-ink-muted: rgb(174 184 198 / 45%);
+  --chart-accent: var(--accent);
+}
+:root[data-theme="light"] {
+  --chart-ink: #2b2f36;
+  --chart-ink-muted: rgb(43 47 54 / 45%);
+}
+.hero-annotations {
+  /* Tune sizes, clearance and rotation here; times live beside each SVG stroke. */
+  --annotation-chart-width: clamp(340px, 25vw, 480px);
+  --annotation-notes-width: clamp(240px, 17vw, 320px);
+  --annotation-notes-offset: clamp(24px, 3vw, 56px);
+  --annotation-clearance: 510px;
+  --annotation-chart-top: 90px;
+  --annotation-notes-top: 300px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  overflow: clip;
+  pointer-events: none;
+  user-select: none;
+  visibility: hidden;
+  color: var(--chart-ink);
+}
+.hero-annotations[data-ready="true"] {
+  visibility: visible;
+}
+.hero-annotation-chart,
+.hero-teacher-notes {
+  position: absolute;
+  text-align: left;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000);
+}
+.hero-annotation-chart {
+  width: var(--annotation-chart-width);
+  right: calc(50% + var(--annotation-clearance));
+  top: var(--annotation-chart-top);
+  transform: rotate(-1.5deg);
+}
+.hero-teacher-notes {
+  width: var(--annotation-notes-width);
+  left: calc(50% + var(--annotation-clearance) + var(--annotation-notes-offset));
+  top: var(--annotation-notes-top);
+  transform: rotate(1deg);
+  mask-image: linear-gradient(90deg, #000, #000 88%, transparent);
+}
+.hero-annotations svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    color 200ms ease,
+    stroke 200ms ease,
+    fill 200ms ease;
+}
+.hero-annotations text {
+  font:
+    500 23px var(--font-annotations),
+    cursive;
+  stroke: none;
+  fill: currentColor;
+}
+.hero-annotations .annotation-small {
+  font-size: 22px;
+}
+.hero-annotations .annotation-footer {
+  font: 10px var(--mono);
+  fill: var(--chart-ink-muted);
+  letter-spacing: 0.08em;
+}
+.annotation-grid {
+  stroke: var(--chart-ink-muted);
+  stroke-width: 1;
+}
+.annotation-grid path {
+  opacity: 0.25;
+}
+.hero-annotations .candle-wick {
+  stroke-width: 1.5;
+}
+.hero-annotations .candle-body {
+  stroke-width: 1.8;
+}
+.hero-annotations .is-up .candle-body {
+  fill: var(--chart-ink);
+  fill-opacity: 0.12;
+}
+.annotation-support {
+  stroke-dasharray: 5 6;
+  stroke-width: 1.7;
+}
+.annotation-projection {
+  stroke-dasharray: 4 6;
+}
+.hero-annotations .annotation-accent {
+  color: var(--chart-accent);
+  stroke-width: 2.25;
+}
+.annotation-bounce {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.annotation-bounce text {
+  font-size: 18px;
+}
+.hero-annotations .notes-title {
+  font-size: 27px;
+}
+.hero-annotations .notes-check {
+  stroke-width: 2.25;
+}
+.notes-bracket {
+  stroke-width: 1.5;
+}
+.annotation-decision {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.hero-annotations[data-started="true"] .annotation-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: annotation-draw 0.35s ease-out var(--delay, 0s) both;
+}
+.hero-annotations[data-started="true"] .annotation-candle {
+  animation: annotation-fade 0.08s linear var(--delay, 0s) both;
+}
+.hero-annotations[data-started="true"] .annotation-write {
+  clip-path: inset(0 100% 0 0);
+  transform-box: fill-box;
+  animation: annotation-write 0.45s steps(18, end) var(--delay, 0s) both;
+}
+.hero-annotations[data-started="true"] .annotation-enter {
+  animation: annotation-enter 0.35s ease-out var(--delay, 0s) both;
+}
+.hero-annotations[data-started="true"] .annotation-decision {
+  animation: annotation-pulse 3s ease-in-out 5.5s infinite;
+}
+.hero-annotations[data-started="true"] .annotation-support {
+  animation: annotation-drift 30s linear 5.5s infinite;
+}
+.hero-annotations[data-visible="false"] :is(.annotation-decision, .annotation-support) {
+  animation-play-state: paused;
+}
+@keyframes annotation-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes annotation-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes annotation-write {
+  to {
+    clip-path: inset(-4% -4% -4% -4%);
+  }
+}
+@keyframes annotation-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes annotation-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+@keyframes annotation-drift {
+  to {
+    stroke-dashoffset: -110;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .hero-annotations {
+    --annotation-chart-width: 340px;
+  }
+  .hero-annotation-chart {
+    mask-image: linear-gradient(90deg, transparent, #000 28%, #000 85%, transparent);
+  }
+  .hero-teacher-notes {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .hero-annotations {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-annotations[data-started]
+    :is(
+      .annotation-draw,
+      .annotation-write,
+      .annotation-enter,
+      .annotation-decision,
+      .annotation-support,
+      .annotation-candle
+    ) {
+    animation: none;
+    stroke-dashoffset: 0;
+    clip-path: none;
+    transform: none;
+    opacity: 1;
+  }
+  .hero-annotations svg {
+    transition: none;
+  }
+}

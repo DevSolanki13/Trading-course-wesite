@@ -39,7 +39,9 @@ export function PurchaseCheckout({
   const [failed, setFailed] = useState(false);
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
   const [coupon, setCoupon] = useState("");
-  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(
+    null,
+  );
   const [couponBusy, setCouponBusy] = useState(false);
   async function api(action: string, payload: unknown) {
     const r = await fetch(`/api/purchase/${action}`, {
@@ -93,7 +95,7 @@ export function PurchaseCheckout({
           order_id: saved.providerOrderId,
           amount: saved.amount,
           currency: saved.currency,
-          name: "Market Method",
+          name: "GlobalBulls",
           description: course.title,
           handler: (result: RazorpayResult) => void verify(saved, result),
           modal: {

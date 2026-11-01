@@ -309,7 +309,7 @@ export function AuthForm({
       <div className="auth-card-footer">
         {mode === "login" ? (
           <p>
-            New to Market Method?{" "}
+            New to GlobalBulls?{" "}
             <Link href={`/signup?next=${encodeURIComponent(next)}`}>Create an account</Link>
           </p>
         ) : (

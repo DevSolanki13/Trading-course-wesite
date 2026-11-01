@@ -1,4 +1,4 @@
-/* Shared visual language from the Market Method landing page. */
+/* Shared visual language from the GlobalBulls landing page. */
 :root:root {
   --background: #0a0a0b;
   --surface: #0e1216;
@@ -41,6 +41,26 @@ body {
     linear-gradient(90deg, var(--page-grid) 1px, transparent 1px);
   background-size: 72px 72px;
   accent-color: var(--accent);
+}
+.brand-bull-mark {
+  --bull-candle-down: #f04b51;
+  --bull-candle-up: #5ab75c;
+  --bull-chart-outline: var(--background);
+  display: block;
+  flex: 0 0 auto;
+  width: 51px;
+  height: 42px;
+  color: var(--foreground);
+}
+:root[data-theme="light"] .brand-bull-mark {
+  --bull-candle-down: #df343c;
+  --bull-candle-up: #439447;
+}
+@media (max-width: 540px) {
+  .brand-bull-mark {
+    width: 41px;
+    height: 34px;
+  }
 }
 
 body .site-header {

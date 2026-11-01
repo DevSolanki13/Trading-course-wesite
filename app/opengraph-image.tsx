@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
-export const alt = "Market Method: Learn the process. Respect the risk.";
+import { BullMark } from "../frontend/components/bull-mark";
+export const alt = "GlobalBulls: Learn the process. Respect the risk.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export default function OpenGraphImage() {
@@ -16,8 +17,19 @@ export default function OpenGraphImage() {
         justifyContent: "space-between",
       }}
     >
-      <div style={{ fontSize: 32, display: "flex" }}>
-        marketmethod<span style={{ color: "#90ACFF" }}>.</span>
+      <div style={{ fontSize: 32, display: "flex", alignItems: "center", gap: 18 }}>
+        <BullMark
+          width={80}
+          height={66}
+          color="#F0F3FA"
+          up="#5ab75c"
+          down="#f04b51"
+          outline="#0B0E11"
+        />
+        <span style={{ display: "flex" }}>
+          <span style={{ fontWeight: 400 }}>Global</span>
+          <span style={{ fontWeight: 700 }}>Bulls</span>
+        </span>
       </div>
       <div
         style={{

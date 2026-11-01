@@ -102,14 +102,14 @@ export const publicCatalog = cache(async function publicCatalog() {
         .eq("status", "published")
         .order("created_at")
         .limit(100),
-      admin.from("site_content").select("document").eq("id", true).single(),
+      admin.from("site_content").select("document").eq("id", true).maybeSingle(),
       admin
         .from("site_settings")
         .select("public_telegram_url,public_instagram_url,support_email")
         .eq("id", true)
-        .single(),
+        .maybeSingle(),
     ]);
-    if (courses.error || content.error || settings.error) throw Error("Unavailable");
+    if (courses.error) throw Error("Course catalogue unavailable");
     const result = (courses.data as RawCourse[]).map((raw) => {
       const modules = [...raw.modules]
         .sort((a, b) => a.position - b.position)
@@ -157,23 +157,24 @@ export const publicCatalog = cache(async function publicCatalog() {
         previewLessonId: lessons.find((l) => l.preview)?.id,
       };
     });
-    const doc = content.data.document as SiteDocument;
+    const doc = content.data?.document as SiteDocument | undefined;
     return {
       courses: result,
       content: doc && typeof doc === "object" ? doc : null,
-      telegramUrl: social(settings.data.public_telegram_url, ["t.me", "telegram.me"]),
-      instagramUrl: social(settings.data.public_instagram_url, [
+      telegramUrl: social(settings.data?.public_telegram_url, ["t.me", "telegram.me"]),
+      instagramUrl: social(settings.data?.public_instagram_url, [
         "instagram.com",
         "www.instagram.com",
       ]),
       supportEmail:
-        typeof settings.data.support_email === "string" &&
+        typeof settings.data?.support_email === "string" &&
         /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)
           ? settings.data.support_email
           : null,
       failed: false,
     };
   } catch {
+    console.error("Public course catalogue could not be loaded.");
     return {
       courses: [],
       content: null,

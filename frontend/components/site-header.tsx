@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowUpRight, List, Moon, Sun, X } from "@phosphor-icons/react";
+import { BullMark } from "./bull-mark";
 
 const links = [
   { href: "/courses", label: "Courses" },
@@ -47,16 +48,11 @@ export function Brand({ footer = false }: { footer?: boolean }) {
     <Link
       href="/"
       className={`brand ${footer ? "brand-footer" : ""}`}
-      aria-label="marketmethod. home"
+      aria-label="GlobalBulls home"
     >
-      <span className="brand-symbol" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-      </span>
+      <BullMark className="brand-bull-mark" />
       <span>
-        market<span className="brand-light">method</span>
-        <span className="brand-period">.</span>
+        <span className="brand-light">Global</span>Bulls
       </span>
     </Link>
   );
@@ -134,7 +130,7 @@ export function SiteHeader() {
                 <Dialog.Overlay className="dialog-overlay" />
                 <Dialog.Content className="mobile-menu">
                   <div className="menu-heading">
-                    <Dialog.Title>Explore Market Method</Dialog.Title>
+                    <Dialog.Title>Explore GlobalBulls</Dialog.Title>
                     <Dialog.Close className="icon-button" aria-label="Close navigation">
                       <X size={22} />
                     </Dialog.Close>

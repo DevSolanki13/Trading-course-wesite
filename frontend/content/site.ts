@@ -1,5 +1,5 @@
 export const site = {
-  name: "Market Method",
+  name: "GlobalBulls",
   description:
     "A structured approach to trading education. Learn market foundations, price action and risk management through Hindi lessons.",
   supportEmail: null as string | null,

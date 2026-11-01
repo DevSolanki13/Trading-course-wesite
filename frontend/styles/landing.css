@@ -109,7 +109,8 @@ body:has(.landing-page) {
   position: relative;
   margin: 20px auto 0;
   max-width: 900px;
-  font-size: clamp(3.3rem, 7vw, 6.3rem);
+  font-family: var(--font-headline), var(--display);
+  font-size: clamp(3.05rem, 6.4vw, 5.8rem);
   line-height: 0.98;
   letter-spacing: -0.065em;
   font-weight: 500;
@@ -124,6 +125,10 @@ body:has(.landing-page) {
   color: var(--muted);
   font-family: var(--display);
   font-weight: 400;
+}
+.hero-modern h1 em {
+  font-family: inherit;
+  font-weight: 500;
 }
 .hero-lede {
   position: relative;
@@ -187,23 +192,23 @@ body:has(.landing-page) {
   letter-spacing: 0.13em;
 }
 .marquee-mask {
+  perspective: 1200px;
+  perspective-origin: center;
+  min-height: 238px;
   overflow: hidden;
   mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
 .marquee-track {
-  display: flex;
-  width: max-content;
-  gap: 24px;
-  animation: marquee 42s linear infinite;
-  padding: 16px 0 24px;
-}
-.marquee-mask:hover .marquee-track {
-  animation-play-state: paused;
+  position: relative;
+  height: 238px;
+  transform-style: preserve-3d;
 }
 .marquee-card {
-  width: 220px;
-  height: 190px;
-  flex: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 232px;
+  height: 200px;
   padding: 17px;
   text-align: left;
   border: 1px solid var(--lp-border);
@@ -216,6 +221,8 @@ body:has(.landing-page) {
   transition:
     box-shadow 0.25s,
     transform 0.25s;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
 }
 .marquee-card:hover {
   box-shadow:
@@ -776,14 +783,6 @@ body:has(.landing-page) {
   text-align: center;
   font: 10px var(--mono);
 }
-@keyframes marquee {
-  from {
-    transform: translateX(-50%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
 @keyframes ticker {
   from {
     transform: translateX(0);
@@ -797,7 +796,7 @@ body:has(.landing-page) {
     padding-top: 75px;
   }
   .hero-modern h1 {
-    font-size: clamp(2.9rem, 13vw, 5rem);
+    font-size: clamp(2.7rem, 12vw, 4.6rem);
   }
   .hero-actions {
     flex-direction: column;
@@ -849,6 +848,11 @@ body:has(.landing-page) {
     width: 190px;
     height: 180px;
   }
+  .marquee-mask,
+  .marquee-track {
+    min-height: 226px;
+    height: 226px;
+  }
   .landing-page .course-card {
     padding: 12px;
   }
@@ -863,10 +867,6 @@ body:has(.landing-page) {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track,
-  .ticker-track {
-    animation-play-state: paused;
-  }
   .landing-page * {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;

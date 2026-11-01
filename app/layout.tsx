@@ -6,8 +6,8 @@ import { siteOrigin } from "@/frontend/lib/metadata";
 export const metadata: Metadata = {
   metadataBase: siteOrigin(),
   title: {
-    default: "Market Method | Learn the process. Respect the risk.",
-    template: "%s | Market Method",
+    default: "GlobalBulls | Learn the process. Respect the risk.",
+    template: "%s | GlobalBulls",
   },
   description: site.description,
   robots: { index: false, follow: false },

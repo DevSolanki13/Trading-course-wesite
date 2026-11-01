@@ -25,10 +25,7 @@ test("metadata, sitemap and social image are usable", async ({ page, request }) 
     "href",
     /\/courses\/market-foundations$/,
   );
-  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
-    "content",
-    /Market Method/,
-  );
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", /GlobalBulls/);
   const image = await request.get("/opengraph-image");
   expect(image.status()).toBe(200);
   expect(image.headers()["content-type"]).toContain("image/png");

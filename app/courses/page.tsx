@@ -11,9 +11,8 @@ export default async function Catalogue() {
   const data = await publicCatalog();
   return (
     <CataloguePage
-      courses={data.failed ? [] : data.courses.length ? data.courses : undefined}
+      courses={data.courses.length ? data.courses : undefined}
       published={!data.failed && !!data.courses.length}
-      unavailable={data.failed}
     />
   );
 }

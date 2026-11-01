@@ -16,12 +16,11 @@ export default async function Home() {
   const data = await publicCatalog();
   return (
     <HomePage
-      courses={data.failed ? [] : data.courses.length ? data.courses : undefined}
+      courses={data.courses.length ? data.courses : undefined}
       content={data.content}
       telegramUrl={data.telegramUrl}
       instagramUrl={data.instagramUrl}
       published={!data.failed && !!data.courses.length}
-      unavailable={data.failed}
     />
   );
 }

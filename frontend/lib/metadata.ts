@@ -9,7 +9,7 @@ export function siteOrigin() {
 }
 export function pageMetadata(title: string, description: string, path: string): Metadata {
   return {
-    title,
+    title: { absolute: `${title} | ${site.name}` },
     description,
     alternates: { canonical: path },
     openGraph: {
@@ -23,7 +23,7 @@ export function pageMetadata(title: string, description: string, path: string): 
           url: "/opengraph-image",
           width: 1200,
           height: 630,
-          alt: "Market Method: Learn the process. Respect the risk.",
+          alt: "GlobalBulls: Learn the process. Respect the risk.",
         },
       ],
     },

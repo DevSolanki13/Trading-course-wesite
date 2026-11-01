@@ -45,7 +45,7 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} Market Method. Provisional identity.</span>
+          <span>© {new Date().getFullYear()} GlobalBulls. Provisional identity.</span>
           <span>Website in English. Lessons in Hindi.</span>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { pageMetadata } from "@/frontend/lib/metadata";
 export const metadata = pageMetadata(
   "Contact & support",
-  "Find information about course access, refunds and the planned Market Method community.",
+  "Find information about course access, refunds and the planned GlobalBulls community.",
   "/contact",
 );
 import ContactPage from "@/frontend/pages/contact-page";

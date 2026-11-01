@@ -104,7 +104,7 @@ export async function learningRequest(request: Request) {
       // Learner email watermark explicitly approved; never log it or provider credentials.
       const tokens = await playbackCredentials(
         asset.provider_video_id,
-        account?.context.user.email ?? "Market Method | Public preview",
+        account?.context.user.email ?? "GlobalBulls | Public preview",
         lesson.is_preview ? null : accessExpiresAt,
       );
       // Provider calls can take seconds: recheck access and the current lease before disclosure.

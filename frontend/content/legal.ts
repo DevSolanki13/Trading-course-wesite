@@ -1,7 +1,7 @@
 export const legalPages = {
   terms: {
     title: "Terms of use",
-    intro: "The proposed terms for learning with Market Method.",
+    intro: "The proposed terms for learning with GlobalBulls.",
     sections: [
       {
         title: "Preview status",

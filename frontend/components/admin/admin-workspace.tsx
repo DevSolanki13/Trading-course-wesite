@@ -107,7 +107,7 @@ export function AdminWorkspace() {
     <main id="main-content" className="container admin-page">
       <header className="admin-top">
         <div>
-          <span className="auth-section-label">Market Method · Operations</span>
+          <span className="auth-section-label">GlobalBulls · Operations</span>
           <h1>Team workspace</h1>
           <p>
             {user.email} · {user.role} · Authenticator verified

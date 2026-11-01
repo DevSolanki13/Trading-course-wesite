@@ -13,8 +13,8 @@ export default function AboutPage({ content = null }: { content?: SiteDocument |
           <span className="muted">Not for shortcuts.</span>
         </h1>
         <p>
-          Market Method is a provisional trading-education brand with a simple point of view:
-          learning a process matters more than collecting tips.
+          GlobalBulls is a provisional trading-education brand with a simple point of view: learning
+          a process matters more than collecting tips.
         </p>
       </div>
       <div className="about-image">

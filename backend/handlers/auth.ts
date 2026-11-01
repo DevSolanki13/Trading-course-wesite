@@ -493,7 +493,7 @@ export async function authRequest(request: Request) {
           await context.client.auth.mfa.unenroll({ factorId: factor.id });
         const { data, error: enrollError } = await context.client.auth.mfa.enroll({
           factorType: "totp",
-          friendlyName: "Market Method staff",
+          friendlyName: "GlobalBulls staff",
         });
         if (enrollError || !data)
           throw new AuthError(503, "Authenticator setup could not be started.");
