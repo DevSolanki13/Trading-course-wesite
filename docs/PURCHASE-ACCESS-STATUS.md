@@ -1,6 +1,6 @@
 # Zero-env course purchase and access
 
-Updated 31 October 2026. The requested local purchase/access flow is implemented and verified. Real Razorpay credentials, merchant acceptance and shared deployment/schema setup remain external launch steps. See [the quickstart](../README.md#run-locally-with-zero-environment-setup), [environment template](../.env.example) and [important-work tracker](../IMPwork.md).
+Updated 31 October 2026. The requested local purchase/access flow is implemented and verified. Real Razorpay credentials, merchant acceptance and shared deployment/schema setup remain external launch steps. See [the quickstart](../README.md#run-locally-with-zero-environment-setup), [environment template](../.env.example) and [implementation plan](../IMPLEMENTATION-PLAN.md).
 
 ## Setup and behavior
 
@@ -69,7 +69,7 @@ Files added or changed for this request, relative to the preceding verified base
 | Changed | [.gitignore](../.gitignore)                                                                                                     |
 | Changed | [.prettierignore](../.prettierignore)                                                                                           |
 | Changed | [.vscode/tasks.json](../.vscode/tasks.json)                                                                                     |
-| Changed | [IMPwork.md](../IMPwork.md)                                                                                                     |
+| Changed | [IMPLEMENTATION-PLAN.md](../IMPLEMENTATION-PLAN.md)                                                                           |
 | Changed | [README.md](../README.md)                                                                                                       |
 | Changed | [app/account/page.tsx](../app/account/page.tsx)                                                                                 |
 | Changed | [app/admin/page.tsx](../app/admin/page.tsx)                                                                                     |

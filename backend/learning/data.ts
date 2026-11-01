@@ -107,14 +107,18 @@ export function courseView(row: Row, account: LearningAccount | null): CourseVie
             e.course_id === row.id &&
             e.active &&
             !e.revoked_at &&
-            (e.source === "manual" ||
+              e.source === "purchase" &&
+              e.expires_at &&
+              Date.parse(e.expires_at) > Date.now() &&
               account.orders.some(
                 (o) =>
                   o.id === e.order_id &&
                   o.status === "paid" &&
+                  !!o.paid_at &&
+                  Date.parse(o.paid_at) <= Date.now() &&
                   o.course_id === row.id &&
                   o.user_id === account.context.user.id,
-              )),
+              ),
         )
         .map((e) => e.expires_at as string)
         .filter(Boolean)

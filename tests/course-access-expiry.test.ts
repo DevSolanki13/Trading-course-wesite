@@ -42,7 +42,7 @@ test("SQL freezes purchased terms, denies expired access, preserves progress and
       create function auth.jwt()returns jsonb language sql stable as $$select '{}'::jsonb$$;grant usage on schema public,auth to anon,authenticated,service_role;`);
     const root = new URL("../backend/database/migrations/", import.meta.url);
     const migrations = (await readdir(root)).filter((f) => f.endsWith(".sql")).sort();
-    for (const file of migrations.filter((f) => !f.includes("0011_")))
+    for (const file of migrations.filter((f) => !f.includes("0011_") && !f.includes("0017_")))
       await db.exec(await readFile(new URL(file, root), "utf8"));
     await db.query("insert into auth.users(id,email)values($1,'expiry@example.invalid')", [user]);
     const course = (
@@ -69,6 +69,15 @@ test("SQL freezes purchased terms, denies expired access, preserves progress and
       await readFile(
         new URL(
           migrations.find((f) => f.includes("0011_"))!,
+          root,
+        ),
+        "utf8",
+      ),
+    );
+    await db.exec(
+      await readFile(
+        new URL(
+          migrations.find((f) => f.includes("0017_"))!,
           root,
         ),
         "utf8",

@@ -1,6 +1,6 @@
 ﻿# Phase 6: verification, deployment and handover
 
-Updated 31 October 2026 (IST). **Local release verification delivered; hosted acceptance and live sales remain blocked.** This is the current evidence record for [the implementation plan](../IMPLEMENTATION-PLAN.md), [priority work](./PRIORITY-WORK-2026-10-30.md) and [important work](../IMPwork.md).
+Updated 31 October 2026 (IST). **Local release verification delivered; hosted acceptance and live sales remain blocked.** This is the current evidence record for [the implementation plan](../IMPLEMENTATION-PLAN.md) and [priority work](./PRIORITY-WORK-2026-10-30.md).
 
 ## Delivered and verified
 

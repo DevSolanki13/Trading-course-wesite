@@ -92,7 +92,7 @@ test("learning SQL enforces access, heartbeat ordering, unique watched ranges an
     );
     const order = (
       await db.query<{ id: string }>(
-        "insert into orders(user_id,course_id,status,currency,base_paise,total_paise)values($1,$2,'paid','INR',100,100)returning id",
+        "insert into orders(user_id,course_id,status,currency,base_paise,total_paise,paid_at)values($1,$2,'paid','INR',100,100,now())returning id",
         [user, course],
       )
     ).rows[0].id;

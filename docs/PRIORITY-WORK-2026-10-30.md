@@ -1,6 +1,6 @@
 ﻿# Priority work: learner journey, video, security and domain
 
-Updated 31 October 2026 (India). This is the decision record for [IMPwork.md](../IMPwork.md). The landing redesign remains deferred. A real sale is **not** live. Fresh acceptance evidence and the exact next sequence are in [Phase 6 status](./PHASE-6-STATUS.md); operating procedures are in [the runbook](./OPERATIONS-RUNBOOK.md).
+Updated 31 October 2026 (India). This is the decision record for [IMPLEMENTATION-PLAN.md](../IMPLEMENTATION-PLAN.md). The landing redesign remains deferred. A real sale is **not** live. Fresh acceptance evidence and the exact next sequence are in [Phase 6 status](./PHASE-6-STATUS.md); operating procedures are in [the runbook](./OPERATIONS-RUNBOOK.md).
 
 ## 31 October implementation update
 
