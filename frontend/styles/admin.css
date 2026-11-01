@@ -867,6 +867,8 @@
   border-color: rgba(156, 163, 175, 0.3);
 }
 
+body:has(.admin-page) .site-header,
+body:has(.admin-page) .site-footer { display: none; }
 .admin-page.admin-page { width: 100%; max-width: none; min-height: 100vh; padding: 0; display: grid; grid-template-columns: 280px minmax(0, 1fr); background: var(--background); }
 .admin-page > .admin-sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 26px; padding: 30px 20px 22px; background: color-mix(in srgb, var(--background) 92%, #071018); border: 0; border-right: 1px solid var(--line); border-radius: 0; }
 .admin-brand { display: flex; align-items: center; gap: 8px; padding: 0 9px; font-size: 23px; letter-spacing: -1px; font-weight: 500; }
