@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowDown, ArrowUp, Plus, UploadSimple } from "@phosphor-icons/react";
 import { adminApi, operation, formText, formNumber, money, when } from "../../lib/admin-api";
 import type { AdminCourse, AdminLesson, AdminModule } from "../../../shared/admin";
+import { CourseLearnersPanel } from "./course-learners-panel";
 
 type Summary = Pick<AdminCourse, "id" | "title" | "slug" | "status" | "price_paise" | "version">;
 export function CourseManager() {
@@ -12,6 +13,7 @@ export function CourseManager() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [learnersCourseId, setLearnersCourseId] = useState<string | null>(null);
   async function list() {
     const d = await adminApi<{ items: Summary[] }>("courses");
     setItems(d.items);
@@ -50,6 +52,14 @@ export function CourseManager() {
     );
   return (
     <section>
+      {learnersCourseId && (
+        <CourseLearnersPanel
+          courseId={learnersCourseId}
+          onBack={() => setLearnersCourseId(null)}
+        />
+      )}
+      {!learnersCourseId && (
+      <>
       <div className="admin-section-head">
         <div>
           <h2>Courses</h2>
@@ -90,6 +100,9 @@ export function CourseManager() {
                   </td>
                   <td>{money(c.price_paise)}</td>
                   <td>
+                    <button className="text-link" onClick={() => setLearnersCourseId(c.id)}>
+                      View learners
+                    </button>{" "}
                     <button className="text-link" onClick={() => open(c.id)}>
                       Edit curriculum
                     </button>
@@ -107,6 +120,8 @@ export function CourseManager() {
             administrators.
           </p>
         </div>
+      )}
+      </>
       )}
     </section>
   );

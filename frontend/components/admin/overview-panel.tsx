@@ -8,6 +8,8 @@ type Overview = {
   sales: number;
   refundRate: number;
   newStudents: number;
+  coursesCount: number;
+  enrolledStudents: number;
   pendingRefunds: number;
   chart: { day: string; total: number }[];
   courses: { title: string; sales: number; gross: number; net: number }[];
@@ -60,7 +62,8 @@ export function OverviewPanel() {
           <div className="admin-metrics">
             {[
               ["Net revenue", money(data.net)],
-              ["Gross sales", money(data.gross)],
+              ["Courses", String(data.coursesCount)],
+              ["Enrolled students", String(data.enrolledStudents)],
               ["Confirmed refunds", money(data.refunded)],
               ["Paid sales", String(data.sales)],
               ["Refund rate", `${data.refundRate.toFixed(1)}%`],

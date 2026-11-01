@@ -2,6 +2,8 @@ import "server-only";
 import type { Identity } from "../auth/session";
 import { AuthError } from "../auth/http";
 import type { AdminCourse } from "../../shared/admin";
+import type { AdminCourseLearners } from "../../shared/admin";
+import { localDatabase } from "../local/database";
 export const courseSelection =
   "*,modules(id,title,position,lessons(id,title,position,duration_seconds,is_preview,published,lesson_assets(provider_video_id,notes,provider_status,verified_at,verified_duration),lesson_resources(id,title,content,position)))";
 export function databaseError(error: { code?: string } | null) {
@@ -96,4 +98,109 @@ export async function overview(context: Identity, range: string) {
   });
   databaseError(result.error);
   return result.data;
+}
+
+export async function localCourseLearners(courseId: string): Promise<AdminCourseLearners> {
+  const db = await localDatabase();
+  const course = (
+    await db.query<AdminCourseLearners["course"]>(
+      "select id,title,slug,status from courses where id=$1",
+      [courseId],
+    )
+  ).rows[0];
+  if (!course) throw new AuthError(404, "Course not found.");
+  const lessons = (
+    await db.query<{
+      id: string;
+      title: string;
+      moduleTitle: string;
+      durationSeconds: number;
+      modulePosition: number;
+      lessonPosition: number;
+    }>(
+      "select l.id,l.title,m.title as \"moduleTitle\",l.duration_seconds as \"durationSeconds\",m.position as \"modulePosition\",l.position as \"lessonPosition\" from modules m join lessons l on l.module_id=m.id where m.course_id=$1 and l.published order by m.position,l.position",
+      [courseId],
+    )
+  ).rows;
+  const enrollments = (
+    await db.query<{
+      id: string;
+      name: string;
+      email: string;
+      grantedAt: string;
+      expiresAt: string | null;
+      active: boolean;
+      revokedAt: string | null;
+      userId: string;
+    }>(
+      "select e.user_id as \"userId\",p.full_name as name,u.email,e.granted_at as \"grantedAt\",e.expires_at as \"expiresAt\",e.active,e.revoked_at as \"revokedAt\" from enrollments e join orders o on o.id=e.order_id and o.status='paid' and o.user_id=e.user_id and o.course_id=e.course_id join profiles p on p.id=e.user_id join auth.users u on u.id=p.id where e.course_id=$1 and e.source='purchase' order by p.full_name,u.email",
+      [courseId],
+    )
+  ).rows;
+  const progress = (
+    await db.query<{
+      userId: string;
+      lessonId: string;
+      positionSeconds: number;
+      watchedSeconds: number;
+      completed: boolean;
+      updatedAt: string;
+    }>(
+      "select lp.user_id as \"userId\",lp.lesson_id as \"lessonId\",lp.position_ms/1000.0 as \"positionSeconds\",coalesce((select sum(upper(r)-lower(r))/1000.0 from unnest(lp.watched) r),0) as \"watchedSeconds\",lp.completed,lp.updated_at as \"updatedAt\" from lesson_progress lp join lessons l on l.id=lp.lesson_id join modules m on m.id=l.module_id where m.course_id=$1",
+      [courseId],
+    )
+  ).rows;
+  const learners = enrollments.map((enrollment) => {
+    const records = new Map(progress.filter((row) => row.userId === enrollment.userId).map((row) => [row.lessonId, row]));
+    const lessonRows = lessons.map((lesson) => {
+      const row = records.get(lesson.id);
+      return {
+        lessonId: lesson.id,
+        title: lesson.title,
+        moduleTitle: lesson.moduleTitle,
+        completed: row?.completed ?? false,
+        positionSeconds: Number(row?.positionSeconds ?? 0),
+        watchedSeconds: Number(row?.watchedSeconds ?? 0),
+        updatedAt: row?.updatedAt ?? null,
+      };
+    });
+    const completedLessons = lessonRows.filter((lesson) => lesson.completed).length;
+    const lastActiveAt = lessonRows.reduce<string | null>(
+      (latest, lesson) => (!latest || (lesson.updatedAt && lesson.updatedAt > latest) ? lesson.updatedAt : latest),
+      null,
+    );
+    return {
+      id: enrollment.userId,
+      name: enrollment.name,
+      email: enrollment.email,
+      grantedAt: enrollment.grantedAt,
+      expiresAt: enrollment.expiresAt,
+      active:
+        enrollment.active &&
+        !enrollment.revokedAt &&
+        (!enrollment.expiresAt || new Date(enrollment.expiresAt).getTime() > Date.now()),
+      progressPercent: lessons.length ? Math.round((completedLessons * 100) / lessons.length) : 0,
+      completedLessons,
+      totalLessons: lessons.length,
+      watchedSeconds: lessonRows.reduce((total, lesson) => total + lesson.watchedSeconds, 0),
+      lastActiveAt,
+      lessons: lessonRows,
+    };
+  });
+  return {
+    course: {
+      id: course.id,
+      title: course.title,
+      slug: course.slug,
+      status: course.status,
+      lessonCount: lessons.length,
+      lessons: lessons.map(({ id, title, moduleTitle, durationSeconds }) => ({
+        id,
+        title,
+        moduleTitle,
+        durationSeconds,
+      })),
+    },
+    learners,
+  };
 }

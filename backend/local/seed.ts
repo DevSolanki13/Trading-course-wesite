@@ -79,4 +79,47 @@ export async function seedLocal(db: PGlite) {
       }
     });
   }
+  const demoLearner = (
+    await db.query<{ id: string }>("select id from auth.users where email='demo@example.com'")
+  ).rows[0];
+  const demoCourse = (
+    await db.query<{ id: string }>("select id from courses where slug='risk-psychology'")
+  ).rows[0];
+  if (demoLearner && demoCourse) {
+    const existingOrder = (
+      await db.query<{ id: string }>(
+        "select id from orders where user_id=$1 and course_id=$2 and status='paid' limit 1",
+        [demoLearner.id, demoCourse.id],
+      )
+    ).rows[0];
+    const orderId =
+      existingOrder?.id ??
+      (
+        await db.query<{ id: string }>(
+          "insert into orders(user_id,course_id,purchase_provider,status,currency,base_paise,total_paise,course_snapshot,billing_snapshot,refund_policy_snapshot,paid_at) select $1,id,'mock','paid','INR',price_paise,price_paise,jsonb_build_object('title',title,'slug',slug),jsonb_build_object('customer_name','Demo learner','customer_email','demo@example.com'),jsonb_build_object('window_days',7,'watch_limit_percent',10),now() from courses where id=$2 returning id",
+          [demoLearner.id, demoCourse.id],
+        )
+      ).rows[0]?.id;
+    if (orderId) {
+      await db.query(
+        "update enrollments set order_id=$3,source='purchase',active=true,revoked_at=null,expires_at=now()+interval '1 year' where user_id=$1 and course_id=$2 and source='manual'",
+        [demoLearner.id, demoCourse.id, orderId],
+      );
+      await db.query(
+        "insert into enrollments(user_id,course_id,order_id,source,active,expires_at) select $1,$2,$3,'purchase',true,now()+interval '1 year' where not exists (select 1 from enrollments where user_id=$1 and course_id=$2 and active)",
+        [demoLearner.id, demoCourse.id, orderId],
+      );
+    }
+    const firstLesson = (
+      await db.query<{ id: string; duration: number }>(
+        "select l.id,l.duration_seconds as duration from modules m join lessons l on l.module_id=m.id where m.course_id=$1 order by m.position,l.position limit 1",
+        [demoCourse.id],
+      )
+    ).rows[0];
+    if (firstLesson)
+      await db.query(
+        "insert into lesson_progress(user_id,lesson_id,duration_seconds,position_ms,watched,completed) values($1,$2,$3,30000,int4multirange(int4range(0,30000,'[)')),true) on conflict(user_id,lesson_id) do nothing",
+        [demoLearner.id, firstLesson.id, firstLesson.duration],
+      );
+  }
 }
