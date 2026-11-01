@@ -34,7 +34,7 @@ export function AuthForm({
   const [google, setGoogle] = useState(false);
   const [demoHint, setDemoHint] = useState(false);
   useEffect(() => {
-    if (mode !== "login" && mode !== "signup") return;
+    if (!["login", "signup", "forgot"].includes(mode)) return;
     let live = true;
     fetch("/api/auth/options")
       .then((response) => response.json())
@@ -60,7 +60,9 @@ export function AuthForm({
   const descriptions = {
     login: "Sign in to your learning space.",
     signup: "Your first step towards a clearer learning process.",
-    forgot: "We’ll send a secure reset link if the address is eligible.",
+    forgot: demoHint
+      ? "Password recovery is unavailable in the local demo. Use the demo account or create a fresh test account."
+      : "We’ll send a secure reset link if the address is eligible.",
     reset: "Use at least 12 characters, with uppercase, lowercase and a number.",
     confirm: "Press Continue to use this link. Links expire after 30 minutes and work once.",
   };
@@ -210,7 +212,7 @@ export function AuthForm({
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               required
               minLength={mode === "login" ? 1 : 12}
-              maxLength={128}
+              maxLength={demoHint ? 72 : 128}
               placeholder={mode === "login" ? "Your password" : "At least 12 characters"}
             />
           </label>

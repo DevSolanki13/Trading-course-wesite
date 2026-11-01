@@ -22,11 +22,13 @@ export function ContentPanel() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     adminApi<{ document: Partial<SiteDocument>; version: number }>("content")
       .then((d) => {
         setVersion(d.version);
         setDocument({ ...initial, ...d.document });
+        setLoaded(true);
       })
       .catch((e) => setError(e.message));
   }, []);
@@ -56,6 +58,9 @@ export function ContentPanel() {
       {error && (
         <p role="alert" className="auth-error">
           {error}
+          <button type="button" className="text-link" onClick={() => window.location.reload()}>
+            Retry
+          </button>
         </p>
       )}
       {message && (
@@ -161,7 +166,7 @@ export function ContentPanel() {
             <button
               type="button"
               className="button button-secondary"
-              disabled={document.faqs.length >= 12}
+              disabled={!loaded || document.faqs.length >= 12}
               onClick={() =>
                 setDocument((d) => ({ ...d, faqs: [...d.faqs, { question: "", answer: "" }] }))
               }
@@ -225,7 +230,7 @@ export function ContentPanel() {
             <button
               type="button"
               className="button button-secondary"
-              disabled={document.testimonials.length >= 5}
+              disabled={!loaded || document.testimonials.length >= 5}
               onClick={() =>
                 setDocument((d) => ({
                   ...d,
@@ -319,8 +324,12 @@ export function ContentPanel() {
             I confirm all quotes are authentic and approved for publication
           </label>
         </section>
-        <button className="button button-primary" disabled={pending}>
-          Publish content changes
+        <button className="button button-primary" disabled={!loaded || pending}>
+          {!loaded
+            ? "Load content before publishing"
+            : pending
+              ? "Publishing…"
+              : "Publish content changes"}
         </button>
       </form>
     </section>

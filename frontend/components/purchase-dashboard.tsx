@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -18,16 +19,23 @@ export function PurchaseDashboard({
   local?: boolean;
 }) {
   const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
   async function logout() {
-    const r = await fetch("/api/auth/logout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "{}",
-    });
-    if (r.ok) {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      const r = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      if (!r.ok) throw new Error("Sign out failed. Please retry.");
       router.push("/login");
       router.refresh();
-    } else toast.error("Sign out failed. Please retry.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Sign out failed. Please retry.");
+      setLoggingOut(false);
+    }
   }
   return (
     <main id="main-content" className="container learning-library">
@@ -42,8 +50,12 @@ export function PurchaseDashboard({
             <p>Demo administrator account. Production staff tools remain separate.</p>
           )}
         </div>
-        <button className="button button-secondary" onClick={() => void logout()}>
-          Sign out
+        <button
+          className="button button-secondary"
+          disabled={loggingOut}
+          onClick={() => void logout()}
+        >
+          {loggingOut ? "Signing out…" : "Sign out"}
         </button>
       </header>
       <nav className="learning-tabs" aria-label="Dashboard sections">
@@ -54,6 +66,8 @@ export function PurchaseDashboard({
           Purchase history
         </Link>
         <Link href="/courses">Browse courses</Link>
+        <Link href="/contact?topic=refund">Refund support</Link>
+        {!local && <Link href="/learn">Learning library</Link>}
         {!local && <Link href="/account">Account & devices</Link>}
       </nav>
       {!ordersOnly &&

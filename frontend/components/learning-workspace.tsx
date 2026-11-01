@@ -31,6 +31,9 @@ export function LearningWorkspace({
     notes: string;
     resources: { id: string; title: string; content: string }[];
   } | null>(null);
+  const [notesPending, setNotesPending] = useState(false);
+  const [notesError, setNotesError] = useState("");
+  const [notesRetry, setNotesRetry] = useState(0);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -68,16 +71,20 @@ export function LearningWorkspace({
         if (active) setNotes(value);
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (active) setNotesError(e.message);
+      })
+      .finally(() => {
+        if (active) setNotesPending(false);
       });
     return () => {
       active = false;
     };
-  }, [selected, canWatch]);
+  }, [selected, canWatch, notesRetry]);
   function choose(next: LessonView) {
     if (pending) return;
     setPlayback(null);
     setNotes(null);
+    setNotesError("");
     setError("");
     setSelected(next.id);
     setDrawer(false);
@@ -99,6 +106,10 @@ export function LearningWorkspace({
   }, [selected]);
   async function complete() {
     if (!lesson) return;
+    if (!course?.owned) {
+      router.push(`/login?next=${encodeURIComponent(`/learn/${slug}?lesson=${selected}`)}`);
+      return;
+    }
     setPending(true);
     try {
       await learningApi("complete", { lessonId: lesson.id, completed: !lesson.completed });
@@ -140,6 +151,7 @@ export function LearningWorkspace({
   }
   const done = lessons.filter((l) => l.completed).length;
   const next = lessons[lessons.findIndex((l) => l.id === selected) + 1];
+  const notesLoading = canWatch && !notes && !notesError && (notesPending || !!selected);
   return (
     <main id="main-content" className="learning-workspace container">
       <header className="learning-workspace-heading">
@@ -286,7 +298,11 @@ export function LearningWorkspace({
                       onClick={complete}
                     >
                       <CheckCircle size={18} />
-                      {lesson.completed ? "Mark incomplete" : "Mark as complete"}
+                      {course.owned
+                        ? lesson.completed
+                          ? "Mark incomplete"
+                          : "Mark as complete"
+                        : "Sign in to save progress"}
                     </button>
                     <label>
                       <input
@@ -313,7 +329,21 @@ export function LearningWorkspace({
                 {canWatch && (
                   <section className="learning-notes">
                     <h2>Lesson notes</h2>
-                    {notes ? (
+                    {notesLoading ? (
+                      <p role="status">Loading lesson notes…</p>
+                    ) : notesError ? (
+                      <>
+                        <p className="auth-error" role="alert">
+                          {notesError}
+                        </p>
+                        <button
+                          className="text-link"
+                          onClick={() => setNotesRetry((value) => value + 1)}
+                        >
+                          Retry notes
+                        </button>
+                      </>
+                    ) : notes ? (
                       <>
                         <p className="learning-note-content">
                           {notes.notes || "No notes have been published for this lesson."}
@@ -325,9 +355,7 @@ export function LearningWorkspace({
                           </details>
                         ))}
                       </>
-                    ) : (
-                      <p role="status">Loading lesson notes…</p>
-                    )}
+                    ) : null}
                     <p className="learning-caption">
                       Notes are provided for viewing in your classroom. Completion checkmarks and
                       watched time are recorded separately.

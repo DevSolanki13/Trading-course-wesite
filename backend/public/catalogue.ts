@@ -12,6 +12,7 @@ type RawCourse = {
   level: string;
   language: string;
   price_paise: number;
+  sale_price_paise: number | null;
   access_period: number;
   access_unit: "days" | "months";
   thumbnail_url: string | null;
@@ -87,6 +88,7 @@ export const publicCatalog = cache(async function publicCatalog() {
       telegramUrl: null,
       instagramUrl: null,
       supportEmail: null,
+      failed: false,
     };
   }
   try {
@@ -95,7 +97,7 @@ export const publicCatalog = cache(async function publicCatalog() {
       admin
         .from("courses")
         .select(
-          "id,slug,title,description,level,language,price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
+          "id,slug,title,description,level,language,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
         )
         .eq("status", "published")
         .order("created_at")
@@ -137,7 +139,7 @@ export const publicCatalog = cache(async function publicCatalog() {
         level: raw.level[0].toUpperCase() + raw.level.slice(1),
         duration: `${Math.floor(seconds / 3600)}h ${String(Math.round((seconds % 3600) / 60)).padStart(2, "0")}m`,
         lessons: lessons.length,
-        price: raw.price_paise / 100,
+        price: (raw.sale_price_paise ?? raw.price_paise) / 100,
         accessPeriod: raw.access_period,
         accessUnit: raw.access_unit,
         artwork: ["foundations", "structure", "risk"].includes(raw.artwork)
@@ -169,6 +171,7 @@ export const publicCatalog = cache(async function publicCatalog() {
         /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)
           ? settings.data.support_email
           : null,
+      failed: false,
     };
   } catch {
     return {
@@ -177,6 +180,7 @@ export const publicCatalog = cache(async function publicCatalog() {
       telegramUrl: null,
       instagramUrl: null,
       supportEmail: null,
+      failed: true,
     };
   }
 });

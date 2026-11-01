@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 async function find(slug: string) {
   const data = await publicCatalog();
-  return data.courses.find((c) => c.slug === slug) ?? getCourse(slug);
+  return data.courses.find((c) => c.slug === slug) ?? (data.failed ? undefined : getCourse(slug));
 }
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -44,6 +44,7 @@ export default async function CourseRoute({
       }
       paymentsUnavailable={unavailable}
       purchaseNotice={(await searchParams).message === "purchase-to-unlock"}
+      expiryNotice={(await searchParams).message === "access-expired"}
     />
   );
 }

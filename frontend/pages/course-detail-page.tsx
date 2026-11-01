@@ -23,11 +23,13 @@ export default function CourseDetailPage({
   demoEnabled = false,
   paymentsUnavailable = false,
   purchaseNotice = false,
+  expiryNotice = false,
 }: {
   course: Course;
   demoEnabled?: boolean;
   paymentsUnavailable?: boolean;
   purchaseNotice?: boolean;
+  expiryNotice?: boolean;
 }) {
   return (
     <main id="main-content" className="course-detail">
@@ -35,6 +37,12 @@ export default function CourseDetailPage({
         {purchaseNotice && (
           <p role="alert" className="auth-error">
             Purchase to unlock this lesson. You can try a free preview below.
+          </p>
+        )}
+        {expiryNotice && (
+          <p role="alert" className="auth-error">
+            Your course access has expired. Renew access to continue learning, or review your
+            previous purchase from your dashboard.
           </p>
         )}
         <Link className="back-link" href="/courses">
@@ -100,10 +108,10 @@ export default function CourseDetailPage({
           <h2>Your course access</h2>
           <p>
             Hindi lessons, online access for the period shown at checkout and a private student
-            community are planned. You can use two active devices.
+            community are planned. Device limits and eligibility follow the active account policy.
           </p>
           <p>
-            Seven-day refund window, with less than 10% watched.{" "}
+            Refund eligibility follows the active policy and the terms saved with your purchase.{" "}
             <Link href="/refund-policy">Read the full refund policy.</Link>
           </p>
         </section>
