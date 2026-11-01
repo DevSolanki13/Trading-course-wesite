@@ -879,7 +879,10 @@
 .admin-page > .admin-sidebar button:not(.admin-workspace-switcher):hover, .admin-page > .admin-sidebar > .admin-sidebar-bottom a:hover { color: var(--foreground); background: var(--raised); }
 .admin-page > .admin-sidebar button.is-active { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border-left-color: var(--accent); }
 .admin-sidebar-bottom { display: grid; gap: 12px; margin-top: auto; padding-top: 20px; border-top: 1px solid var(--line); }
-.admin-user-menu { display: flex; align-items: center; gap: 10px; padding: 8px; border: 0; background: transparent; text-align: left; }
+.admin-user-menu { display: flex; align-items: center; gap: 10px; padding: 8px; border: 0; background: transparent; text-align: left; text-decoration: none; }
+.admin-signout { padding: 0 8px 0 54px; border: 0; background: transparent; color: var(--muted); font-size: 11px; text-align: left; }
+.admin-signout:hover { color: var(--foreground); }
+.admin-main { padding-top: 34px; }
 .admin-user-menu > span:nth-child(2) { display: grid; flex: 1; gap: 1px; }
 .admin-user-menu strong { font-size: 13px; }
 .admin-user-menu small { color: var(--muted); font-size: 10px; }

@@ -19,10 +19,8 @@ import {
   Users,
   Receipt,
   ArrowUUpLeft,
-  ShieldCheck,
   Gear,
   Plus,
-  Sun,
   CaretDown,
   Fingerprint,
   Ticket,
@@ -167,23 +165,15 @@ export function AdminWorkspace() {
         </div>
         <div className="admin-sidebar-bottom">
           <Link href="/"><ArrowUUpLeft size={18} /> View storefront</Link>
-          <button type="button" className="admin-user-menu" onClick={() => void logout()}>
+          <Link href="/account" className="admin-user-menu" aria-label="Open account settings">
             <span className="admin-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
-            <span><strong>Admin</strong><small>{loggingOut ? "Signing out…" : "Verified account"}</small></span>
+            <span><strong>Admin</strong><small>{loggingOut ? "Signing out…" : "Edit account"}</small></span>
             <CaretDown size={15} />
-          </button>
+          </Link>
+          <button type="button" className="admin-signout" disabled={loggingOut} onClick={() => void logout()}>{loggingOut ? "Signing out…" : "Sign out"}</button>
         </div>
       </aside>
       <div className="admin-content">
-        <header className="admin-top">
-          <div className="admin-breadcrumb"><span>Workspace</span><span>/</span><strong>{views.find((item) => item.id === view)?.label}</strong></div>
-          <div className="admin-top-actions">
-            <span className="admin-preview-pill"><i /> Preview environment</span>
-            <span className="admin-preview-note">Sample data · test payments only.</span>
-            <button type="button" className="admin-theme-button" aria-label="Theme settings"><Sun size={21} /></button>
-            <Link href="/admin/security" className="button button-secondary"><ShieldCheck size={17} /> Team security</Link>
-          </div>
-        </header>
         <div className="admin-main">
           {view === "courses" && user.role === "admin" && <div className="admin-page-heading"><div><h1>Courses</h1><p>Manage your curriculum, pricing and publishing.</p></div><button className="button button-primary" onClick={() => setView("courses")}><Plus size={19} /> New course</button></div>}
           {view === "overview" && <OverviewPanel />}
