@@ -87,7 +87,7 @@ export function AdminWorkspace() {
         <p role="status">Checking staff access…</p>
       </main>
     );
-  if (user.aal !== "aal2")
+  if (user.aal !== "aal2" && user.aal !== "local-demo")
     return (
       <main id="main-content" className="container admin-page">
         <div className="admin-section-head">

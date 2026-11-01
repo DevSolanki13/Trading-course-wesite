@@ -12,6 +12,23 @@
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
+.checkout-coupon {
+  display: grid;
+  gap: 8px;
+  margin-block: 20px;
+}
+.checkout-coupon p {
+  margin: 0;
+  font-weight: 600;
+}
+.checkout-coupon-row {
+  display: flex;
+  gap: 8px;
+}
+.checkout-coupon-row input {
+  min-width: 0;
+  flex: 1;
+}
 .purchase-classroom {
   display: grid;
   grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);

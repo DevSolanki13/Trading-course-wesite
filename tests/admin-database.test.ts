@@ -172,7 +172,7 @@ grant usage on schema public,auth to anon,authenticated,service_role;grant execu
           lesson,
         ])
       ).rows[0].allowed,
-      true,
+      false,
     );
     await assert.rejects(
       act(1, "block", { userId: ids[2], blocked: true, note: "Support should not block" }),

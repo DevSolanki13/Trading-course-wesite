@@ -46,6 +46,12 @@ export const purchaseCourse = (ref: string, userId: string | null = null) =>
     p_user: userId,
     p_ref: ref,
   });
+export const purchaseQuoteCoupon = (course: string, code: string, userId: string) =>
+  purchaseRpc<{ base: number; discount: number; total: number }>("purchase_quote_coupon", {
+    p_user: userId,
+    p_course: course,
+    p_code: code,
+  });
 export const purchaseOrder = (id: string, userId: string) =>
   purchaseRpc<PurchaseOrder | null>("purchase_read", {
     p_action: "order",

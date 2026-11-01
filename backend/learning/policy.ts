@@ -21,15 +21,14 @@ export function hasCourseAccess(
       !e.revoked_at &&
       !!e.expires_at &&
       Date.parse(e.expires_at) > now &&
-      (e.source === "manual" ||
-        (e.source === "purchase" &&
-          orders.some(
-            (o) =>
-              o.id === e.order_id &&
-              o.user_id === userId &&
-              o.course_id === courseId &&
-              o.status === "paid",
-          ))),
+      e.source === "purchase" &&
+      orders.some(
+        (o) =>
+          o.id === e.order_id &&
+          o.user_id === userId &&
+          o.course_id === courseId &&
+          o.status === "paid",
+      ),
   );
 }
 export function refundEligibility(

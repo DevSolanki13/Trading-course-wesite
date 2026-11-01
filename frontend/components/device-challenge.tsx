@@ -98,17 +98,27 @@ export function DeviceChallenge({ next = "/account" }: { next?: string }) {
       )}
       <button
         className="text-link"
+        disabled={pending}
         onClick={async () => {
-          await fetch("/api/auth/logout", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: "{}",
-          });
-          router.replace("/login");
-          router.refresh();
+          setPending(true);
+          setError("");
+          try {
+            const response = await fetch("/api/auth/logout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: "{}",
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || "Sign out failed. Please retry.");
+            router.replace("/login");
+            router.refresh();
+          } catch (reason) {
+            setError(reason instanceof Error ? reason.message : "Sign out failed. Please retry.");
+            setPending(false);
+          }
         }}
       >
-        Cancel and sign out
+        {pending ? "Signing out…" : "Cancel and sign out"}
       </button>
     </div>
   );

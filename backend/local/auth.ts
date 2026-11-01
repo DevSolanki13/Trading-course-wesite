@@ -27,7 +27,7 @@ export async function localRateLimit(key: string) {
       status: 429,
     });
 }
-export async function localSignIn(email: string, password: string) {
+export async function localSignIn(email: string, password: string, remember = false) {
   const db = await localDatabase();
   const row = (
     await db.query<{ id: string; password_hash: string }>(
@@ -43,10 +43,10 @@ export async function localSignIn(email: string, password: string) {
   if (!row || !valid)
     throw Object.assign(new Error("Email or password is incorrect."), { status: 401 });
   const token = randomBytes(32).toString("hex");
-  await db.query("insert into local_auth.sessions values($1,$2,now()+interval '7 days')", [
-    digest(token),
-    row.id,
-  ]);
+  await db.query(
+    `insert into local_auth.sessions values($1,$2,now()+interval '${remember ? 30 : 1} days')`,
+    [digest(token), row.id],
+  );
   return token;
 }
 export async function localSignUp(name: string, email: string, password: string) {
@@ -64,7 +64,7 @@ export async function localSignUp(name: string, email: string, password: string)
       passwordHash,
     ]);
   });
-  return localSignIn(email, password);
+  return localSignIn(email, password, false);
 }
 export async function localSignOut(token: string | undefined) {
   if (token)

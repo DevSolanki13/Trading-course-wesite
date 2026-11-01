@@ -12,6 +12,7 @@ import {
   purchaseOrder,
   purchaseOrders,
   purchaseRpc,
+  purchaseQuoteCoupon,
 } from "../purchase/repository";
 import {
   getPaymentProvider,
@@ -59,19 +60,30 @@ export async function purchaseRequest(request: Request) {
     else await limit(request, `purchase:${action}`, user.id, 30, 60);
     if (action === "create") {
       const input = z
-        .object({ courseId: z.string().min(1).max(120), terms: z.literal(true) })
+        .object({
+          courseId: z.string().min(1).max(120),
+          terms: z.literal(true),
+          coupon: z.string().trim().max(32).optional(),
+        })
         .strict()
         .parse(await body(request));
       const provider = getPaymentProvider();
       const origin = process.env.NEXT_PUBLIC_APP_URL
         ? new URL(process.env.NEXT_PUBLIC_APP_URL).origin
         : url.origin;
-      const order = await createPurchase(user, input.courseId, origin);
+      const order = await createPurchase(user, input.courseId, origin, input.coupon);
       return json({
         order,
         provider: provider.name,
         keyId: provider.name === "razorpay" ? process.env.RAZORPAY_KEY_ID : undefined,
       });
+    }
+    if (action === "quote") {
+      const input = z
+        .object({ courseId: z.string().min(1).max(120), coupon: z.string().trim().min(3).max(32) })
+        .strict()
+        .parse(await body(request));
+      return json(await purchaseQuoteCoupon(input.courseId, input.coupon, user.id));
     }
     if (action === "mock" || action === "verify") {
       const input = z
@@ -130,6 +142,14 @@ export async function purchaseRequest(request: Request) {
     if (error instanceof PaymentsUnavailableError) return json({ error: error.message }, 503);
     if (error instanceof z.ZodError) return json({ error: "Check the supplied fields." }, 400);
     if (error instanceof AuthError) return failure(error);
+    if (error && typeof error === "object" && "status" in error) {
+      const status = Number(error.status);
+      if (Number.isInteger(status) && status >= 400 && status < 500)
+        return json(
+          { error: error instanceof Error ? error.message : "Please try again later." },
+          status,
+        );
+    }
     if (error && typeof error === "object" && "code" in error && error.code === "23505")
       return json({ error: "You already own this course.", code: "ALREADY_OWNED" }, 409);
     console.error("Purchase operation failed; provider and personal details withheld.");

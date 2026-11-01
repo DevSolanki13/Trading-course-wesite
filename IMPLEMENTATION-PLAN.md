@@ -56,6 +56,59 @@ The implementer updates this file at the start and end of every work session and
 
 ## 3. Inputs and external dependencies
 
+## 3A. Course learner progress dashboard
+
+**Status:** IN PROGRESS
+**Scope:** local demo and configured production/staging mode
+**Surface:** authenticated admin/support workspace, reusing the existing admin shell and theme
+
+### Product goal
+
+An authorised staff member can open a course and see the learners enrolled in that course, their
+access state, completion percentage, watched time, and last activity. Selecting a learner reveals
+lesson-level progress without exposing passwords, provider secrets, or unrelated student data.
+
+### Implementation sequence
+
+1. **Shared data contract and role guard**
+   - Add a versioned SQL function guarded by `admin_guard`.
+   - Return course metadata, published lesson totals, enrolled learners, aggregate progress, and
+     lesson-level progress.
+   - Use the same function in Supabase/staging and the local PGlite demo.
+2. **Admin API**
+   - Add `GET /api/admin/course-learners?courseId=<uuid>`.
+   - Permit admin and support roles to read progress; keep mutations on existing audited operations.
+   - Return explicit 400/403/404/503 errors; do not silently fall back to empty data.
+3. **Admin UI**
+   - Add a Learners action to each course in the existing Courses panel.
+   - Show summary metrics, a compact learner table, progress bars, access status, and last activity.
+   - Add a detail view for lesson completion/watched time and responsive horizontal table scrolling.
+   - Include loading, empty, error/retry, and selected states.
+4. **Demo parity**
+   - Allow the seeded admin account to open `/admin` in local demo mode.
+   - Keep production MFA/role gates unchanged; local mode remains isolated and clearly labelled.
+5. **Verification**
+   - Assert role denial, course filtering, progress aggregation, and lesson detail in SQL tests.
+   - Run lint, typecheck, unit/backend tests, and the relevant browser smoke flow.
+
+### Design decisions
+
+- **Density:** compact/balanced operational view; existing neutral surfaces, blue brand accent,
+  borders, badges, and typography remain unchanged.
+- **Privacy:** course-scoped data only; no passwords or authentication secrets; watched time and
+  completion are read-only.
+- **Access semantics:** active non-revoked enrollments are shown as Active; expired/revoked
+  enrollments remain visible for support context but cannot be mistaken for current access.
+- **Progress denominator:** published lessons in the selected course, with completion based on the
+  learner's saved completion records and watched time based on unique watched ranges.
+- **Student access rule:** a student must have an active enrollment linked to a paid order whose
+  user and course match. Manual grants do not unlock student accounts.
+- **Pricing rule:** every paid order stores an immutable course-price snapshot. Future course-price
+  edits affect new purchases only; historical revenue and receipts use the original order total.
+- **Coupons:** admin-created percentage/fixed coupons are validated server-side, optionally scoped
+  to a course, and limited by expiry, total uses, and uses per student. The final discounted total
+  is stored on the order before payment creation.
+
 These are questions about readiness, not reasons to delay independent design and scaffolding work. Credentials must be configured through protected environment settings, never committed into Markdown or sent in public messages.
 
 | Needed | Owner | Current status | Effect if missing |

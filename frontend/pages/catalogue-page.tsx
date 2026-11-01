@@ -7,12 +7,15 @@ import { ArrowDown, MagnifyingGlass } from "@phosphor-icons/react";
 export default function CataloguePage({
   courses = sampleCourses,
   published = false,
+  unavailable = false,
 }: {
   courses?: Course[];
   published?: boolean;
+  unavailable?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("All levels");
+  const levels = [...new Set(courses.map((course) => course.level))].sort();
   const results = courses.filter(
     (course) =>
       (level === "All levels" || course.level === level) &&
@@ -36,8 +39,9 @@ export default function CataloguePage({
           <label htmlFor="course-level">Your starting point</label>
           <select id="course-level" value={level} onChange={(e) => setLevel(e.target.value)}>
             <option>All levels</option>
-            <option>Beginner</option>
-            <option>Intermediate</option>
+            {levels.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
           </select>
         </div>
         <div className="course-search">
@@ -59,6 +63,11 @@ export default function CataloguePage({
           {results.length} {results.length === 1 ? "course" : "courses"} <ArrowDown size={14} />
         </span>
       </div>
+      {unavailable && (
+        <p role="alert" className="auth-error">
+          Course information is temporarily unavailable. Please try again later.
+        </p>
+      )}
       {results.length ? (
         <div className="course-grid">
           {results.map((course) => (

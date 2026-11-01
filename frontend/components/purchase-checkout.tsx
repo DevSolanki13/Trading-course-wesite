@@ -38,6 +38,9 @@ export function PurchaseCheckout({
   const [error, setError] = useState("");
   const [failed, setFailed] = useState(false);
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
+  const [coupon, setCoupon] = useState("");
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
   async function api(action: string, payload: unknown) {
     const r = await fetch(`/api/purchase/${action}`, {
       method: "POST",
@@ -75,7 +78,11 @@ export function PurchaseCheckout({
     setBusy(true);
     setError("");
     try {
-      const data = await api("create", { courseId: course.id, terms: true });
+      const data = await api("create", {
+        courseId: course.id,
+        terms: true,
+        ...(couponApplied ? { coupon: couponApplied.code } : {}),
+      });
       const saved = data.order as PurchaseOrder;
       setOrder(saved);
       if (data.provider === "razorpay") {
@@ -163,15 +170,72 @@ export function PurchaseCheckout({
           <dt>Course price</dt>
           <dd>{money(course.price)}</dd>
         </div>
+        {couponApplied && (
+          <div>
+            <dt>Coupon discount</dt>
+            <dd>-{money(couponApplied.discount)}</dd>
+          </div>
+        )}
         <div>
           <dt>Taxes</dt>
           <dd>{money(tax)}</dd>
         </div>
         <div>
           <dt>Total</dt>
-          <dd>{money(course.price + tax)}</dd>
+          <dd>{money(course.price - (couponApplied?.discount ?? 0) + tax)}</dd>
         </div>
       </dl>
+      <div className="checkout-coupon">
+        <p>Have a coupon?</p>
+        <div className="checkout-coupon-row">
+          <input
+            value={coupon}
+            maxLength={32}
+            onChange={(event) => {
+              setCoupon(event.target.value.toUpperCase());
+              setCouponApplied(null);
+            }}
+            placeholder="Enter coupon code"
+            aria-label="Coupon code"
+            disabled={busy || couponBusy}
+          />
+          <button
+            className="button button-secondary"
+            type="button"
+            disabled={!coupon.trim() || busy || couponBusy}
+            onClick={async () => {
+              setCouponBusy(true);
+              setError("");
+              try {
+                const quote = await api("quote", { courseId: course.id, coupon: coupon.trim() });
+                setCouponApplied({ code: coupon.trim(), discount: quote.discount });
+              } catch (reason) {
+                setCouponApplied(null);
+                setError(reason instanceof Error ? reason.message : "Coupon could not be applied.");
+              } finally {
+                setCouponBusy(false);
+              }
+            }}
+          >
+            {couponBusy ? "Checking…" : "Apply"}
+          </button>
+        </div>
+        {couponApplied ? (
+          <p className="checkout-note">Coupon {couponApplied.code} applied.</p>
+        ) : (
+          <button
+            className="text-link"
+            type="button"
+            disabled={busy || couponBusy}
+            onClick={() => {
+              setCoupon("");
+              setCouponApplied(null);
+            }}
+          >
+            I don’t have a coupon
+          </button>
+        )}
+      </div>
       <label className="terms-check">
         <input
           type="checkbox"

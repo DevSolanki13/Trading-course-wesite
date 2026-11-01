@@ -10,6 +10,11 @@ import { requireEnv } from "../config/env";
 import { CashfreeClient, cashfreeSandboxEnabled } from "../payments/cashfree";
 import { commerceStore } from "../payments/data";
 import { reconcilePayment, reconcileRefund } from "../payments/workflow";
+import { cookies } from "next/headers";
+import { localDemoEnabled } from "../purchase/mode";
+import { LOCAL_SESSION_COOKIE, localSession } from "../local/auth";
+import { localCourseLearners } from "../admin/data";
+import { localDatabase } from "../local/database";
 const uuid = z.string().uuid();
 function parse<T>(schema: z.ZodType<T>, input: unknown): T {
   const result = schema.safeParse(input);
@@ -22,6 +27,54 @@ export async function adminRequest(request: Request) {
     const url = new URL(request.url);
     const action = url.pathname.replace(/^\/api\/admin\//, "");
     if (request.method !== "GET") sameOrigin(request);
+    if (localDemoEnabled()) {
+      const localUser = await localSession((await cookies()).get(LOCAL_SESSION_COOKIE)?.value);
+      if (!localUser) throw new AuthError(401, "Please sign in to continue.", "SIGN_IN_REQUIRED");
+      if (localUser.role !== "admin" && localUser.role !== "support")
+        throw new AuthError(403, "This role cannot access the admin workspace.", "FORBIDDEN");
+      if (request.method === "GET" && action === "course-learners") {
+        const id = parse(uuid, url.searchParams.get("courseId"));
+        return json(await localCourseLearners(id));
+      }
+      if (request.method === "GET" && action === "courses") {
+        const db = await localDatabase();
+        const courses = await db.query(
+          "select id,title,slug,status,price_paise,sale_price_paise,1 as version,updated_at from courses order by updated_at desc limit 200",
+        );
+        return json({ items: courses.rows });
+      }
+      if (request.method === "GET" && action === "overview") {
+        const db = await localDatabase();
+        const [courses, enrolledStudents, revenue, coursePerformance] = await Promise.all([
+          db.query<{ count: number }>("select count(*)::integer as count from courses"),
+          db.query<{ count: number }>(
+            "select count(distinct e.user_id)::integer as count from enrollments e join orders o on o.id=e.order_id where e.source='purchase' and e.active and e.revoked_at is null and o.status='paid' and o.user_id=e.user_id and o.course_id=e.course_id and (e.expires_at is null or e.expires_at>now())",
+          ),
+          db.query<{ gross: number; refunded: number; sales: number }>(
+            "select coalesce(sum(total_paise) filter(where status in ('paid','refunded')),0)::integer as gross, coalesce(sum(total_paise) filter(where status='refunded'),0)::integer as refunded, count(*) filter(where status in ('paid','refunded'))::integer as sales from orders",
+          ),
+          db.query<{ title: string; sales: number; gross: number; net: number }>(
+            "select coalesce(max(course_snapshot->>'title'),c.title) as title,count(*)::integer as sales,coalesce(sum(o.total_paise),0)::integer as gross,coalesce(sum(o.total_paise) filter(where o.status='paid'),0)::integer as net from orders o join courses c on c.id=o.course_id where o.status in ('paid','refunded') group by o.course_id,c.title order by gross desc",
+          ),
+        ]);
+        const gross = revenue.rows[0]?.gross ?? 0;
+        const refunded = revenue.rows[0]?.refunded ?? 0;
+        return json({
+          gross,
+          refunded,
+          net: gross - refunded,
+          sales: revenue.rows[0]?.sales ?? 0,
+          refundRate: 0,
+          newStudents: 0,
+          coursesCount: courses.rows[0]?.count ?? 0,
+          enrolledStudents: enrolledStudents.rows[0]?.count ?? 0,
+          pendingRefunds: 0,
+          chart: [],
+          courses: coursePerformance.rows,
+          limited: false,
+        });
+      }
+    }
     const adminOnly = ![
       "overview",
       "orders",
@@ -51,6 +104,16 @@ export async function adminRequest(request: Request) {
       }
       if (action === "course")
         return json({ course: await getCourse(context, parse(uuid, url.searchParams.get("id"))) });
+      if (action === "course-learners") {
+        const id = parse(uuid, url.searchParams.get("courseId"));
+        const result = await context.admin.rpc("admin_course_learners", {
+          p_actor: context.user.id,
+          p_session: context.sessionId,
+          p_course: id,
+        });
+        databaseError(result.error);
+        return json(result.data);
+      }
       if (action === "students") {
         const r = await context.admin.rpc("admin_students", {
           p_actor: context.user.id,

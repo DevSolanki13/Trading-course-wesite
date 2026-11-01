@@ -3,8 +3,9 @@ import { useState } from "react";
 
 export function RiskExercise() {
   const [risk, setRisk] = useState(1);
-  const [capital, setCapital] = useState(50000);
-  const budget = (capital * risk) / 100;
+  const [capital, setCapital] = useState("50000");
+  const numericCapital = Number(capital);
+  const budget = ((Number.isFinite(numericCapital) ? numericCapital : 0) * risk) / 100;
   return (
     <div className="risk-exercise">
       <div className="exercise-header">
@@ -23,7 +24,13 @@ export function RiskExercise() {
           max="10000000"
           step="1000"
           value={capital}
-          onChange={(e) => setCapital(Math.min(10000000, Math.max(0, Number(e.target.value))))}
+          onChange={(e) => setCapital(e.target.value)}
+          onBlur={() => {
+            const value = Number(capital);
+            setCapital(
+              String(Math.min(10000000, Math.max(1000, Number.isFinite(value) ? value : 1000))),
+            );
+          }}
         />
       </div>
       <div className="risk-label">

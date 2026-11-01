@@ -3,7 +3,6 @@ import { CourseCard } from "../components/course-card";
 import { RiskExercise } from "../components/risk-exercise";
 import { Faq } from "../components/faq";
 import { ArrowRight, ArrowUpRight, Play, ShieldCheck } from "../components/icons";
-import { Star } from "@phosphor-icons/react/dist/ssr";
 import { courses as sampleCourses, type Course } from "../content/courses";
 import type { SiteDocument } from "../../shared/admin";
 import "../styles/landing.css";
@@ -101,10 +100,19 @@ function MiniVisual({ type }: { type: string }) {
   return null;
 }
 
-function MarqueeCard({ card, index }: { card: (typeof marqueeCards)[number]; index: number }) {
+function MarqueeCard({
+  card,
+  index,
+  ariaHidden = false,
+}: {
+  card: (typeof marqueeCards)[number];
+  index: number;
+  ariaHidden?: boolean;
+}) {
   return (
     <article
       className={`marquee-card marquee-${card.type}`}
+      aria-hidden={ariaHidden}
       style={{
         transform: `translateY(${index % 2 ? 16 : 0}px) rotate(${index % 3 === 0 ? "-1deg" : "1deg"})`,
       }}
@@ -133,6 +141,7 @@ function CardMarquee() {
               key={`${card.type}-${index}`}
               card={card}
               index={index % marqueeCards.length}
+              ariaHidden={index >= marqueeCards.length}
             />
           ))}
         </div>
@@ -141,7 +150,7 @@ function CardMarquee() {
   );
 }
 
-function StatsGrid() {
+function StatsGrid({ content }: { content?: SiteDocument | null }) {
   return (
     <section className="about-section container" id="about" aria-labelledby="about-heading">
       <div className="eyebrow">• ABOUT US</div>
@@ -158,14 +167,10 @@ function StatsGrid() {
         <article className="stat-large">
           <div>
             <span className="card-label">THE CURRICULUM</span>
-            <h3>
-              120+ Hours of
-              <br />
-              <em>video lessons</em>
-            </h3>
+            <h3>{content?.teachingTitle || "A considered trading education"}</h3>
             <p>
-              From market foundations to risk and psychology, learn at a pace that respects your
-              process.
+              {content?.teachingDescription ||
+                "From market foundations to risk and psychology, learn at a pace that respects your process."}
             </p>
           </div>
           <div className="stat-chart" aria-hidden="true">
@@ -184,29 +189,21 @@ function StatsGrid() {
             <br />
             Practical
           </h3>
-          <blockquote>
-            “The best lesson was learning what <em>not</em> to do.”
-          </blockquote>
-          <div className="avatar-row">
-            <i>AK</i>
-            <i>RS</i>
-            <i>MN</i>
-            <span>+2k learners</span>
-          </div>
+          <blockquote>Practical learning, careful review, and no promises of returns.</blockquote>
         </article>
         <article className="stat-green">
           <span className="card-label">THE WORK</span>
-          <strong>10k+</strong>
+          <strong>Review</strong>
           <h3>
-            Trades analyzed
+            Decisions analyzed
             <br />
-            in class.
+            in context.
           </h3>
           <span className="card-arrow">↗</span>
         </article>
         <article className="stat-dark">
           <span className="card-label">THE SCOPE</span>
-          <strong>15+</strong>
+          <strong>Multiple</strong>
           <h3>Markets covered</h3>
           <p>Stocks · Forex · Crypto · Options</p>
           <div className="dark-wave" aria-hidden="true" />
@@ -220,19 +217,21 @@ export default function HomePage({
   courses = sampleCourses,
   content = null,
   published = false,
+  unavailable = false,
 }: {
   courses?: Course[];
   content?: SiteDocument | null;
   telegramUrl?: string | null;
   instagramUrl?: string | null;
   published?: boolean;
+  unavailable?: boolean;
 }) {
   return (
     <main id="main-content" className="landing-page">
       <div className="ticker-strip" aria-label="Sample market ticker">
         <div className="ticker-track">
           {[...ticker, ...ticker].map((item, index) => (
-            <span key={`${item}-${index}`}>
+            <span key={`${item}-${index}`} aria-hidden={index >= ticker.length}>
               <b>{item}</b>
               <em className={index % 3 === 0 ? "down" : "up"}>
                 {index % 3 === 0 ? "−" : "+"}
@@ -243,16 +242,21 @@ export default function HomePage({
         </div>
       </div>
       <section className="hero-modern container" aria-labelledby="landing-title">
+        {unavailable && (
+          <p role="alert" className="auth-error">
+            Course information is temporarily unavailable. Please try again later.
+          </p>
+        )}
         <div className="hero-glow" aria-hidden="true" />
         <div className="eyebrow">MARKET METHOD · TRADING EDUCATION</div>
         <h1 id="landing-title">
-          Learn to trade with <em>clarity</em>
+          {content?.heroTitle || "Learn to trade with"} <em>{content?.heroAccent || "clarity"}</em>
           <br />
-          and confidence.
+          {content?.heroTitle ? "" : "and confidence."}
         </h1>
         <p className="hero-lede">
-          Structured trading courses on price action, risk management and market psychology, taught
-          by working traders.
+          {content?.heroDescription ||
+            "Structured trading courses on price action, risk management and market psychology."}
         </p>
         <div className="hero-actions">
           <Link href="/courses" className="button button-primary">
@@ -269,27 +273,10 @@ export default function HomePage({
             View syllabus
           </Link>
         </div>
-        <div className="trust-line">
-          <span className="stars" role="img" aria-label="5 stars">
-            <Star size={14} weight="fill" />
-            <Star size={14} weight="fill" />
-            <Star size={14} weight="fill" />
-            <Star size={14} weight="fill" />
-            <Star size={14} weight="fill" />
-          </span>{" "}
-          Rated 4.9/5 by 2,000+ students
-        </div>
+        <div className="trust-line">A structured, risk-aware place to start learning.</div>
         <CardMarquee />
       </section>
-      <section className="logo-strip container">
-        <span>TRUSTED BY TRADERS FROM</span>
-        <div>
-          {["ZERODHA", "UPSTOX", "MOTILAL", "NSE ACADEMY", "BSE", "COIN DCX"].map((logo) => (
-            <b key={logo}>{logo}</b>
-          ))}
-        </div>
-      </section>
-      <StatsGrid />
+      <StatsGrid content={content} />
       <section className="landing-section landing-courses container" id="courses">
         <div className="section-heading">
           <div>
@@ -363,31 +350,36 @@ export default function HomePage({
               Before asking what a trade could make, understand what a hypothetical risk budget
               means.
             </p>
-            <Link href="/courses/risk-and-psychology" className="text-link">
+            <Link
+              href={`/courses/${courses.find((course) => course.slug === "risk-psychology" || course.slug === "risk-and-psychology")?.slug ?? "risk-and-psychology"}`}
+              className="text-link"
+            >
               Explore risk & psychology <ArrowUpRight size={18} />
             </Link>
           </div>
           <RiskExercise />
         </div>
       </section>
-      <section className="testimonials-modern container">
-        <div className="eyebrow">LEARNER PERSPECTIVES</div>
-        <h2>
-          Quiet confidence
-          <br />
-          <span>speaks loudest.</span>
-        </h2>
-        <div className="testimonial-cards">
-          <blockquote>
-            “The structure helped me stop jumping between strategies and start reviewing my
-            decisions.”<footer>— Aditi K. · Price Action</footer>
-          </blockquote>
-          <blockquote>
-            “Clear, practical and honest about the risk. Exactly what I was looking for.”
-            <footer>— Rohan S. · Market Foundations</footer>
-          </blockquote>
-        </div>
-      </section>
+      {content?.genuineTestimonialsConfirmed && content.testimonials.length > 0 && (
+        <section className="testimonials-modern container">
+          <div className="eyebrow">LEARNER PERSPECTIVES</div>
+          <h2>
+            Quiet confidence
+            <br />
+            <span>speaks loudest.</span>
+          </h2>
+          <div className="testimonial-cards">
+            {content.testimonials.map((item) => (
+              <blockquote key={`${item.name}-${item.quote}`}>
+                “{item.quote}”
+                <footer>
+                  — {item.name} · {item.course}
+                </footer>
+              </blockquote>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="landing-faq container" id="faq">
         <div>
           <div className="eyebrow">A FEW USEFUL ANSWERS</div>

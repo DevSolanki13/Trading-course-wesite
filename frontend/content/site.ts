@@ -28,12 +28,12 @@ export const faqs = [
   {
     question: "What is the refund policy?",
     answer:
-      "The planned policy allows a refund request within seven days of payment, provided you have watched less than 10% of the course. Exactly 10% watched is outside the eligibility limit. Review the full policy before purchasing.",
+      "Refund eligibility follows the active policy and the terms saved with your purchase. Review the full refund policy before purchasing.",
   },
   {
     question: "Can I use my phone and laptop?",
     answer:
-      "Accounts allow two active devices by default. You can manage them from your profile. A third device asks you to sign out an existing one before continuing.",
+      "Your account follows the active device limit. You can manage admitted devices from your profile, and a full device limit asks you to sign out an existing one before continuing.",
   },
   {
     question: "Will these courses provide trading calls or guaranteed returns?",

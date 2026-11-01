@@ -23,7 +23,20 @@ Test accounts (local development only):
 | Student       | `demo@example.com`  | `1234567890` |
 | Administrator | `admin@example.com` | `1234567890` |
 
-The first seed creates three sample courses and no purchases. Re-running it preserves existing purchases/progress. Demo credentials must not exist in a live sales database. Demo administrator access is limited to the isolated learning dashboard; production staff role/MFA checks remain unchanged. The development login hint can fill the credentials and be dismissed. New local signups are test accounts and do not require real email verification; configured Supabase signup retains its existing verification policy.
+The first seed creates three sample courses and a clearly labelled paid learner fixture. Re-running it
+preserves existing purchases/progress. Demo credentials must not exist in a live sales database.
+The demo administrator can open `/admin`, choose **Courses**, and use **View learners** on
+**Risk & Trading Psychology** to inspect the seeded learner at 25% completion. Production staff
+role/MFA checks remain unchanged. The development login hint can fill the credentials and be
+dismissed. New local signups are test accounts and do not require real email verification;
+configured Supabase signup retains its existing verification policy.
+
+Course prices are snapshotted into each paid order. Changing a course price affects future
+purchases only; historical orders, receipts, and admin net revenue retain the original paid price.
+Administrators can create percentage or fixed-amount coupons, optionally scope them to a course,
+set expiry and usage limits, and students can apply them before payment. The server validates and
+reserves coupons and stores the discounted order total; changing a course price does not alter
+existing orders.
 
 ## Test the complete journey
 
@@ -175,7 +188,7 @@ Use `/login`, `/signup`, `/account` and `/admin/login` for the new flows. Test s
 
 ## Phase 5 operator workspace
 
-After verifying the owner's staging account, an authorised operator can run `npm run admin:bootstrap -- --user-id YOUR_VERIFIED_USER_UUID --apply`. The owner then signs in at `/admin/login`, enrolls/verifies their authenticator and opens `/admin`. Course publishing uses real approved metadata, ready VdoCipher video and explicit Admin action. Support can inspect students/orders/refunds and grant access but cannot change prices, content, settings or staff. See [the Phase 5 report](./docs/PHASE-5-STATUS.md) before publishing or testing with real owner content.
+After verifying the owner's staging account, an authorised operator can run `npm run admin:bootstrap -- --user-id YOUR_VERIFIED_USER_UUID --apply`. The owner then signs in at `/admin/login`, enrolls/verifies their authenticator and opens `/admin`. Course publishing uses real approved metadata, ready VdoCipher video and explicit Admin action. Support can inspect students/orders/refunds and grant access but cannot change prices, content, settings or staff. In Courses, **View learners** opens the selected course's enrollment, access, aggregate progress, watched time, last activity, and lesson detail. See [the Phase 5 report](./docs/PHASE-5-STATUS.md) before publishing or testing with real owner content.
 
 `npm run test:admin` uses disposable staging identities and a temporary course/order. Explicit notification commands send real queued messages and were not invoked against students. `npm run operations:run` is a dry run; `-- --run` explicitly calls the protected staging worker after configuration. Notification delivery has a separate opt-in. Hosted scheduling/alerts, actual merchant/email acceptance and production enablement are still pending.
 
@@ -183,4 +196,4 @@ After verifying the owner's staging account, an authorised operator can run `npm
 
 Courses have a finite access period, configured in the administrator course editor in days or calendar months (default: one month). Video duration and access duration are separate. Successful payment starts access; checkout snapshots its period and a later course edit does not change an existing enrollment. The dashboard, confirmation and receipt show the end date in IST. After expiry, paid lessons/progress APIs deny access and the student can buy a fresh period while retaining learning progress. Free previews and private receipts remain available. There are no automatic recurring charges.
 
-[Migration 011](./backend/database/migrations/202610310011_course_access_expiry.sql) is additive and is applied automatically only by the isolated local demo on initialization. Shared databases require reviewed deployment after outstanding migrations. It gives existing courses a one-month default and backfills enrollment expiry from the original payment/grant time; older enrollments may expire immediately. Review legacy-customer treatment and course periods before applying it to shared staging/production. No shared migration was run for this change.
+[Migration 011](./backend/database/migrations/202610310011_course_access_expiry.sql) is additive and is applied automatically only by the isolated local demo on initialization. [Migration 012](./backend/database/migrations/202611010012_admin_course_learners.sql) adds the role-guarded course learner progress query, [Migration 013](./backend/database/migrations/202611010013_admin_overview_counts.sql) adds overview count fields, [Migration 014](./backend/database/migrations/202611010014_paid_student_access.sql) requires successful payment for student access, and [Migration 015](./backend/database/migrations/202611010015_paid_overview_counts.sql) makes enrolled-student counts paid-order based. These migrations must be reviewed/applied with the other outstanding migrations on shared staging/production. Migration 011 gives existing courses a one-month default and backfills enrollment expiry from the original payment/grant time; older enrollments may expire immediately. Review legacy-customer treatment and course periods before applying them to shared staging/production. No shared migration was run for these changes.

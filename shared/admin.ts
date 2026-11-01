@@ -73,6 +73,39 @@ export type StudentDetail = {
   devices: { id: string; device_name: string; last_active_at: string }[];
   courses: { id: string; title: string; status: string }[];
 };
+export type AdminCourseLearnerLesson = {
+  lessonId: string;
+  title: string;
+  moduleTitle: string;
+  completed: boolean;
+  positionSeconds: number;
+  watchedSeconds: number;
+  updatedAt: string | null;
+};
+export type AdminCourseLearners = {
+  course: {
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+    lessonCount: number;
+    lessons: { id: string; title: string; moduleTitle: string; durationSeconds: number }[];
+  };
+  learners: {
+    id: string;
+    name: string;
+    email: string;
+    grantedAt: string;
+    expiresAt: string | null;
+    active: boolean;
+    progressPercent: number;
+    completedLessons: number;
+    totalLessons: number;
+    watchedSeconds: number;
+    lastActiveAt: string | null;
+    lessons: AdminCourseLearnerLesson[];
+  }[];
+};
 export type AdminOrder = {
   id: string;
   user_id: string;

@@ -53,6 +53,14 @@ export async function localAuthRequest(request: Request) {
       jar.delete(LOCAL_SESSION_COOKIE);
       return json({ redirect: "/login" });
     }
+    if (action === "forgot-password")
+      return json(
+        {
+          error:
+            "Password recovery is unavailable in the local demo. Use a configured auth environment.",
+        },
+        503,
+      );
     if (!["login", "signup"].includes(action))
       return json(
         { error: "This account feature requires the configured authentication service." },
@@ -66,7 +74,7 @@ export async function localAuthRequest(request: Request) {
           .email()
           .max(254)
           .transform((v) => v.toLowerCase()),
-        password: z.string().min(1).max(72),
+        password: z.string().min(1).max(128),
         name: z.string().trim().min(2).max(100).optional(),
         next: z.string().optional(),
         remember: z.boolean().optional(),
@@ -76,20 +84,30 @@ export async function localAuthRequest(request: Request) {
       .strict()
       .parse(await body(request));
     if (Buffer.byteLength(input.password, "utf8") > 72)
-      throw new AuthError(400, "Use a password no longer than 72 UTF-8 bytes.");
+      throw new AuthError(400, "Local demo passwords must be no longer than 72 UTF-8 bytes.");
     await localRateLimit(`login:${input.email}`);
-    if (action === "signup" && (input.password.length < 12 || !input.name))
-      throw new AuthError(400, "Provide a name and a password of at least 12 characters.");
+    if (
+      action === "signup" &&
+      (input.password.length < 12 ||
+        !input.name ||
+        !/[A-Z]/.test(input.password) ||
+        !/[a-z]/.test(input.password) ||
+        !/[0-9]/.test(input.password))
+    )
+      throw new AuthError(
+        400,
+        "Provide a name and a password with uppercase, lowercase, and a number.",
+      );
     const token =
       action === "signup"
         ? await localSignUp(input.name!, input.email, input.password)
-        : await localSignIn(input.email, input.password);
+        : await localSignIn(input.email, input.password, input.remember === true);
     jar.set(LOCAL_SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 604800,
+      ...(input.remember === true ? { maxAge: 2592000 } : {}),
     });
     return json({ redirect: safeNext(input.next, "/dashboard") });
   } catch (error) {
@@ -99,6 +117,11 @@ export async function localAuthRequest(request: Request) {
       return json(
         { error: error instanceof Error ? error.message : "Sign in failed." },
         Number(error.status),
+      );
+    if (error && typeof error === "object" && "code" in error && error.code === "23505")
+      return json(
+        { error: "An account already exists for this email. Sign in or reset its password." },
+        409,
       );
     return failure(error);
   }

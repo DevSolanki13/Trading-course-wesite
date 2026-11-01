@@ -4,7 +4,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { hasCourseAccess, refundEligibility, snapshotMatches } from "../backend/learning/policy.ts";
 
-test("enrollment requires active access and a matching paid purchase or manual grant", () => {
+test("enrollment requires active access and a matching paid purchase", () => {
   const e = {
     course_id: "course",
     active: true,
@@ -22,10 +22,7 @@ test("enrollment requires active access and a matching paid purchase or manual g
     hasCourseAccess([{ ...e, revoked_at: new Date().toISOString() }], [o], "course", "user"),
     false,
   );
-  assert.equal(
-    hasCourseAccess([{ ...e, source: "manual", order_id: null }], [], "course", "user"),
-    true,
-  );
+  assert.equal(hasCourseAccess([{ ...e, source: "manual", order_id: null }], [], "course", "user"), false);
 });
 test("refund display uses exact time/watch boundaries and refuses missing snapshots", () => {
   const policy = { window_days: 7, watch_limit_percent: 10 };
@@ -93,9 +90,16 @@ test("learning SQL enforces access, heartbeat ordering, unique watched ranges an
       db.query("select learning_start($1,$2,$3)", [user, session, lesson]),
       /Access denied/,
     );
-    await db.query("insert into enrollments(user_id,course_id,source)values($1,$2,'manual')", [
+    const order = (
+      await db.query<{ id: string }>(
+        "insert into orders(user_id,course_id,status,currency,base_paise,total_paise)values($1,$2,'paid','INR',100,100)returning id",
+        [user, course],
+      )
+    ).rows[0].id;
+    await db.query("insert into enrollments(user_id,course_id,order_id,source)values($1,$2,$3,'purchase')", [
       user,
       course,
+      order,
     ]);
     let lease = (
       await db.query<{ state: { leaseId: string } }>("select learning_start($1,$2,$3) as state", [

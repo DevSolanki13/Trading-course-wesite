@@ -103,7 +103,7 @@ export function RefundsPanel({ role }: { role: "admin" | "support" }) {
           <h2>Refund review</h2>
           <p>
             Review current and request-time evidence. Approval queues an action; it does not move
-            money.
+            money. Provider settlement must be confirmed separately before access is revoked.
           </p>
         </div>
         <label className="admin-range">
@@ -134,6 +134,12 @@ export function RefundsPanel({ role }: { role: "admin" | "support" }) {
       )}
       {data ? (
         <>
+          {!data.providerActionsAvailable && (
+            <p className="admin-help">
+              Automatic provider processing is unavailable for this environment. Approved refunds
+              require the documented provider-dashboard/manual process and a recorded confirmation.
+            </p>
+          )}
           <div className="admin-refund-list">
             {data.items.map((r) => (
               <article className="admin-panel" key={r.id}>

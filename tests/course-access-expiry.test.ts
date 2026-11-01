@@ -4,24 +4,25 @@ import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { hasCourseAccess } from "../backend/learning/policy.ts";
 
-test("course access requires a valid future expiry, including manual grants", () => {
+test("course access requires a valid future expiry and paid order", () => {
   const enrollment = {
     course_id: "course",
-    source: "manual",
-    order_id: null,
+    source: "purchase",
+    order_id: "order",
     active: true,
     revoked_at: null,
   };
+  const paidOrder = [{ id: "order", user_id: "user", course_id: "course", status: "paid" }];
   const now = Date.parse("2026-11-01T00:00:00Z");
   for (const expiry of [undefined, null, "invalid", "2026-11-01T00:00:00Z", "2026-10-31T23:59:59Z"])
     assert.equal(
-      hasCourseAccess([{ ...enrollment, expires_at: expiry }], [], "course", "user", now),
+      hasCourseAccess([{ ...enrollment, expires_at: expiry }], paidOrder, "course", "user", now),
       false,
     );
   assert.equal(
     hasCourseAccess(
       [{ ...enrollment, expires_at: "2026-11-01T00:00:01Z" }],
-      [],
+      paidOrder,
       "course",
       "user",
       now,
