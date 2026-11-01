@@ -71,9 +71,73 @@ export const purchaseOrders = (userId: string) =>
     p_user: userId,
     p_ref: null,
   });
-export const purchaseLesson = (id: string, userId: string | null) =>
-  purchaseRpc<PurchaseLessonContent>("purchase_read", {
+export const purchaseLesson = async (id: string, userId: string | null) => {
+  const content = await purchaseRpc<PurchaseLessonContent>("purchase_read", {
     p_action: "lesson",
     p_user: userId,
     p_ref: id,
   });
+  if (localDemoEnabled()) {
+    try {
+      const { localDatabase } = await import("../local/database.ts");
+      const db = await localDatabase();
+      const asset = (
+        await db.query<{ provider_video_id: string | null }>(
+          "select provider_video_id from lesson_assets where lesson_id = $1",
+          [id],
+        )
+      ).rows[0];
+      if (asset?.provider_video_id) {
+        content.providerVideoId = asset.provider_video_id;
+        let secret = process.env.VDOCIPHER_API_SECRET;
+        if (!secret) {
+          const { existsSync, readFileSync } = await import("node:fs");
+          if (existsSync(".env.local")) {
+            const raw = readFileSync(".env.local", "utf8");
+            const match = raw.match(/VDOCIPHER_API_SECRET=(.+)/);
+            if (match) secret = match[1].trim().replace(/^['"]|['"]$/g, "");
+          }
+        }
+        if (secret) {
+          const res = await fetch(
+            `https://dev.vdocipher.com/api/videos/${encodeURIComponent(asset.provider_video_id)}/otp`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Apisecret ${secret}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                ttl: 300,
+                annotate: JSON.stringify([
+                  {
+                    type: "rtext",
+                    text: "GlobalBulls Student",
+                    alpha: "0.6",
+                    color: "0xFFFFFF",
+                    size: "15",
+                    interval: "5000",
+                    skip: "2000",
+                  },
+                ]),
+              }),
+              signal: AbortSignal.timeout(10000),
+            },
+          );
+          if (res.ok) {
+            const data = (await res.json()) as { otp?: string; playbackInfo?: string };
+            if (data.otp && data.playbackInfo) {
+              content.vdoCipher = {
+                otp: data.otp,
+                playbackInfo: data.playbackInfo,
+              };
+            }
+          }
+        }
+      }
+    } catch {
+      // Continue with existing content if provider lookup fails
+    }
+  }
+  return content;
+};

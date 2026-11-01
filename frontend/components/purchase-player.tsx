@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { useHydrated } from "../lib/use-hydrated";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,6 +20,7 @@ export function PurchasePlayer({
   const [error, setError] = useState("");
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const vdoIframeRef = useRef<HTMLIFrameElement>(null);
   useEffect(() => {
     if (lesson.preview || !course.accessExpiresAt) return;
     let timer: ReturnType<typeof setTimeout>;
@@ -39,27 +41,83 @@ export function PurchasePlayer({
   }, [course.accessExpiresAt, course.slug, lesson.preview, router]);
   const lessons = course.modules.flatMap((m) => m.lessons);
   const index = lessons.findIndex((l) => l.id === lesson.id);
-  async function complete() {
-    setPending(true);
-    setError("");
-    try {
-      const r = await fetch("/api/purchase/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId: lesson.id, completed: !lesson.completed }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error ?? "Progress could not be saved.");
-      toast.success(lesson.completed ? "Lesson marked incomplete." : "Lesson completed.");
-      router.refresh();
-    } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "Progress could not be saved.";
-      setError(message);
-      toast.error(message);
-    } finally {
-      setPending(false);
+  const complete = useCallback(
+    async (explicitValue?: boolean) => {
+      const nextCompleted = explicitValue !== undefined ? explicitValue : !lesson.completed;
+      if (explicitValue !== undefined && lesson.completed === explicitValue) return;
+      setPending(true);
+      setError("");
+      try {
+        const r = await fetch("/api/purchase/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lessonId: lesson.id, completed: nextCompleted }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error ?? "Progress could not be saved.");
+        toast.success(
+          nextCompleted
+            ? "Lesson completed! Course progress updated."
+            : "Lesson marked incomplete.",
+        );
+        router.refresh();
+      } catch (reason) {
+        const message = reason instanceof Error ? reason.message : "Progress could not be saved.";
+        setError(message);
+        toast.error(message);
+      } finally {
+        setPending(false);
+      }
+    },
+    [lesson.id, lesson.completed, router],
+  );
+  useEffect(() => {
+    if (!lesson.vdoCipher || lesson.completed) return;
+    let cleanup: (() => void) | undefined;
+    let interval: NodeJS.Timeout;
+
+    function attach() {
+      const win = window as unknown as {
+        VdoPlayer?: {
+          getInstance: (frame: HTMLIFrameElement) => {
+            video: {
+              addEventListener: (event: string, cb: () => void) => void;
+              removeEventListener: (event: string, cb: () => void) => void;
+            };
+          };
+        };
+      };
+      if (win.VdoPlayer && vdoIframeRef.current) {
+        try {
+          const player = win.VdoPlayer.getInstance(vdoIframeRef.current);
+          const onEnded = () => {
+            void complete(true);
+          };
+          player.video.addEventListener("ended", onEnded);
+          cleanup = () => {
+            try {
+              player.video.removeEventListener("ended", onEnded);
+            } catch {}
+          };
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      return false;
     }
-  }
+
+    if (!attach()) {
+      interval = setInterval(() => {
+        if (attach()) clearInterval(interval);
+      }, 500);
+    }
+
+    return () => {
+      clearInterval(interval);
+      cleanup?.();
+    };
+  }, [lesson.id, lesson.completed, lesson.vdoCipher, complete]);
   return (
     <main id="main-content" className="container purchase-classroom">
       <aside className="purchase-sidebar">
@@ -91,11 +149,51 @@ export function PurchasePlayer({
         ))}
       </aside>
       <section className="purchase-lesson">
-        <div className="demo-banner">
-          LOCAL DEMO: public placeholder video, not paid instructor content
-        </div>
+        {lesson.vdoCipher ? (
+          <div className="demo-banner">
+            DRM PROTECTED LESSON · VdoCipher Streaming
+          </div>
+        ) : (
+          <div className="demo-banner">
+            LOCAL DEMO: public placeholder video, not paid instructor content
+          </div>
+        )}
         <h1>{lesson.title}</h1>
-        {lesson.videoUrl && !videoError ? (
+        {lesson.vdoCipher ? (
+          <div
+            className="vdocipher-embed-container"
+            style={{
+              position: "relative",
+              width: "100%",
+              aspectRatio: "16/9",
+              background: "#000",
+              borderRadius: "8px",
+              overflow: "hidden",
+              marginBottom: "1.5rem",
+            }}
+          >
+            <iframe
+              ref={vdoIframeRef}
+              title={lesson.title}
+              src={`https://player.vdocipher.com/v2/?otp=${lesson.vdoCipher.otp}&playbackInfo=${lesson.vdoCipher.playbackInfo}`}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                border: 0,
+              }}
+              allow="encrypted-media; fullscreen; autoplay"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+            <Script
+              src="https://player.vdocipher.com/v2/api.js"
+              strategy="afterInteractive"
+            />
+          </div>
+        ) : lesson.videoUrl && !videoError ? (
           <video
             ref={videoRef}
             key={lesson.id}
@@ -103,6 +201,9 @@ export function PurchasePlayer({
             playsInline
             preload="metadata"
             onError={() => setVideoError(true)}
+            onEnded={() => {
+              if (!lesson.completed) void complete(true);
+            }}
             src={lesson.videoUrl}
           >
             <track

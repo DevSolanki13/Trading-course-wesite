@@ -135,6 +135,9 @@ export function LearningWorkspace({
     }
   }
   async function ended() {
+    if (lesson && !lesson.completed && course?.owned) {
+      void complete();
+    }
     const next = lessons[lessons.findIndex((l) => l.id === selected) + 1];
     if (autoNext && next && (course?.owned || next.preview)) {
       choose(next);

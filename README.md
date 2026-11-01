@@ -12,9 +12,9 @@ npm run db:seed
 npm run dev:demo
 ```
 
-Open <http://127.0.0.1:3000>. If that port is already serving another app, use `npm run dev:demo -- --port 3001` instead. The demo runner uses a separate build directory and clears external-service credentials in its child process; it never edits your local environment file or contacts your Supabase project. With no existing environment configuration, `npm run dev` also chooses the local store automatically. `dev:demo` is the reliable choice when this checkout already contains real/staging configuration.
+Open <http://127.0.0.1:3000>. If that port is already serving another app, use `npm run dev:demo -- --port 3001` instead. The demo runner uses a separate build directory and clears external-service credentials in its child process; it never edits your local environment file or contacts your Supabase project. With no existing environment configuration, `npm run dev` also chooses the local store automatically. `dev:demo` uses the persistent `.local-data/demo-v2/` store by default; set `LOCAL_DATA_NAME` only when intentionally creating a disposable reset. It is the reliable choice when this checkout already contains real/staging configuration.
 
-The local store is an embedded PostgreSQL-compatible PGlite database, using the same SQL migrations as Supabase. It lives in ignored `.local-data/demo-v1/`; passwords use bcrypt and opaque session tokens are stored only as hashes. No Prisma/SQLite replacement was introduced. The sample video is an explicitly labelled public placeholder; paid instructor media continues through the production DRM integration.
+The local store is an embedded PostgreSQL-compatible PGlite database, using the same SQL migrations as Supabase. It lives in ignored `.local-data/demo-v2/`; passwords use bcrypt and opaque session tokens are stored only as hashes. No Prisma/SQLite replacement was introduced. The sample video is an explicitly labelled public placeholder; paid instructor media continues through the production DRM integration.
 
 Test accounts (local development only):
 

@@ -39,7 +39,8 @@ export default async function Classroom({
   const preview =
     typeof query.lesson === "string" &&
     course.modules.flatMap((m) => m.lessons).some((l) => l.id === query.lesson && l.preview);
-  if (!course.owned && !preview) redirect(`/courses/${course.slug}?message=purchase-to-unlock`);
+  if (!course.owned && !preview && account?.context.profile.role !== "admin")
+    redirect(`/courses/${course.slug}?message=purchase-to-unlock`);
   return (
     <LearningWorkspace
       slug={slug}

@@ -6,6 +6,9 @@ import { pageMetadata } from "@/frontend/lib/metadata";
 import { isDemoPaymentEnabled } from "@/backend/payments/demo";
 import { cashfreeSandboxEnabled } from "@/backend/payments/cashfree";
 import { getPaymentProvider } from "@/backend/payments/providers";
+import { purchaseUser } from "@/backend/purchase/session";
+import "@/frontend/styles/admin.css";
+
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 async function find(slug: string) {
@@ -25,7 +28,10 @@ export default async function CourseRoute({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
-  const course = await find(slug);
+  const [course, user] = await Promise.all([
+    find(slug),
+    purchaseUser(false).catch(() => null),
+  ]);
   if (!course) notFound();
   let enabled = false,
     unavailable = false;
@@ -35,6 +41,7 @@ export default async function CourseRoute({
   } catch {
     unavailable = true;
   }
+  const isAdmin = user?.role === "admin";
   return (
     <CourseDetailPage
       course={course}
@@ -45,6 +52,7 @@ export default async function CourseRoute({
       paymentsUnavailable={unavailable}
       purchaseNotice={(await searchParams).message === "purchase-to-unlock"}
       expiryNotice={(await searchParams).message === "access-expired"}
+      isAdmin={isAdmin}
     />
   );
 }

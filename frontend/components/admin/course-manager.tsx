@@ -1,12 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowDown, ArrowUp, Plus, UploadSimple } from "@phosphor-icons/react";
+import {
+  ArrowLeft,
+  ArrowDown,
+  ArrowUp,
+  Plus,
+  UploadSimple,
+  Trash,
+  CalendarBlank,
+  Clock,
+  CurrencyInr,
+  Users,
+  PencilSimple,
+} from "@phosphor-icons/react";
 import { adminApi, operation, formText, formNumber, money, when } from "../../lib/admin-api";
 import type { AdminCourse, AdminLesson, AdminModule } from "../../../shared/admin";
 import { CourseLearnersPanel } from "./course-learners-panel";
 
-type Summary = Pick<AdminCourse, "id" | "title" | "slug" | "status" | "price_paise" | "version">;
+type Summary = Pick<
+  AdminCourse,
+  | "id"
+  | "title"
+  | "slug"
+  | "status"
+  | "price_paise"
+  | "sale_price_paise"
+  | "access_period"
+  | "access_unit"
+  | "version"
+  | "updated_at"
+  | "created_at"
+>;
 export function CourseManager() {
   const [items, setItems] = useState<Summary[]>([]);
   const [course, setCourse] = useState<AdminCourse | null>(null);
@@ -14,6 +39,7 @@ export function CourseManager() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [learnersCourseId, setLearnersCourseId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   async function list() {
     const d = await adminApi<{ items: Summary[] }>("courses");
     setItems(d.items);
@@ -37,6 +63,28 @@ export function CourseManager() {
     await open(id);
     await list();
   }
+  async function deleteCourse(c: Summary) {
+    if (
+      !window.confirm(
+        `Are you sure you want to permanently delete "${c.title}"? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(c.id);
+    setError("");
+    try {
+      await operation("course_delete", {
+        courseId: c.id,
+        version: c.version,
+      });
+      await list();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete course.");
+    } finally {
+      setDeletingId(null);
+    }
+  }
   if (course || creating)
     return (
       <CourseEditor
@@ -56,6 +104,10 @@ export function CourseManager() {
         <CourseLearnersPanel
           courseId={learnersCourseId}
           onBack={() => setLearnersCourseId(null)}
+          onEdit={() => {
+            void open(learnersCourseId);
+            setLearnersCourseId(null);
+          }}
         />
       )}
       {!learnersCourseId && (
@@ -77,40 +129,91 @@ export function CourseManager() {
       {loading ? (
         <p role="status">Loading courses…</p>
       ) : items.length ? (
-        <div className="admin-table-wrap">
-          <table>
-            <caption className="sr-only">Course inventory</caption>
-            <thead>
-              <tr>
-                <th>Course</th>
-                <th>State</th>
-                <th>Base price</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((c) => (
-                <tr key={c.id}>
-                  <td>
-                    <strong>{c.title}</strong>
-                    <small>/{c.slug}</small>
-                  </td>
-                  <td>
-                    <span className="admin-badge">{c.status}</span>
-                  </td>
-                  <td>{money(c.price_paise)}</td>
-                  <td>
-                    <button className="text-link" onClick={() => setLearnersCourseId(c.id)}>
-                      View learners
-                    </button>{" "}
-                    <button className="text-link" onClick={() => open(c.id)}>
-                      Edit curriculum
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="admin-course-horizontal-list">
+          {items.map((c) => {
+            const formattedDate = c.created_at || c.updated_at
+              ? new Date(c.created_at || c.updated_at).toLocaleDateString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "—";
+            const validity = `${c.access_period || 1} ${c.access_unit || "months"}`;
+            const isDeleting = deletingId === c.id;
+
+            return (
+              <article className="admin-course-horizontal-card" key={c.id}>
+                <div className="admin-course-card-main">
+                  <div className="admin-course-card-title-row">
+                    <span className={`admin-badge status-${c.status}`}>{c.status}</span>
+                    <strong className="admin-course-card-title">{c.title}</strong>
+                  </div>
+                  <span className="admin-course-card-slug">/{c.slug}</span>
+                </div>
+
+                <div className="admin-course-card-col">
+                  <span className="admin-course-col-label">
+                    <CalendarBlank size={14} /> Date
+                  </span>
+                  <span className="admin-course-col-val">{formattedDate}</span>
+                </div>
+
+                <div className="admin-course-card-col">
+                  <span className="admin-course-col-label">
+                    <Clock size={14} /> Validity
+                  </span>
+                  <span className="admin-course-col-val">{validity}</span>
+                </div>
+
+                <div className="admin-course-card-col">
+                  <span className="admin-course-col-label">
+                    <CurrencyInr size={14} /> Price
+                  </span>
+                  <div className="admin-course-col-val admin-course-price">
+                    {c.sale_price_paise && c.sale_price_paise < c.price_paise ? (
+                      <>
+                        <span className="price-sale">{money(c.sale_price_paise)}</span>
+                        <s className="price-original">{money(c.price_paise)}</s>
+                      </>
+                    ) : (
+                      <span>{money(c.price_paise)}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="admin-course-card-actions">
+                  <button
+                    type="button"
+                    className="button button-secondary button-sm"
+                    onClick={() => setLearnersCourseId(c.id)}
+                    title="View learners"
+                  >
+                    <Users size={15} />
+                    <span>Learners</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary button-sm"
+                    onClick={() => open(c.id)}
+                    title="Edit curriculum"
+                  >
+                    <PencilSimple size={15} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-danger button-sm"
+                    disabled={isDeleting}
+                    onClick={() => void deleteCourse(c)}
+                    title="Delete course"
+                  >
+                    <Trash size={15} />
+                    <span>{isDeleting ? "Deleting…" : "Delete"}</span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="admin-empty">
@@ -145,7 +248,7 @@ function CourseEditor({
     setMessage("");
     try {
       const d = await operation(action, data);
-      const id = d.courseId ?? d.id ?? course?.id;
+      const id = course?.id ?? d.courseId ?? d.id;
       if (id) await onSaved(id);
       setMessage(action === "course_state" ? "Course visibility updated." : "Changes saved.");
       return true;
@@ -219,6 +322,51 @@ function CourseEditor({
             <Link className="button button-secondary" href={`/learn/${course.slug}`}>
               View classroom
             </Link>
+            {course.status !== "archived" && (
+              <button
+                className="button button-secondary"
+                disabled={pending}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Archive this course? It will leave the storefront, while existing orders and learner records are preserved.",
+                    )
+                  )
+                    void run("course_state", {
+                      courseId: course.id,
+                      version: course.version,
+                      status: "archived",
+                    });
+                }}
+              >
+                Archive course
+              </button>
+            )}
+            {course && (
+              <button
+                className="button button-secondary"
+                disabled={pending}
+                onClick={async () => {
+                  if (!window.confirm("Permanently delete this draft course and its curriculum?"))
+                    return;
+                  setPending(true);
+                  setError("");
+                  try {
+                    await operation("course_delete", {
+                      courseId: course.id,
+                      version: course.version,
+                    });
+                    onBack();
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : "Course could not be deleted.");
+                  } finally {
+                    setPending(false);
+                  }
+                }}
+              >
+                Delete course
+              </button>
+            )}
             <button
               className="button button-primary"
               disabled={pending}
@@ -226,11 +374,20 @@ function CourseEditor({
                 run("course_state", {
                   courseId: course.id,
                   version: course.version,
-                  status: course.status === "published" ? "draft" : "published",
+                  status:
+                    course.status === "published"
+                      ? "draft"
+                      : course.status === "archived"
+                        ? "draft"
+                        : "published",
                 })
               }
             >
-              {course.status === "published" ? "Unpublish" : "Verify & publish"}
+              {course.status === "published"
+                ? "Unpublish"
+                : course.status === "archived"
+                  ? "Restore as draft"
+                  : "Verify & publish"}
             </button>
           </div>
         )}
@@ -612,6 +769,25 @@ function LessonList({
               }
             >
               <ArrowDown size={16} />
+            </button>
+            <button
+              className="text-link"
+              disabled={pending}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Permanently delete this lesson? Learner history prevents deletion.",
+                  )
+                )
+                  void run("lesson_delete", {
+                    courseId: course.id,
+                    moduleId: module.id,
+                    lessonId: l.id,
+                    version: course.version,
+                  });
+              }}
+            >
+              Delete
             </button>
           </div>
           <LessonEditor

@@ -6,13 +6,21 @@ export const metadata = pageMetadata(
 );
 import CataloguePage from "@/frontend/pages/catalogue-page";
 import { publicCatalog } from "@/backend/public/catalogue";
+import { purchaseUser } from "@/backend/purchase/session";
+import "@/frontend/styles/admin.css";
+
 export const dynamic = "force-dynamic";
 export default async function Catalogue() {
-  const data = await publicCatalog();
+  const [data, user] = await Promise.all([
+    publicCatalog(),
+    purchaseUser(false).catch(() => null),
+  ]);
+  const isAdmin = user?.role === "admin";
   return (
     <CataloguePage
       courses={data.courses.length ? data.courses : undefined}
       published={!data.failed && !!data.courses.length}
+      isAdmin={isAdmin}
     />
   );
 }

@@ -24,22 +24,24 @@ export default function CourseDetailPage({
   paymentsUnavailable = false,
   purchaseNotice = false,
   expiryNotice = false,
+  isAdmin = false,
 }: {
   course: Course;
   demoEnabled?: boolean;
   paymentsUnavailable?: boolean;
   purchaseNotice?: boolean;
   expiryNotice?: boolean;
+  isAdmin?: boolean;
 }) {
   return (
     <main id="main-content" className="course-detail">
       <div className="container">
-        {purchaseNotice && (
+        {!isAdmin && purchaseNotice && (
           <p role="alert" className="auth-error">
             Purchase to unlock this lesson. You can try a free preview below.
           </p>
         )}
-        {expiryNotice && (
+        {!isAdmin && expiryNotice && (
           <p role="alert" className="auth-error">
             Your course access has expired. Renew access to continue learning, or review your
             previous purchase from your dashboard.
@@ -54,6 +56,7 @@ export default function CourseDetailPage({
             <div className="course-tags">
               <span>{course.level}</span>
               <span>Hindi lessons</span>
+              {isAdmin && <span className="admin-badge status-published">Admin View</span>}
             </div>
             <h1>{course.title}</h1>
             <p className="detail-lead">{course.shortTitle}</p>
@@ -69,7 +72,16 @@ export default function CourseDetailPage({
                 {course.provisional === false ? "course duration" : "illustrative duration"}
               </span>
             </div>
-            {course.previewLessonId ? (
+            {isAdmin ? (
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+                <Link className="button button-primary" href={`/learn/${course.slug}`}>
+                  Open course classroom
+                </Link>
+                <Link className="button button-secondary" href="/admin">
+                  Edit in admin workspace
+                </Link>
+              </div>
+            ) : course.previewLessonId ? (
               <Link
                 className="button button-secondary"
                 href={`/learn/${course.slug}?lesson=${course.previewLessonId}`}
@@ -191,61 +203,109 @@ export default function CourseDetailPage({
             </section>
           </div>
           <aside className="purchase-panel">
-            <span className="preview-price-label">
-              {course.provisional === false ? "Course price preview" : "Illustrative course price"}
-            </span>
-            <div className="detail-price">{formatPrice(course.price)}</div>
-            <p className="purchase-tax-note">
-              Final price and applicable GST will be confirmed before checkout.
-            </p>
-            <CourseAccessAction
-              slug={course.slug}
-              previewId={course.previewLessonId}
-              demoEnabled={demoEnabled}
-              courseId={course.id}
-              paymentsUnavailable={paymentsUnavailable}
-            />
-            <span className="purchase-status">
-              {demoEnabled
-                ? "Complete checkout to add this course to your dashboard."
-                : "Purchases are disabled in this preview."}
-            </span>
-            <ul className="purchase-includes">
-              <li>
-                <Check size={17} />
-                Hindi video lessons
-              </li>
-              <li>
-                <Check size={17} />
-                {course.accessPeriod ?? 1}{" "}
-                {(course.accessUnit ?? "months") === "months"
-                  ? course.accessPeriod === 1 || !course.accessPeriod
-                    ? "month"
-                    : "months"
-                  : course.accessPeriod === 1
-                    ? "day"
-                    : "days"}{" "}
-                of online access from payment
-              </li>
-              <li>
-                <Check size={17} />
-                Resume across two active devices
-              </li>
-              <li>
-                <Check size={17} />
-                Private student community planned
-              </li>
-            </ul>
-            <div className="purchase-refund">
-              <ShieldCheck size={22} />
-              <p>
-                Seven-day refund window, with less than 10% watched.{" "}
-                <Link href="/refund-policy">Read the full policy.</Link>
-              </p>
-            </div>
-            <p className="purchase-risk">
-              Educational content. No investment advice or guaranteed returns.
-            </p>
+            {isAdmin ? (
+              <>
+                <span className="admin-badge status-published">Administrator Preview</span>
+                <h3 style={{ fontSize: "20px", marginTop: "14px", marginBottom: "8px" }}>
+                  Course Details & Access
+                </h3>
+                <p className="purchase-tax-note">
+                  You are viewing this course as an administrator. Full curriculum and video playback access is enabled without purchasing.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBlock: "18px" }}>
+                  <Link className="button button-primary" href={`/learn/${course.slug}`}>
+                    Open course classroom
+                  </Link>
+                  <Link className="button button-secondary" href="/admin">
+                    Edit curriculum in admin
+                  </Link>
+                </div>
+                <ul className="purchase-includes">
+                  <li>
+                    <Check size={17} />
+                    Hindi video lessons
+                  </li>
+                  <li>
+                    <Check size={17} />
+                    {course.accessPeriod ?? 1}{" "}
+                    {(course.accessUnit ?? "months") === "months"
+                      ? course.accessPeriod === 1 || !course.accessPeriod
+                        ? "month"
+                        : "months"
+                      : course.accessPeriod === 1
+                        ? "day"
+                        : "days"}{" "}
+                    of online access configured
+                  </li>
+                  <li>
+                    <Check size={17} />
+                    {course.lessons} lessons across {course.modules.length} modules
+                  </li>
+                  <li>
+                    <Check size={17} />
+                    Configured price: {formatPrice(course.price)}
+                  </li>
+                </ul>
+              </>
+            ) : (
+              <>
+                <span className="preview-price-label">
+                  {course.provisional === false ? "Course price preview" : "Illustrative course price"}
+                </span>
+                <div className="detail-price">{formatPrice(course.price)}</div>
+                <p className="purchase-tax-note">
+                  Final price and applicable GST will be confirmed before checkout.
+                </p>
+                <CourseAccessAction
+                  slug={course.slug}
+                  previewId={course.previewLessonId}
+                  demoEnabled={demoEnabled}
+                  courseId={course.id}
+                  paymentsUnavailable={paymentsUnavailable}
+                />
+                <span className="purchase-status">
+                  {demoEnabled
+                    ? "Complete checkout to add this course to your dashboard."
+                    : "Purchases are disabled in this preview."}
+                </span>
+                <ul className="purchase-includes">
+                  <li>
+                    <Check size={17} />
+                    Hindi video lessons
+                  </li>
+                  <li>
+                    <Check size={17} />
+                    {course.accessPeriod ?? 1}{" "}
+                    {(course.accessUnit ?? "months") === "months"
+                      ? course.accessPeriod === 1 || !course.accessPeriod
+                        ? "month"
+                        : "months"
+                      : course.accessPeriod === 1
+                        ? "day"
+                        : "days"}{" "}
+                    of online access from payment
+                  </li>
+                  <li>
+                    <Check size={17} />
+                    Resume across two active devices
+                  </li>
+                  <li>
+                    <Check size={17} />
+                    Private student community planned
+                  </li>
+                </ul>
+                <div className="purchase-refund">
+                  <ShieldCheck size={22} />
+                  <p>
+                    Seven-day refund window, with less than 10% watched.{" "}
+                    <Link href="/refund-policy">Read the full policy.</Link>
+                  </p>
+                </div>
+                <p className="purchase-risk">
+                  Educational content. No investment advice or guaranteed returns.
+                </p>
+              </>
+            )}
           </aside>
         </div>
         <section className="section related-courses">

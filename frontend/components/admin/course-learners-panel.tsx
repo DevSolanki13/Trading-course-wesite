@@ -12,9 +12,11 @@ function duration(seconds: number) {
 export function CourseLearnersPanel({
   courseId,
   onBack,
+  onEdit,
 }: {
   courseId: string;
   onBack: () => void;
+  onEdit: () => void;
 }) {
   const [data, setData] = useState<AdminCourseLearners | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -69,11 +71,16 @@ export function CourseLearnersPanel({
           <h2>{data.course.title}</h2>
           <p>{data.learners.length} enrolled · {data.course.lessonCount} published lessons</p>
         </div>
-        <label className="admin-search">
-          <MagnifyingGlass size={17} />
-          <span className="sr-only">Search learners</span>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search learners" />
-        </label>
+        <div className="admin-actions">
+          <button className="button button-secondary" onClick={onEdit}>
+            Edit course
+          </button>
+          <label className="admin-search">
+            <MagnifyingGlass size={17} />
+            <span className="sr-only">Search learners</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search learners" />
+          </label>
+        </div>
       </div>
       {error && <p className="auth-error" role="alert">{error}</p>}
       {selected ? (

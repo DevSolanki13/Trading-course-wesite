@@ -1,8 +1,8 @@
 /* Shared visual language from the GlobalBulls landing page. */
 :root:root {
-  --background: #0a0a0b;
-  --surface: #0e1216;
-  --raised: #171c21;
+  --background: #111111;
+  --surface: #191919;
+  --raised: #222222;
   --foreground: #f3f5f7;
   --muted: #a7afb9;
   --subtle: #8b95a1;

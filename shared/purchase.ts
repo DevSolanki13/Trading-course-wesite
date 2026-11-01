@@ -45,6 +45,11 @@ export type PurchaseLessonContent = PurchaseLesson & {
   content: string;
   videoUrl: string | null;
   isDemo: boolean;
+  providerVideoId?: string | null;
+  vdoCipher?: {
+    otp: string;
+    playbackInfo: string;
+  } | null;
 };
 export type PurchaseUser = {
   id: string;

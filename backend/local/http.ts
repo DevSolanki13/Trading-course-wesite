@@ -42,7 +42,8 @@ export async function localAuthRequest(request: Request) {
           demoLoginHint: process.env.NODE_ENV !== "production",
         });
       const user = await localSession(jar.get(LOCAL_SESSION_COOKIE)?.value);
-      if (action === "status") return json({ authenticated: !!user, localDemo: true });
+      if (action === "status")
+        return json({ authenticated: !!user, localDemo: true, role: user?.role });
       if (action === "me" && user)
         return json({ user: { ...user, aal: "local-demo" }, localDemo: true });
       return json({ error: "Please sign in to continue." }, 401);
@@ -109,7 +110,14 @@ export async function localAuthRequest(request: Request) {
       path: "/",
       ...(input.remember === true ? { maxAge: 2592000 } : {}),
     });
-    return json({ redirect: safeNext(input.next, "/dashboard") });
+    const user = await localSession(token);
+    const fallback = user?.role === "admin" ? "/admin" : "/dashboard";
+    const redirectUrl =
+      user?.role === "admin" &&
+      (!input.next || input.next === "/dashboard" || input.next === "/account")
+        ? "/admin"
+        : safeNext(input.next, fallback);
+    return json({ redirect: redirectUrl });
   } catch (error) {
     if (error instanceof z.ZodError)
       return json({ error: "Check your email, password and name." }, 400);

@@ -1,11 +1,13 @@
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import "./load-env.mjs";
 const args = process.argv.slice(2);
 const portIndex = args.indexOf("--port");
 const port = portIndex >= 0 ? args[portIndex + 1] : "3000";
 const env = {
   ...process.env,
   LOCAL_DEMO: "true",
+  LOCAL_DATA_NAME: process.env.LOCAL_DATA_NAME || "demo-v2",
   PROJECT_STAGE: "local",
   NEXT_PUBLIC_APP_URL: `http://127.0.0.1:${port}`,
   PAYMENT_PROVIDER: "",
@@ -22,11 +24,13 @@ const env = {
   RESEND_FROM_EMAIL: "",
   CASHFREE_CLIENT_ID: "",
   CASHFREE_CLIENT_SECRET: "",
-  VDOCIPHER_API_SECRET: "",
+  VDOCIPHER_API_SECRET: process.env.VDOCIPHER_API_SECRET || "",
+  VDOCIPHER_TEST_VIDEO_ID: process.env.VDOCIPHER_TEST_VIDEO_ID || "",
   GOOGLE_OAUTH_CONFIGURED: "false",
   OPERATIONS_ENABLED: "false",
   NOTIFICATION_DELIVERY_ENABLED: "false",
   SEED_DEMO_USERS: "true",
+  ALLOW_MOCK_PAYMENTS: "true",
 };
 const child = spawn(
   process.execPath,

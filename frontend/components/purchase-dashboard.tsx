@@ -47,7 +47,12 @@ export function PurchaseDashboard({
             {local ? "Local demo learning space." : "Your courses and purchases, in one place."}
           </p>
           {local && user.role === "admin" && (
-            <p>Demo administrator account. Production staff tools remain separate.</p>
+            <>
+              <p>Demo administrator account. Production staff tools remain separate.</p>
+              <Link className="button button-primary" href="/admin">
+                Open admin workspace
+              </Link>
+            </>
           )}
         </div>
         <button

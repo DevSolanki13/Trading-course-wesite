@@ -1,20 +1,57 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { courses as sampleCourses, type Course } from "../content/courses";
 import { CourseCard } from "../components/course-card";
-import { ArrowDown, MagnifyingGlass } from "@phosphor-icons/react";
+import { CourseArtwork } from "../components/course-artwork";
+import { CourseLearnersPanel } from "../components/admin/course-learners-panel";
+import {
+  ArrowDown,
+  CalendarBlank,
+  Clock,
+  CurrencyInr,
+  MagnifyingGlass,
+  Rows,
+  SquaresFour,
+  Users,
+} from "@phosphor-icons/react";
 
 export default function CataloguePage({
   courses = sampleCourses,
   published = false,
   unavailable = false,
+  isAdmin = false,
 }: {
   courses?: Course[];
   published?: boolean;
   unavailable?: boolean;
+  isAdmin?: boolean;
 }) {
+  const router = useRouter();
+  const [isAdminUser, setIsAdminUser] = useState(isAdmin);
+  const [viewMode, setViewMode] = useState<"horizontal" | "grid">(isAdmin ? "horizontal" : "grid");
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("All levels");
+  const [learnersCourseId, setLearnersCourseId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (active && d?.user?.role === "admin") {
+          setIsAdminUser(true);
+          setViewMode((prev) => (prev === "grid" && !isAdmin ? "horizontal" : prev));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [isAdmin]);
+
   const levels = [...new Set(courses.map((course) => course.level))].sort();
   const results = courses.filter(
     (course) =>
@@ -23,6 +60,17 @@ export default function CataloguePage({
   );
   return (
     <main id="main-content" className="container catalogue-page">
+      {learnersCourseId && (
+        <CourseLearnersPanel
+          courseId={learnersCourseId}
+          onBack={() => setLearnersCourseId(null)}
+          onEdit={() => {
+            router.push("/admin");
+          }}
+        />
+      )}
+      {!learnersCourseId && (
+      <>
       <div className="page-intro">
         <h1>
           A clearer path
@@ -58,10 +106,41 @@ export default function CataloguePage({
         </div>
       </div>
       <div className="catalogue-results-heading">
-        <h2>{level === "All levels" ? "Explore the courses" : `${level} courses`}</h2>
-        <span aria-live="polite">
-          {results.length} {results.length === 1 ? "course" : "courses"} <ArrowDown size={14} />
-        </span>
+        <div>
+          <h2>{level === "All levels" ? "Explore the courses" : `${level} courses`}</h2>
+          {isAdminUser && (
+            <span className="admin-view-indicator">
+              Admin workspace mode
+            </span>
+          )}
+        </div>
+        <div className="catalogue-heading-actions">
+          <span aria-live="polite">
+            {results.length} {results.length === 1 ? "course" : "courses"} <ArrowDown size={14} />
+          </span>
+          {isAdminUser && (
+            <div className="admin-view-switcher" role="group" aria-label="Layout switcher">
+              <button
+                type="button"
+                className={`switcher-btn ${viewMode === "horizontal" ? "is-active" : ""}`}
+                onClick={() => setViewMode("horizontal")}
+                title="Horizontal layout (Admin)"
+              >
+                <Rows size={15} />
+                <span>Horizontal</span>
+              </button>
+              <button
+                type="button"
+                className={`switcher-btn ${viewMode === "grid" ? "is-active" : ""}`}
+                onClick={() => setViewMode("grid")}
+                title="Grid layout (Student preview)"
+              >
+                <SquaresFour size={15} />
+                <span>Grid</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       {unavailable && (
         <p role="alert" className="auth-error">
@@ -69,11 +148,102 @@ export default function CataloguePage({
         </p>
       )}
       {results.length ? (
-        <div className="course-grid">
-          {results.map((course) => (
-            <CourseCard key={course.slug} course={course} />
-          ))}
-        </div>
+        isAdminUser && viewMode === "horizontal" ? (
+          <div className="admin-course-horizontal-list">
+            {results.map((course) => {
+              const rawDate = course.created_at || course.updated_at;
+              const formattedDate = rawDate
+                ? new Date(rawDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "1 Nov 2026";
+              const validity = `${course.accessPeriod || 1} ${course.accessUnit || "months"}`;
+
+              return (
+                <article className="admin-course-horizontal-card" key={course.slug}>
+                  <div className="admin-course-card-main-with-thumb">
+                    <Link
+                      href={`/courses/${course.slug}`}
+                      className="admin-course-thumb-wrap"
+                      tabIndex={-1}
+                      title={`View ${course.title} details`}
+                    >
+                      {course.thumbnailUrl ? (
+                        <Image
+                          unoptimized
+                          src={course.thumbnailUrl}
+                          alt=""
+                          width={110}
+                          height={72}
+                        />
+                      ) : (
+                        <CourseArtwork kind={course.artwork} className="admin-course-thumb-artwork" />
+                      )}
+                    </Link>
+                    <div className="admin-course-card-info">
+                      <div className="admin-course-card-title-row">
+                        <span className={`admin-badge status-${course.status || "published"}`}>
+                          {course.status || "published"}
+                        </span>
+                        <Link
+                          href={`/courses/${course.slug}`}
+                          className="admin-course-card-title-link"
+                        >
+                          <strong className="admin-course-card-title">{course.title}</strong>
+                        </Link>
+                        <span className="admin-course-card-slug">/{course.slug}</span>
+                      </div>
+                      <p className="admin-course-card-desc">{course.summary || course.shortTitle}</p>
+                    </div>
+                  </div>
+
+                  <div className="admin-course-card-col">
+                    <span className="admin-course-col-label">
+                      <CalendarBlank size={14} /> Date
+                    </span>
+                    <span className="admin-course-col-val">{formattedDate}</span>
+                  </div>
+
+                  <div className="admin-course-card-col">
+                    <span className="admin-course-col-label">
+                      <Clock size={14} /> Validity
+                    </span>
+                    <span className="admin-course-col-val">{validity}</span>
+                  </div>
+
+                  <div className="admin-course-card-col">
+                    <span className="admin-course-col-label">
+                      <CurrencyInr size={14} /> Price
+                    </span>
+                    <div className="admin-course-col-val admin-course-price">
+                      <span>₹{course.price.toLocaleString("en-IN")}</span>
+                    </div>
+                  </div>
+
+                  <div className="admin-course-card-actions">
+                    <button
+                      type="button"
+                      className="button button-secondary button-sm"
+                      onClick={() => setLearnersCourseId(course.id || course.slug)}
+                      title="View enrolled learners"
+                    >
+                      <Users size={15} />
+                      <span>Learners</span>
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="course-grid">
+            {results.map((course) => (
+              <CourseCard key={course.slug} course={course} />
+            ))}
+          </div>
+        )
       ) : (
         <div className="empty-state">
           <MagnifyingGlass size={32} />
@@ -95,6 +265,8 @@ export default function CataloguePage({
           ? "Published course information is shown for learning. Payments and final tax treatment remain unavailable in this preview."
           : "Preview catalogue. All curriculum, counts, durations and prices are illustrative. Final course information and tax treatment will be confirmed before enrolment opens."}
       </p>
+      </>
+      )}
     </main>
   );
 }

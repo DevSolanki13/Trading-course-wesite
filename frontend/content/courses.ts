@@ -18,6 +18,10 @@ export type Course = {
   outcomes: string[];
   audience: string;
   prerequisites: string;
+  created_at?: string;
+  updated_at?: string;
+  version?: number;
+  status?: string;
   modules: {
     title: string;
     lessons: { id?: string; title: string; duration: string; preview?: boolean }[];

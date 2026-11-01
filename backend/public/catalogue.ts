@@ -20,6 +20,9 @@ type RawCourse = {
   outcomes: unknown;
   audience: string;
   prerequisites: string;
+  version?: number;
+  created_at?: string;
+  status?: string;
   modules: {
     title: string;
     position: number;
@@ -48,42 +51,54 @@ function social(raw: unknown, hosts: string[]) {
 export const publicCatalog = cache(async function publicCatalog() {
   if (localDemoEnabled()) {
     const list = await purchaseCatalog();
+    const { localDatabase } = await import("../local/database");
+    const db = await localDatabase();
+    const courseMeta = await db.query<{ id: string; created_at: string; version: number; status: string }>(
+      "select id,created_at,version,status from courses",
+    );
+    const metaMap = new Map(courseMeta.rows.map((r) => [r.id, r]));
     return {
-      courses: list.map((c) => ({
-        id: c.id,
-        slug: c.slug,
-        title: c.title,
-        shortTitle: c.description,
-        summary: c.description,
-        level: c.level[0].toUpperCase() + c.level.slice(1),
-        duration: `${c.modules.flatMap((m) => m.lessons).reduce((sum, l) => sum + l.duration, 0) / 60}m`,
-        lessons: c.modules.flatMap((m) => m.lessons).length,
-        price: c.price / 100,
-        accessPeriod: c.accessPeriod,
-        accessUnit: c.accessUnit,
-        artwork:
-          c.slug === "price-action"
-            ? "structure"
-            : c.slug === "market-foundations"
-              ? "foundations"
-              : "psychology",
-        color: "mint",
-        outcomes: ["Test a complete purchase and learning journey"],
-        audience: "Local demo learners",
-        prerequisites: "Sample content for testing only",
-        modules: c.modules.map((m) => ({
-          title: m.title,
-          lessons: m.lessons.map((l) => ({
-            id: l.id,
-            title: l.title,
-            duration: `${Math.floor(l.duration / 60)}:${String(l.duration % 60).padStart(2, "0")}`,
-            preview: l.preview,
+      courses: list.map((c) => {
+        const meta = metaMap.get(c.id);
+        return {
+          id: c.id,
+          slug: c.slug,
+          title: c.title,
+          shortTitle: c.description,
+          summary: c.description,
+          level: c.level[0].toUpperCase() + c.level.slice(1),
+          duration: `${c.modules.flatMap((m) => m.lessons).reduce((sum, l) => sum + l.duration, 0) / 60}m`,
+          lessons: c.modules.flatMap((m) => m.lessons).length,
+          price: c.price / 100,
+          accessPeriod: c.accessPeriod,
+          accessUnit: c.accessUnit,
+          created_at: meta?.created_at,
+          version: meta?.version ?? 1,
+          status: meta?.status ?? "published",
+          artwork:
+            c.slug === "price-action"
+              ? "structure"
+              : c.slug === "market-foundations"
+                ? "foundations"
+                : "psychology",
+          color: "mint",
+          outcomes: ["Test a complete purchase and learning journey"],
+          audience: "Local demo learners",
+          prerequisites: "Sample content for testing only",
+          modules: c.modules.map((m) => ({
+            title: m.title,
+            lessons: m.lessons.map((l) => ({
+              id: l.id,
+              title: l.title,
+              duration: `${Math.floor(l.duration / 60)}:${String(l.duration % 60).padStart(2, "0")}`,
+              preview: l.preview,
+            })),
           })),
-        })),
-        thumbnailUrl: c.thumbnail,
-        provisional: false,
-        previewLessonId: c.modules.flatMap((m) => m.lessons).find((l) => l.preview)?.id,
-      })),
+          thumbnailUrl: c.thumbnail,
+          provisional: false,
+          previewLessonId: c.modules.flatMap((m) => m.lessons).find((l) => l.preview)?.id,
+        };
+      }),
       content: null,
       telegramUrl: null,
       instagramUrl: null,
@@ -97,7 +112,7 @@ export const publicCatalog = cache(async function publicCatalog() {
       admin
         .from("courses")
         .select(
-          "id,slug,title,description,level,language,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
+          "id,slug,title,description,level,language,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,version,created_at,status,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
         )
         .eq("status", "published")
         .order("created_at")
@@ -151,6 +166,9 @@ export const publicCatalog = cache(async function publicCatalog() {
           : [],
         audience: raw.audience,
         prerequisites: raw.prerequisites,
+        created_at: raw.created_at,
+        version: raw.version ?? 1,
+        status: raw.status ?? "published",
         modules,
         thumbnailUrl: raw.thumbnail_url,
         provisional: false,

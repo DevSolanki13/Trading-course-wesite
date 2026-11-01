@@ -134,6 +134,8 @@ export const operationSchemas = {
     .object({ courseId: id, version, id: optionalId, title: text(150).min(2) })
     .strict(),
   lesson_save: lessonSchema,
+  course_delete: z.object({ courseId: id, version }).strict(),
+  lesson_delete: z.object({ courseId: id, moduleId: id, lessonId: id, version }).strict(),
   reorder: z
     .object({
       courseId: id,

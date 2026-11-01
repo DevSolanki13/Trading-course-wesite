@@ -71,8 +71,8 @@ export async function authRequest(request: Request) {
       if (action === "options") return json(await options());
       if (action === "status") {
         try {
-          await admitted();
-          return json({ authenticated: true });
+          const context = await admitted();
+          return json({ authenticated: true, role: context.profile.role });
         } catch {
           return json({ authenticated: false });
         }

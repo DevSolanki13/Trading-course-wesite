@@ -19,7 +19,7 @@ export default async function Lesson({
   if (!course) notFound();
   const lesson = course.modules.flatMap((m) => m.lessons).find((l) => l.id === lessonId);
   if (!lesson) notFound();
-  if (!course.owned && !lesson.preview)
+  if (!course.owned && !lesson.preview && user?.role !== "admin")
     redirect(`/courses/${course.slug}?message=purchase-to-unlock`);
   if (!localDemoEnabled()) return <LearningWorkspace slug={slug} initialLesson={lessonId} />;
   const content = await purchaseLesson(lessonId, user?.id ?? null);

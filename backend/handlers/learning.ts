@@ -38,12 +38,14 @@ export async function learningRequest(request: Request) {
   if (localDemoEnabled()) {
     if (request.method === "GET" && new URL(request.url).pathname === "/api/learning/course") {
       const user = await purchaseUser(false);
-      return json({
-        course: await purchaseCourse(
-          new URL(request.url).searchParams.get("slug") ?? "",
-          user?.id ?? null,
-        ),
-      });
+      const course = await purchaseCourse(
+        new URL(request.url).searchParams.get("slug") ?? "",
+        user?.id ?? null,
+      );
+      if (course && user?.role === "admin") {
+        course.owned = true;
+      }
+      return json({ course });
     }
     return json({ error: "Use the local demo classroom routes." }, 404);
   }

@@ -35,6 +35,7 @@ export type AdminCourse = {
   artwork: "foundations" | "structure" | "risk";
   version: number;
   updated_at: string;
+  created_at?: string;
   modules: AdminModule[];
 };
 export type StudentRow = {

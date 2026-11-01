@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { privileged, audit } from "../auth/session";
 import { AuthError, body, failure, json, limit, sameOrigin } from "../auth/http";
@@ -15,6 +16,261 @@ import { localDemoEnabled } from "../purchase/mode";
 import { LOCAL_SESSION_COOKIE, localSession } from "../local/auth";
 import { localCourseLearners } from "../admin/data";
 import { localDatabase } from "../local/database";
+import { localAdminRead } from "../local/admin";
+
+async function localCourse(db: Awaited<ReturnType<typeof localDatabase>>, id: string) {
+  const course = (
+    await db.query<Record<string, unknown> & { version: number }>(
+      "select id,slug,title,description,level,language,status,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,outcomes,audience,prerequisites,artwork,version,updated_at from courses where id=$1",
+      [id],
+    )
+  ).rows[0];
+  if (!course) throw new AuthError(404, "Course not found.");
+  const modules = await db.query<{ id: string; title: string; position: number }>(
+    "select id,title,position from modules where course_id=$1 order by position",
+    [id],
+  );
+  const result = [];
+  for (const moduleRow of modules.rows) {
+    const lessons = await db.query<
+      Record<string, unknown> & { id: string; lesson_assets: Record<string, unknown> | null }
+    >(
+      `select l.id,l.title,l.position,l.duration_seconds,l.is_preview,l.published,
+        jsonb_build_object('provider_video_id',a.provider_video_id,'notes',a.notes,
+          'provider_status',a.provider_status,'verified_at',a.verified_at,
+          'verified_duration',a.verified_duration) as lesson_assets
+       from lessons l left join lesson_assets a on a.lesson_id=l.id
+       where l.module_id=$1 order by l.position`,
+      [moduleRow.id],
+    );
+    const lessonRows = [];
+    for (const lesson of lessons.rows) {
+      const resources = await db.query(
+        "select id,title,content,position from lesson_resources where lesson_id=$1 order by position",
+        [lesson.id],
+      );
+      lessonRows.push({
+        ...lesson,
+        lesson_assets: lesson.lesson_assets?.provider_video_id ? lesson.lesson_assets : null,
+        lesson_resources: resources.rows,
+      });
+    }
+    result.push({ ...moduleRow, lessons: lessonRows });
+  }
+  return { ...course, modules: result };
+}
+
+async function localAdminOperation(
+  db: Pick<Awaited<ReturnType<typeof localDatabase>>, "query">,
+  action: string,
+  data: Record<string, unknown>,
+) {
+  if (action === "course_save") {
+    const id = String(data.courseId ?? randomUUID());
+    if (data.courseId) {
+      const current = await db.query<{ version: number }>(
+        "select version from courses where id=$1",
+        [id],
+      );
+      if (!current.rows[0] || current.rows[0].version !== data.version)
+        throw new AuthError(409, "Reload this course before saving.", "STALE_RECORD");
+      await db.query(
+        `update courses set slug=$2,title=$3,description=$4,price_paise=$5,sale_price_paise=$6,
+          access_period=$7,access_unit=$8,level=$9,language=$10,thumbnail_url=$11,
+          outcomes=$12,audience=$13,prerequisites=$14,artwork=$15,version=version+1,updated_at=now()
+         where id=$1`,
+        [
+          id,
+          data.slug,
+          data.title,
+          data.description,
+          data.price_paise,
+          data.sale_price_paise,
+          data.access_period,
+          data.access_unit,
+          data.level,
+          data.language,
+          data.thumbnail_url || null,
+          JSON.stringify(data.outcomes),
+          data.audience,
+          data.prerequisites,
+          data.artwork,
+        ],
+      );
+    } else {
+      await db.query(
+        `insert into courses(id,slug,title,description,price_paise,sale_price_paise,access_period,
+          access_unit,level,language,thumbnail_url,outcomes,audience,prerequisites,artwork)
+         values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+        [
+          id,
+          data.slug,
+          data.title,
+          data.description,
+          data.price_paise,
+          data.sale_price_paise,
+          data.access_period,
+          data.access_unit,
+          data.level,
+          data.language,
+          data.thumbnail_url || null,
+          JSON.stringify(data.outcomes),
+          data.audience,
+          data.prerequisites,
+          data.artwork,
+        ],
+      );
+    }
+    return { id };
+  }
+  if (action === "module_save") {
+    const id = String(data.id ?? randomUUID());
+    if (data.id) {
+      await db.query("update modules set title=$2 where id=$1 and course_id=$3", [
+        id,
+        data.title,
+        data.courseId,
+      ]);
+    } else {
+      const position = await db.query<{ position: number }>(
+        "select coalesce(max(position)+1,0)::integer as position from modules where course_id=$1",
+        [data.courseId],
+      );
+      await db.query("insert into modules(id,course_id,title,position)values($1,$2,$3,$4)", [
+        id,
+        data.courseId,
+        data.title,
+        position.rows[0].position,
+      ]);
+    }
+    await db.query("update courses set version=version+1,updated_at=now() where id=$1", [
+      data.courseId,
+    ]);
+    return { id };
+  }
+  if (action === "lesson_save") {
+    const id = String(data.id ?? randomUUID());
+    const position = data.id
+      ? null
+      : (
+          await db.query<{ position: number }>(
+            "select coalesce(max(position)+1,0)::integer as position from lessons where module_id=$1",
+            [data.moduleId],
+          )
+        ).rows[0].position;
+    if (data.id) {
+      await db.query(
+        "update lessons set title=$2,duration_seconds=$3,is_preview=$4,published=$5 where id=$1 and module_id=$6",
+        [id, data.title, data.duration_seconds, data.is_preview, data.published, data.moduleId],
+      );
+    } else {
+      await db.query(
+        "insert into lessons(id,module_id,title,position,duration_seconds,is_preview,published)values($1,$2,$3,$4,$5,$6,$7)",
+        [
+          id,
+          data.moduleId,
+          data.title,
+          position,
+          data.duration_seconds,
+          data.is_preview,
+          data.published,
+        ],
+      );
+    }
+    await db.query("delete from lesson_assets where lesson_id=$1", [id]);
+    if (data.videoId) {
+      await db.query(
+        `insert into lesson_assets(lesson_id,provider_video_id,notes,provider_status,verified_at,verified_duration)
+         values($1,$2,$3,'ready',now(),$4)`,
+        [id, data.videoId, data.notes, data.duration_seconds],
+      );
+    }
+    await db.query("delete from lesson_resources where lesson_id=$1", [id]);
+    for (const [index, resource] of (
+      data.resources as { title: string; content: string }[]
+    ).entries())
+      await db.query(
+        "insert into lesson_resources(lesson_id,title,content,position)values($1,$2,$3,$4)",
+        [id, resource.title, resource.content, index],
+      );
+    await db.query("update courses set version=version+1,updated_at=now() where id=$1", [
+      data.courseId,
+    ]);
+    return { id };
+  }
+  if (action === "course_state") {
+    if (data.status === "published") {
+      const lessons = await db.query(
+        `select l.id from lessons l join modules m on m.id=l.module_id
+         join lesson_assets a on a.lesson_id=l.id
+         where m.course_id=$1 and l.published and a.provider_status='ready'`,
+        [data.courseId],
+      );
+      if (!lessons.rows.length)
+        throw new AuthError(400, "Publish at least one verified lesson first.");
+    }
+    await db.query("update courses set status=$2,version=version+1,updated_at=now() where id=$1", [
+      data.courseId,
+      data.status,
+    ]);
+    return { courseId: data.courseId };
+  }
+  if (action === "lesson_delete") {
+    const lesson = await db.query(
+      "select l.id from lessons l join modules m on m.id=l.module_id where l.id=$1 and m.id=$2 and m.course_id=$3",
+      [data.lessonId, data.moduleId, data.courseId],
+    );
+    if (!lesson.rows.length) throw new AuthError(404, "Lesson not found.");
+    const used = await db.query<{ used: boolean }>(
+      "select exists(select 1 from lesson_progress where lesson_id=$1) or exists(select 1 from order_watch_ranges where lesson_id=$1) as used",
+      [data.lessonId],
+    );
+    if (used.rows[0].used)
+      throw new AuthError(
+        409,
+        "This lesson has learner history and cannot be deleted. Archive the course instead.",
+      );
+    await db.query("delete from lesson_resources where lesson_id=$1", [data.lessonId]);
+    await db.query("delete from lesson_assets where lesson_id=$1", [data.lessonId]);
+    await db.query("delete from lessons where id=$1", [data.lessonId]);
+    await db.query("update courses set version=version+1,updated_at=now() where id=$1", [
+      data.courseId,
+    ]);
+    return { courseId: data.courseId };
+  }
+  if (action === "course_delete") {
+    const course = await db.query<{ id: string; status: string }>(
+      "select id,status from courses where id=$1 and version=$2",
+      [data.courseId, data.version],
+    );
+    if (!course.rows.length) throw new AuthError(404, "Course not found or changed.");
+    const used = await db.query<{ used: boolean }>(
+      "select exists(select 1 from orders where course_id=$1) or exists(select 1 from enrollments where course_id=$1) as used",
+      [data.courseId],
+    );
+    if (used.rows[0].used)
+      throw new AuthError(
+        409,
+        "This course has order or learner history and cannot be deleted. Archive it instead.",
+      );
+    await db.query(
+      "delete from lesson_resources where lesson_id in (select l.id from lessons l join modules m on m.id=l.module_id where m.course_id=$1)",
+      [data.courseId],
+    );
+    await db.query(
+      "delete from lesson_assets where lesson_id in (select l.id from lessons l join modules m on m.id=l.module_id where m.course_id=$1)",
+      [data.courseId],
+    );
+    await db.query(
+      "delete from lessons where module_id in (select id from modules where course_id=$1)",
+      [data.courseId],
+    );
+    await db.query("delete from modules where course_id=$1", [data.courseId]);
+    await db.query("delete from courses where id=$1", [data.courseId]);
+    return { deletedCourseId: data.courseId };
+  }
+  throw new AuthError(400, "This operation is not available in the local demo.");
+}
 const uuid = z.string().uuid();
 function parse<T>(schema: z.ZodType<T>, input: unknown): T {
   const result = schema.safeParse(input);
@@ -32,6 +288,63 @@ export async function adminRequest(request: Request) {
       if (!localUser) throw new AuthError(401, "Please sign in to continue.", "SIGN_IN_REQUIRED");
       if (localUser.role !== "admin" && localUser.role !== "support")
         throw new AuthError(403, "This role cannot access the admin workspace.", "FORBIDDEN");
+      if (
+        localUser.role !== "admin" &&
+        ![
+          "overview",
+          "orders",
+          "order-filters",
+          "order",
+          "students",
+          "student",
+          "refunds",
+          "course-learners",
+        ].includes(action)
+      )
+        throw new AuthError(403, "This action requires an administrator.", "FORBIDDEN");
+      if (request.method === "GET") {
+        const result = await localAdminRead(await localDatabase(), action, url, localUser.role);
+        if (result === null) throw new AuthError(404, "Admin record not found.");
+        if (result !== undefined) {
+          if (action === "export" && "items" in result && "total" in result) {
+            const rows = result.items as Record<string, unknown>[];
+            return new Response(
+              csvRows([
+                [
+                  "Order",
+                  "Student ID",
+                  "Course",
+                  "Status",
+                  "Total INR",
+                  "GST INR",
+                  "Provider order",
+                  "Created",
+                ],
+                ...rows.map((o) => [
+                  o.id,
+                  o.user_id,
+                  (o.course_snapshot as { title?: string })?.title ?? o.course_id,
+                  o.status,
+                  (Number(o.total_paise) / 100).toFixed(2),
+                  (Number(o.tax_paise) / 100).toFixed(2),
+                  o.provider_order_id,
+                  o.created_at,
+                ]),
+              ]),
+              {
+                headers: {
+                  "Content-Type": "text/csv; charset=utf-8",
+                  "Content-Disposition": "attachment; filename=orders.csv",
+                  "Cache-Control": "private, no-store",
+                  "X-Export-Limit": "1000",
+                  "X-Export-Truncated": String(Number(result.total) > rows.length),
+                },
+              },
+            );
+          }
+          return json(result);
+        }
+      }
       if (request.method === "GET" && action === "course-learners") {
         const id = parse(uuid, url.searchParams.get("courseId"));
         return json(await localCourseLearners(id));
@@ -39,7 +352,7 @@ export async function adminRequest(request: Request) {
       if (request.method === "GET" && action === "courses") {
         const db = await localDatabase();
         const courses = await db.query(
-          "select id,title,slug,status,price_paise,sale_price_paise,1 as version,updated_at from courses order by updated_at desc limit 200",
+          "select id,title,slug,status,price_paise,sale_price_paise,access_period,access_unit,created_at,updated_at,coalesce(version, 1) as version from courses order by updated_at desc limit 200",
         );
         return json({ items: courses.rows });
       }
@@ -74,6 +387,57 @@ export async function adminRequest(request: Request) {
           limited: false,
         });
       }
+      if (request.method === "GET" && action === "course") {
+        const id = parse(uuid, url.searchParams.get("id"));
+        return json({ course: await localCourse(await localDatabase(), id) });
+      }
+      if (request.method === "GET" && action === "video-test")
+        return json({ videoId: "local-demo-video-1", status: "ready", duration: 60 });
+      if (request.method === "POST" && action === "video-status") {
+        const input = parse(
+          z.object({ videoId: z.string().regex(/^[A-Za-z0-9_-]{8,128}$/) }).strict(),
+          await body(request),
+        );
+        return json({ videoId: input.videoId, status: "ready", duration: 60 });
+      }
+      if (request.method === "POST" && action === "operations") {
+        const envelope = parse(
+          z
+            .object({
+              action: z.enum([
+                "course_save",
+                "module_save",
+                "lesson_save",
+                "course_state",
+                "course_delete",
+                "lesson_delete",
+              ]),
+              data: z.unknown(),
+            })
+            .strict(),
+          await body(request, 65536),
+        );
+        const data = parse(
+          operationSchemas[envelope.action] as z.ZodType<Record<string, unknown>>,
+          envelope.data,
+        );
+        if (envelope.action === "course_delete" || envelope.action === "lesson_delete") {
+          const result = await (
+            await localDatabase()
+          ).transaction((tx) => localAdminOperation(tx, envelope.action, data));
+          return json({ message: "Deleted successfully.", ...result });
+        }
+        const result = await (
+          await localDatabase()
+        ).transaction((tx) => localAdminOperation(tx, envelope.action, data));
+        return json({ message: "Saved successfully.", ...result });
+      }
+      // Never fall through into Supabase: the demo launcher disables its credentials.
+      throw new AuthError(
+        404,
+        "This admin action is not available in the local demo.",
+        "LOCAL_ACTION_UNAVAILABLE",
+      );
     }
     const adminOnly = ![
       "overview",
@@ -96,7 +460,9 @@ export async function adminRequest(request: Request) {
       if (action === "courses") {
         const r = await context.admin
           .from("courses")
-          .select("id,title,slug,status,price_paise,sale_price_paise,version,updated_at")
+          .select(
+            "id,title,slug,status,price_paise,sale_price_paise,access_period,access_unit,created_at,updated_at,version",
+          )
           .order("updated_at", { ascending: false })
           .limit(200);
         databaseError(r.error);
@@ -425,6 +791,28 @@ export async function adminRequest(request: Request) {
       operationSchemas[envelope.action] as z.ZodType<Record<string, unknown>>,
       envelope.data,
     );
+    if (envelope.action === "course_delete" || envelope.action === "lesson_delete") {
+      const deleted = await context.admin.rpc(
+        envelope.action === "course_delete" ? "admin_delete_course" : "admin_delete_lesson",
+        envelope.action === "course_delete"
+          ? {
+              p_actor: context.user.id,
+              p_session: context.sessionId,
+              p_course: data.courseId,
+              p_version: data.version,
+            }
+          : {
+              p_actor: context.user.id,
+              p_session: context.sessionId,
+              p_course: data.courseId,
+              p_module: data.moduleId,
+              p_lesson: data.lessonId,
+              p_version: data.version,
+            },
+      );
+      databaseError(deleted.error);
+      return json({ message: "Deleted successfully.", ...deleted.data });
+    }
     if (context.profile.role === "support" && envelope.action === "grant") {
       const target = await context.admin
         .from("profiles")

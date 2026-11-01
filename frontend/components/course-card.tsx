@@ -11,8 +11,7 @@ export function CourseCard({ course }: { course: Course }) {
       <Link
         href={`/courses/${course.slug}`}
         className="course-image-link"
-        tabIndex={-1}
-        aria-hidden="true"
+        aria-label={`View course: ${course.title}`}
       >
         {course.thumbnailUrl ? (
           <Image

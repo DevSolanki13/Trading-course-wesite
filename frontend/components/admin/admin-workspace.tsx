@@ -42,8 +42,26 @@ const allViews = [
 export function AdminWorkspace() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<string>("overview");
+  const [view, setView] = useState<string>("courses");
   const [error, setError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
+  async function logout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      router.push("/login");
+      router.refresh();
+    } catch {
+      router.push("/login");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
   useEffect(() => {
     let live = true;
     fetch("/api/auth/me", { cache: "no-store" })
@@ -57,6 +75,9 @@ export function AdminWorkspace() {
         if (d.user.role === "student") {
           router.replace("/account");
           return;
+        }
+        if (d.user.role === "support") {
+          setView((prev) => (prev === "courses" ? "overview" : prev));
         }
         setUser(d.user);
       })
@@ -113,9 +134,19 @@ export function AdminWorkspace() {
             {user.email} · {user.role} · Authenticator verified
           </p>
         </div>
-        <Link href="/admin/security" className="button button-secondary">
-          <ShieldCheck size={17} /> Team security
-        </Link>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Link href="/admin/security" className="button button-secondary">
+            <ShieldCheck size={17} /> Team security
+          </Link>
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={loggingOut}
+            onClick={() => void logout()}
+          >
+            {loggingOut ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
       </header>
       <div className="admin-layout">
         <nav className="admin-sidebar" aria-label="Admin sections">
@@ -130,8 +161,8 @@ export function AdminWorkspace() {
               {label}
             </button>
           ))}
-          <Link href="/account">
-            <ArrowUUpLeft size={18} /> My account
+          <Link href="/">
+            <ArrowUUpLeft size={18} /> Storefront
           </Link>
         </nav>
         <div className="admin-main">

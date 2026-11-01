@@ -8,6 +8,7 @@ export function CourseAccessAction({
   demoEnabled = false,
   courseId,
   paymentsUnavailable = false,
+  isAdmin = false,
 }: {
   slug: string;
   previewId?: string;
@@ -15,24 +16,32 @@ export function CourseAccessAction({
   demoEnabled?: boolean;
   courseId?: string;
   paymentsUnavailable?: boolean;
+  isAdmin?: boolean;
 }) {
   const [owned, setOwned] = useState(false);
+  const [isAdminUser, setIsAdminUser] = useState(isAdmin);
   useEffect(() => {
     let live = true;
     fetch(`/api/learning/course?slug=${encodeURIComponent(slug)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
-        if (live) setOwned(d?.course?.owned === true);
+        if (live && d?.course?.owned === true) setOwned(true);
+      })
+      .catch(() => {});
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (live && d?.user?.role === "admin") setIsAdminUser(true);
       })
       .catch(() => {});
     return () => {
       live = false;
     };
   }, [slug]);
-  if (owned)
+  if (owned || isAdminUser)
     return (
       <Link className="button button-primary" href={`/learn/${slug}`}>
-        {mobile ? "Go to course" : "Go to your course"}
+        {isAdminUser ? "Open course classroom" : mobile ? "Go to course" : "Go to your course"}
       </Link>
     );
   if (mobile)
