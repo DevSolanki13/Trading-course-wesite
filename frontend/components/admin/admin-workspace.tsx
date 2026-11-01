@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MfaPanel } from "../mfa-panel";
+import { BullMark } from "../bull-mark";
 import { CourseManager } from "./course-manager";
 import { OverviewPanel } from "./overview-panel";
 import { StudentsPanel } from "./students-panel";
@@ -20,6 +21,9 @@ import {
   ArrowUUpLeft,
   ShieldCheck,
   Gear,
+  Plus,
+  Sun,
+  CaretDown,
   Fingerprint,
   Ticket,
   NotePencil,
@@ -124,48 +128,64 @@ export function AdminWorkspace() {
       </main>
     );
   const views = allViews.filter((v) => !("admin" in v) || user.role === "admin");
+  const workspaceItems = views.filter((item) => ["overview", "courses", "students"].includes(item.id));
+  const commerceItems = views.filter((item) => ["orders", "refunds", "coupons"].includes(item.id));
+  const manageItems = views.filter((item) => ["content", "settings", "operations", "audit"].includes(item.id));
+  const renderNavItems = (items: typeof views) =>
+    items.map(({ id, label, Icon }) => (
+      <button
+        key={id}
+        className={view === id ? "is-active" : ""}
+        aria-current={view === id ? "page" : undefined}
+        onClick={() => setView(id)}
+      >
+        <Icon size={18} weight={view === id ? "fill" : "regular"} />
+        {label}
+      </button>
+    ));
   return (
-    <main id="main-content" className="container admin-page">
-      <header className="admin-top">
-        <div>
-          <span className="auth-section-label">GlobalBulls · Operations</span>
-          <h1>Team workspace</h1>
-          <p>
-            {user.email} · {user.role} · Authenticator verified
-          </p>
+    <main id="main-content" className="admin-page">
+      <aside className="admin-sidebar" aria-label="Admin sections">
+        <Link href="/" className="admin-brand" aria-label="GlobalBulls storefront">
+          <BullMark className="admin-brand-mark" />
+          <span>Global<span>Bulls</span></span>
+        </Link>
+        <button type="button" className="admin-workspace-switcher">
+          <span>Admin workspace</span><CaretDown size={16} />
+        </button>
+        <div className="admin-nav-group">
+          <span className="admin-nav-label">Workspace</span>
+          {renderNavItems(workspaceItems)}
         </div>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <Link href="/admin/security" className="button button-secondary">
-            <ShieldCheck size={17} /> Team security
-          </Link>
-          <button
-            type="button"
-            className="button button-secondary"
-            disabled={loggingOut}
-            onClick={() => void logout()}
-          >
-            {loggingOut ? "Signing out…" : "Sign out"}
+        <div className="admin-nav-group">
+          <span className="admin-nav-label">Commerce</span>
+          {renderNavItems(commerceItems)}
+        </div>
+        <div className="admin-nav-group">
+          <span className="admin-nav-label">Manage</span>
+          {renderNavItems(manageItems)}
+        </div>
+        <div className="admin-sidebar-bottom">
+          <Link href="/"><ArrowUUpLeft size={18} /> View storefront</Link>
+          <button type="button" className="admin-user-menu" onClick={() => void logout()}>
+            <span className="admin-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
+            <span><strong>Admin</strong><small>{loggingOut ? "Signing out…" : "Verified account"}</small></span>
+            <CaretDown size={15} />
           </button>
         </div>
-      </header>
-      <div className="admin-layout">
-        <nav className="admin-sidebar" aria-label="Admin sections">
-          {views.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              className={view === id ? "is-active" : ""}
-              aria-current={view === id ? "page" : undefined}
-              onClick={() => setView(id)}
-            >
-              <Icon size={18} />
-              {label}
-            </button>
-          ))}
-          <Link href="/">
-            <ArrowUUpLeft size={18} /> Storefront
-          </Link>
-        </nav>
+      </aside>
+      <div className="admin-content">
+        <header className="admin-top">
+          <div className="admin-breadcrumb"><span>Workspace</span><span>/</span><strong>{views.find((item) => item.id === view)?.label}</strong></div>
+          <div className="admin-top-actions">
+            <span className="admin-preview-pill"><i /> Preview environment</span>
+            <span className="admin-preview-note">Sample data · test payments only.</span>
+            <button type="button" className="admin-theme-button" aria-label="Theme settings"><Sun size={21} /></button>
+            <Link href="/admin/security" className="button button-secondary"><ShieldCheck size={17} /> Team security</Link>
+          </div>
+        </header>
         <div className="admin-main">
+          {view === "courses" && user.role === "admin" && <div className="admin-page-heading"><div><h1>Courses</h1><p>Manage your curriculum, pricing and publishing.</p></div><button className="button button-primary" onClick={() => setView("courses")}><Plus size={19} /> New course</button></div>}
           {view === "overview" && <OverviewPanel />}
           {view === "courses" && user.role === "admin" && <CourseManager />}
           {view === "students" && <StudentsPanel role={user.role as "admin" | "support"} />}
