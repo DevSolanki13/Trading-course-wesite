@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft,
   ArrowDown,
   ArrowUp,
   Plus,
@@ -14,7 +13,7 @@ import {
   Users,
   PencilSimple,
 } from "@phosphor-icons/react";
-import { adminApi, operation, formText, formNumber, money, when } from "../../lib/admin-api";
+import { adminApi, operation, formText, formNumber, money } from "../../lib/admin-api";
 import type { AdminCourse, AdminLesson, AdminModule } from "../../../shared/admin";
 import { CourseLearnersPanel } from "./course-learners-panel";
 
@@ -305,18 +304,13 @@ function CourseEditor({
   }
   return (
     <section className="admin-editor">
-      <button className="text-link" onClick={onBack}>
-        <ArrowLeft size={16} /> All courses
-      </button>
-      <div className="admin-section-head">
+      <div className="admin-editor-breadcrumb"><button className="text-link" onClick={onBack}>Workspace</button><span>›</span><button className="text-link" onClick={onBack}>Courses</button><span>›</span><strong>Edit course</strong></div>
+      <div className="admin-section-head admin-editor-heading">
         <div>
-          <h2>{course?.title ?? "New course"}</h2>
-          <p>
-            {course
-              ? `${course.status} · Updated ${when(course.updated_at)}`
-              : "Start with accurate course information. New courses are drafts."}
-          </p>
+          <h2>{course ? "Edit course" : "New course"}</h2>
+          <p>Shape your course information and learner experience.</p>
         </div>
+        {course && <Link className="button button-secondary" href={`/learn/${course.slug}`}>Preview course outline</Link>}
         {course && (
           <div className="admin-actions">
             <Link className="button button-secondary" href={`/learn/${course.slug}`}>
@@ -417,8 +411,10 @@ function CourseEditor({
           Curriculum
         </button>
       </nav>
+      <div className="admin-editor-grid">
+        <div className="admin-editor-left">
       {tab === "details" ? (
-        <form key={course?.version ?? 0} className="admin-form" onSubmit={save}>
+        <form id="course-details-form" key={course?.version ?? 0} className="admin-form" onSubmit={save}>
           <div className="admin-form-grid">
             <label>
               Course title
@@ -684,6 +680,19 @@ function CourseEditor({
           </div>
         )
       )}
+        </div>
+        {course && (
+          <aside className="admin-course-preview" aria-label="Course preview">
+            <div className="admin-preview-title"><span>ⓘ</span><div><strong>Course preview</strong><small>This is how your course will appear to learners.</small></div></div>
+            <div className={`admin-course-artwork artwork-${course.artwork ?? "foundations"}`}><span>{course.title.split(" ").slice(0, 2).join(" ").toUpperCase()}</span></div>
+            <span className="admin-preview-label">Course title</span><h3>{course.title}</h3>
+            <p>{course.description || "Add a course description to help learners understand what they will learn."}</p>
+            <div className="admin-preview-price">{money(course.sale_price_paise ?? course.price_paise)}</div>
+            <div className="admin-preview-access"><Clock size={17} /> {course.access_period || 1} {course.access_unit || "months"} access</div>
+          </aside>
+        )}
+      </div>
+      <div className="admin-editor-footer"><span><i /> Unsaved changes<small>You have unpublished changes on this course.</small></span><div><button type="button" className="button button-secondary" onClick={onBack}>Cancel</button><button type="submit" form="course-details-form" className="button button-primary" disabled={pending}>Save changes</button></div></div>
     </section>
   );
 }

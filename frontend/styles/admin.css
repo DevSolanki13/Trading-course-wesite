@@ -900,3 +900,32 @@
 .admin-page-heading .button { background: var(--accent); color: var(--accent-ink); }
 @media (max-width: 900px) { .admin-page { display: block; } .admin-page > .admin-sidebar { position: static; height: auto; overflow: visible; padding: 20px; } .admin-nav-group { display: none; } .admin-sidebar-bottom { display: none; } .admin-top { padding: 18px 20px; flex-wrap: wrap; gap: 14px; } .admin-top-actions { flex-wrap: wrap; } .admin-main { padding: 28px 20px 60px; } }
 @media (max-width: 600px) { .admin-preview-note, .admin-theme-button { display: none; } .admin-page-heading { flex-direction: column; } .admin-page-heading .button { width: 100%; } }
+.admin-editor-breadcrumb { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px; margin-bottom:18px; }
+.admin-editor-breadcrumb strong { color:var(--foreground); }
+.admin-editor-breadcrumb .text-link { padding:0; border:0; background:none; color:inherit; }
+.admin-editor-heading { margin-bottom:14px; }
+.admin-editor-heading h2 { font-size:38px; letter-spacing:-.04em; }
+.admin-editor-grid { display:grid; grid-template-columns:minmax(0, 1fr) 410px; gap:16px; align-items:start; }
+.admin-editor-left { min-width:0; }
+.admin-editor-left .admin-tabs { margin-bottom:14px; }
+.admin-editor-left .admin-form { margin:0; }
+.admin-course-preview { position:sticky; top:22px; padding:17px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.admin-preview-title { display:flex; gap:12px; align-items:flex-start; margin-bottom:15px; }
+.admin-preview-title > span { color:var(--accent); font-size:20px; }
+.admin-preview-title div { display:grid; gap:4px; }
+.admin-preview-title small { color:var(--muted); font-size:11px; }
+.admin-course-artwork { display:grid; place-items:end start; min-height:245px; padding:24px; margin-bottom:16px; overflow:hidden; border:1px solid color-mix(in srgb, var(--accent) 28%, var(--line)); border-radius:8px; background:radial-gradient(circle at 75% 35%, color-mix(in srgb, var(--accent) 60%, transparent), transparent 25%), linear-gradient(135deg, #061d1d, #062b27 50%, #071315); }
+.admin-course-artwork span { max-width:250px; color:white; font-size:32px; line-height:.95; font-weight:800; letter-spacing:-.04em; text-shadow:0 2px 18px #000; }
+.admin-course-artwork.artwork-risk { background:linear-gradient(135deg,#241318,#063330); }
+.admin-course-artwork.artwork-structure { background:linear-gradient(135deg,#111d35,#063329); }
+.admin-preview-label { color:var(--muted); font-size:11px; }
+.admin-course-preview h3 { margin:4px 0 9px; font-size:20px; }
+.admin-course-preview p { color:var(--muted); font-size:13px; line-height:1.6; }
+.admin-preview-price { margin-top:18px; padding-top:18px; border-top:1px solid var(--line); font-size:25px; font-weight:700; }
+.admin-preview-access { display:flex; align-items:center; gap:8px; margin-top:8px; color:var(--muted); font-size:12px; }
+.admin-editor-footer { position:fixed; z-index:4; right:0; bottom:0; left:280px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 28px; border-top:1px solid var(--line); background:color-mix(in srgb, var(--background) 94%, transparent); backdrop-filter:blur(14px); }
+.admin-editor-footer > span { display:grid; grid-template-columns:auto 1fr; column-gap:9px; font-size:12px; font-weight:650; }
+.admin-editor-footer > span i { grid-row:span 2; width:10px; height:10px; margin-top:3px; border-radius:50%; background:#e6aa17; box-shadow:0 0 0 7px color-mix(in srgb, #e6aa17 15%, transparent); }
+.admin-editor-footer small { color:var(--muted); font-weight:400; }
+.admin-editor-footer > div { display:flex; gap:10px; }
+@media (max-width:900px) { .admin-editor-grid { grid-template-columns:1fr; } .admin-course-preview { position:static; } .admin-editor-footer { left:0; padding:12px 20px; } .admin-editor-footer > span { display:none; } }
