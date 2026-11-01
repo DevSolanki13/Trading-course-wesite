@@ -929,3 +929,23 @@
 .admin-editor-footer small { color:var(--muted); font-weight:400; }
 .admin-editor-footer > div { display:flex; gap:10px; }
 @media (max-width:900px) { .admin-editor-grid { grid-template-columns:1fr; } .admin-course-preview { position:static; } .admin-editor-footer { left:0; padding:12px 20px; } .admin-editor-footer > span { display:none; } }
+.admin-curriculum { display:grid; grid-template-columns:minmax(300px,.92fr) minmax(0,1.08fr); gap:16px; }
+.admin-curriculum > .admin-help, .admin-curriculum > .admin-inline-form { grid-column:1; }
+.admin-module { grid-column:1; }
+.admin-lesson-editor { grid-column:2; grid-row:1 / span 4; margin:0; padding:0; border:1px solid var(--line); border-radius:12px; background:var(--surface); overflow:hidden; }
+.admin-lesson-editor summary { display:flex; align-items:center; justify-content:space-between; padding:18px 20px; color:var(--foreground); font-size:20px; font-weight:700; list-style:none; cursor:pointer; }
+.admin-lesson-editor summary::-webkit-details-marker { display:none; }
+.admin-lesson-editor summary small { color:var(--muted); font-size:12px; font-weight:400; }
+.admin-lesson-editor[open] summary { border-bottom:1px solid var(--line); }
+.admin-lesson-editor form { padding:18px 20px 24px; }
+.admin-field-label { display:block; margin-bottom:8px; font-size:12px; font-weight:650; }
+.admin-video-tabs { display:flex; border-bottom:1px solid var(--line); }
+.admin-video-tabs button { display:flex; align-items:center; gap:8px; padding:11px 16px; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--muted); }
+.admin-video-tabs button.is-active { color:var(--foreground); border-color:var(--accent); }
+.admin-upload-zone { display:grid; justify-items:center; gap:9px; padding:28px 16px; margin:8px 0 14px; border:1px dashed var(--muted); border-radius:8px; color:var(--muted); text-align:center; }
+.admin-upload-zone svg { color:var(--foreground); }
+.admin-upload-zone strong { color:var(--foreground); font-size:12px; font-weight:500; }
+.admin-upload-zone strong span { padding:7px 11px; margin-left:5px; border:1px solid var(--line); border-radius:6px; }
+.admin-upload-zone small { font-size:11px; }
+.admin-video-section + .admin-form-grid { margin-top:14px; }
+@media (max-width:900px) { .admin-curriculum { grid-template-columns:1fr; } .admin-curriculum > .admin-help, .admin-curriculum > .admin-inline-form, .admin-module, .admin-lesson-editor { grid-column:1; grid-row:auto; } }

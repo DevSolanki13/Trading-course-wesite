@@ -6,6 +6,7 @@ import {
   ArrowUp,
   Plus,
   UploadSimple,
+  LinkSimple,
   Trash,
   CalendarBlank,
   Clock,
@@ -899,8 +900,8 @@ function LessonEditor({
     }
   }
   return (
-    <details className="admin-lesson-editor">
-      <summary>{lesson ? `Edit lesson: ${lesson.title}` : "Add a lesson"}</summary>
+    <details className="admin-lesson-editor" open={Boolean(lesson)}>
+      <summary><span>{lesson ? "Edit lesson" : "Add lesson"}</span>{lesson && <small>{moduleId ? "Curriculum lesson" : "New lesson"}</small>}</summary>
       <form
         className="admin-form"
         onSubmit={async (e) => {
@@ -925,6 +926,11 @@ function LessonEditor({
           Lesson title
           <input name="title" required minLength={2} maxLength={180} defaultValue={lesson?.title} />
         </label>
+        <div className="admin-video-section">
+          <span className="admin-field-label">Lesson video</span>
+          <div className="admin-video-tabs"><button type="button" className="is-active"><UploadSimple size={16} /> Upload video</button><button type="button"><LinkSimple size={16} /> Use video ID</button></div>
+          <div className="admin-upload-zone"><UploadSimple size={28} /><strong>Drag a video here, or <span>browse files</span></strong><small>Video will be processed for secure playback.</small></div>
+        </div>
         <div className="admin-form-grid">
           <label>
             VdoCipher video ID
@@ -955,7 +961,7 @@ function LessonEditor({
             Check video status
           </button>
           <label className="button button-secondary admin-upload-label">
-            <UploadSimple size={16} /> Upload video
+            <UploadSimple size={16} /> Choose video file
             <input
               type="file"
               accept="video/*"
