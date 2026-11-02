@@ -1501,3 +1501,129 @@ body:has(.student-dashboard-page) .site-footer {
 .collapsed-action:hover {
   background: rgba(0, 223, 143, 0.2);
 }
+
+/* ==========================================================================
+   Light Mode Overrides for Announcements (Student Dashboard)
+   ========================================================================== */
+
+:root[data-theme="light"] .student-announcement-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f4f8f6 100%);
+  border: 1px solid rgba(8, 120, 79, 0.28);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="light"] .student-announcement-card.priority-important {
+  border-color: rgba(217, 119, 6, 0.38);
+  box-shadow: 0 4px 20px rgba(217, 119, 6, 0.08);
+}
+
+:root[data-theme="light"] .student-announcement-card.priority-urgent {
+  border-color: rgba(220, 38, 38, 0.38);
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.08);
+}
+
+:root[data-theme="light"] .announcement-brand-badge {
+  background: rgba(8, 120, 79, 0.1);
+  border-color: rgba(8, 120, 79, 0.26);
+  color: #065f46;
+}
+
+:root[data-theme="light"] .live-pulse-dot {
+  background: #08784f;
+  box-shadow: 0 0 6px rgba(8, 120, 79, 0.5);
+}
+
+:root[data-theme="light"] .announcement-category-tag {
+  background: #f0f4f2;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #131b19;
+}
+
+:root[data-theme="light"] .announcement-pinned-tag {
+  background: rgba(8, 120, 79, 0.1);
+  border-color: rgba(8, 120, 79, 0.24);
+  color: #065f46;
+}
+
+:root[data-theme="light"] .announcement-priority-tag.important {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.28);
+  color: #b45309;
+}
+
+:root[data-theme="light"] .announcement-priority-tag.urgent {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.28);
+  color: #b91c1c;
+}
+
+:root[data-theme="light"] .announcement-pagination {
+  background: #f0f4f2;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #52615a;
+}
+
+:root[data-theme="light"] .announcement-pagination button {
+  color: #131b19;
+}
+
+:root[data-theme="light"] .announcement-dismiss-btn {
+  background: #f0f4f2;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #52615a;
+}
+
+:root[data-theme="light"] .announcement-dismiss-btn:hover {
+  background: #e2e8e5;
+  color: #131b19;
+}
+
+:root[data-theme="light"] .announcement-body h3 {
+  color: #131b19;
+}
+
+:root[data-theme="light"] .announcement-body p {
+  color: #374151;
+}
+
+:root[data-theme="light"] .announcement-footer {
+  border-top-color: rgba(0, 0, 0, 0.08);
+  color: #52615a;
+}
+
+:root[data-theme="light"] .announcement-author-info {
+  color: #52615a;
+}
+
+:root[data-theme="light"] .student-announcement-collapsed-bar {
+  background: #ffffff;
+  border-color: rgba(8, 120, 79, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="light"] .student-announcement-collapsed-bar:hover {
+  background: #f4f8f6;
+  border-color: #08784f;
+}
+
+:root[data-theme="light"] .collapsed-left {
+  color: #131b19;
+}
+
+:root[data-theme="light"] .collapsed-left strong {
+  color: #08784f;
+}
+
+:root[data-theme="light"] .collapsed-title {
+  color: #52615a;
+}
+
+:root[data-theme="light"] .collapsed-action {
+  background: rgba(8, 120, 79, 0.1);
+  border-color: rgba(8, 120, 79, 0.24);
+  color: #08784f;
+}
+
+:root[data-theme="light"] .collapsed-action:hover {
+  background: rgba(8, 120, 79, 0.18);
+}

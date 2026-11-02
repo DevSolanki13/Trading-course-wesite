@@ -1532,3 +1532,57 @@ body:has(.admin-page) .site-footer {
   border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
+/* ==========================================================================
+   Light Mode Overrides for Admin Announcements
+   ========================================================================== */
+
+:root[data-theme="light"] .student-announcement-preview-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f4f8f6 100%);
+  border-color: rgba(8, 120, 79, 0.28);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-theme="light"] .student-announcement-preview-card.priority-important {
+  border-color: rgba(217, 119, 6, 0.38);
+}
+
+:root[data-theme="light"] .student-announcement-preview-card.priority-urgent {
+  border-color: rgba(220, 38, 38, 0.38);
+}
+
+:root[data-theme="light"] .preview-admin-pill {
+  background: rgba(8, 120, 79, 0.1);
+  border-color: rgba(8, 120, 79, 0.26);
+  color: #065f46;
+}
+
+:root[data-theme="light"] .preview-title {
+  color: #131b19;
+}
+
+:root[data-theme="light"] .preview-body {
+  color: #374151;
+}
+
+:root[data-theme="light"] .preview-footer {
+  border-top-color: rgba(0, 0, 0, 0.08);
+  color: #52615a;
+}
+
+:root[data-theme="light"] .preview-author {
+  color: #52615a;
+}
+
+:root[data-theme="light"] .admin-announcement-row {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.1));
+}
+
+:root[data-theme="light"] .admin-announcement-title {
+  color: #131b19;
+}
+
+:root[data-theme="light"] .admin-announcement-body {
+  color: #52615a;
+}
+
