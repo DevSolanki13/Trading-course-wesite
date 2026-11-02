@@ -7,6 +7,8 @@ import {
   localSignUp,
   localSignOut,
   localRateLimit,
+  localUpdateProfile,
+  localUpdatePassword,
   LOCAL_SESSION_COOKIE,
 } from "./auth";
 import { AuthError, body, failure, json } from "../auth/http";
@@ -62,6 +64,40 @@ export async function localAuthRequest(request: Request) {
         },
         503,
       );
+    if (request.method === "PATCH" && action === "profile") {
+      const user = await localSession(jar.get(LOCAL_SESSION_COOKIE)?.value);
+      if (!user) throw new AuthError(401, "Please sign in to continue.");
+      const input = z
+        .object({
+          name: z.string().trim().min(1).max(80),
+          phone: z
+            .string()
+            .trim()
+            .max(25)
+            .regex(/^[+\d ()-]*$/)
+            .optional(),
+        })
+        .strict()
+        .parse(await body(request));
+      await localUpdateProfile(user.id, input.name, input.phone);
+      return json({
+        message: "Profile updated successfully.",
+        user: { ...user, name: input.name, phone: input.phone },
+      });
+    }
+    if (request.method === "POST" && action === "password") {
+      const user = await localSession(jar.get(LOCAL_SESSION_COOKIE)?.value);
+      if (!user) throw new AuthError(401, "Please sign in to continue.");
+      const input = z
+        .object({
+          currentPassword: z.string().min(1).max(128).optional(),
+          password: z.string().min(8).max(128),
+        })
+        .strict()
+        .parse(await body(request));
+      await localUpdatePassword(user.id, input.currentPassword, input.password);
+      return json({ message: "Password updated successfully." });
+    }
     if (!["login", "signup"].includes(action))
       return json(
         { error: "This account feature requires the configured authentication service." },

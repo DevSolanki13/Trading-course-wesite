@@ -22,6 +22,7 @@ export function HeroAnnotations({
       if (!heading || !carousel) return;
       const bounds = hero.getBoundingClientRect();
       const title = heading.getBoundingClientRect();
+      const carouselBounds = carousel.getBoundingClientRect();
       const center = bounds.left + bounds.width / 2;
       let halfWidth = 0;
       hero.querySelectorAll("h1, .hero-lede, .hero-actions a, .trust-line").forEach((element) => {
@@ -41,7 +42,7 @@ export function HeroAnnotations({
       );
       layer.style.setProperty(
         "--annotation-notes-top",
-        `${Math.max(12, Math.min(title.bottom - bounds.top + 24, carousel.getBoundingClientRect().top - bounds.top - (noteWidth * 280) / 320 - 24))}px`,
+        `${Math.max(12, Math.min(title.bottom - bounds.top + 24, carouselBounds.top - bounds.top - (noteWidth * 280) / 320 - 24))}px`,
       );
       layer.dataset.ready = "true";
     }

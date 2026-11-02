@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "gravitas": {
+      "source": "udaysharmadev/Gravitas",
+      "sourceType": "github",
+      "skillPath": "skills/gravitas/SKILL.md",
+      "computedHash": "5d80d2ba5e74b151cff1ce9b4d1409019b22939154d82a938ad280554c447695"
+    },
+    "make-interfaces-feel-better": {
+      "source": "WatermelonCorp/watermelon-platform",
+      "sourceType": "github",
+      "skillPath": "skills/make-interfaces-feel-better/SKILL.md",
+      "computedHash": "2c3576e63d8c39d75ed327f1dcf6aab7aec0edf293a55f6cb3f7b8571974a01c"
+    },
+    "watermelon-ui": {
+      "source": "WatermelonCorp/watermelon-platform",
+      "sourceType": "github",
+      "skillPath": "skills/watermelon-ui/SKILL.md",
+      "computedHash": "3db9de1cea26abc218a8badf438e1aeebd3b7a80d98d61910a0d83de7c2b043a"
+    }
+  }
+}

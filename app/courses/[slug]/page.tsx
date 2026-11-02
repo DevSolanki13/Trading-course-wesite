@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getCourse } from "@/frontend/content/courses";
 import CourseDetailPage from "@/frontend/pages/course-detail-page";
 import { publicCatalog } from "@/backend/public/catalogue";
@@ -7,7 +7,7 @@ import { isDemoPaymentEnabled } from "@/backend/payments/demo";
 import { cashfreeSandboxEnabled } from "@/backend/payments/cashfree";
 import { getPaymentProvider } from "@/backend/payments/providers";
 import { purchaseUser } from "@/backend/purchase/session";
-import "@/frontend/styles/admin.css";
+import "@/frontend/styles/admin-shared.css";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
@@ -32,6 +32,9 @@ export default async function CourseRoute({
     find(slug),
     purchaseUser(false).catch(() => null),
   ]);
+  if (user?.role === "admin") {
+    redirect("/admin");
+  }
   if (!course) notFound();
   let enabled = false,
     unavailable = false;

@@ -1,0 +1,18 @@
+/* Match the existing Google-font fallback metrics to keep loading layout stable. */
+@font-face {
+  font-family: "Caveat Fallback";
+  src: local("Arial");
+  ascent-override: 124.77%;
+  descent-override: 38.99%;
+  line-gap-override: 0%;
+  size-adjust: 76.94%;
+}
+
+@font-face {
+  font-family: "Newsreader Fallback";
+  src: local("Times New Roman");
+  ascent-override: 69.68%;
+  descent-override: 25.12%;
+  line-gap-override: 0%;
+  size-adjust: 105.48%;
+}

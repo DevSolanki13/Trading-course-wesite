@@ -9,6 +9,31 @@ import {
   mockPaymentsAllowed,
 } from "../backend/payments/providers.ts";
 import { localDemoEnabled } from "../backend/purchase/mode.ts";
+
+test("Vercel deployments cannot enable local authentication even with every demo switch", () => {
+  for (const deployment of [
+    { VERCEL: "1" },
+    { VERCEL_ENV: "production" },
+    { VERCEL_ENV: "preview" },
+  ]) {
+    for (const NODE_ENV of ["development", "production"])
+      assert.equal(
+        localDemoEnabled({
+          ...deployment,
+          NODE_ENV,
+          LOCAL_DEMO: "true",
+          ALLOW_MOCK_PAYMENTS: "true",
+          SEED_DEMO_USERS: "true",
+        }),
+        false,
+      );
+  }
+  assert.equal(localDemoEnabled({ NODE_ENV: "development", LOCAL_DEMO: "true" }), true);
+  assert.equal(
+    localDemoEnabled({ NODE_ENV: "production", LOCAL_DEMO: "true", ALLOW_MOCK_PAYMENTS: "true" }),
+    true,
+  );
+});
 test("provider factory has a zero-env mock and refuses implicit production mock", () => {
   assert.ok(getPaymentProvider({}) instanceof MockPaymentProvider);
   assert.ok(

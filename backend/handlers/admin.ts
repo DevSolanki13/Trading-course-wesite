@@ -1,3 +1,5 @@
+import { invalidatePublicCatalog } from "../public/cache";
+import { validationParser } from "../auth/validation";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -272,12 +274,7 @@ async function localAdminOperation(
   throw new AuthError(400, "This operation is not available in the local demo.");
 }
 const uuid = z.string().uuid();
-function parse<T>(schema: z.ZodType<T>, input: unknown): T {
-  const result = schema.safeParse(input);
-  if (!result.success)
-    throw new AuthError(400, result.error.issues[0]?.message ?? "Check the fields.");
-  return result.data;
-}
+const parse = validationParser({ fallback: "Check the fields." });
 export async function adminRequest(request: Request) {
   try {
     const url = new URL(request.url);
@@ -811,6 +808,7 @@ export async function adminRequest(request: Request) {
             },
       );
       databaseError(deleted.error);
+      invalidatePublicCatalog(envelope.action);
       return json({ message: "Deleted successfully.", ...deleted.data });
     }
     if (context.profile.role === "support" && envelope.action === "grant") {
@@ -879,6 +877,7 @@ export async function adminRequest(request: Request) {
         "TASK_CHANGED",
       );
     databaseError(result.error);
+    invalidatePublicCatalog(envelope.action);
     return json({ message: "Saved successfully.", ...result.data });
   } catch (error) {
     return failure(error);

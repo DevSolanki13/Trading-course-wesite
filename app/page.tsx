@@ -1,4 +1,11 @@
 import { pageMetadata } from "@/frontend/lib/metadata";
+import { redirect } from "next/navigation";
+import HomePage from "@/frontend/pages/home-page";
+import { publicCatalog } from "@/backend/public/catalogue";
+import { purchaseUser } from "@/backend/purchase/session";
+
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata() {
   const data = await publicCatalog();
   const title =
@@ -9,11 +16,15 @@ export async function generateMetadata() {
     "Structured Hindi trading education, focused on market understanding, price action and risk. Explore the preview catalogue.";
   return pageMetadata(title, description, "/");
 }
-import HomePage from "@/frontend/pages/home-page";
-import { publicCatalog } from "@/backend/public/catalogue";
-export const dynamic = "force-dynamic";
+
 export default async function Home() {
-  const data = await publicCatalog();
+  const [data, user] = await Promise.all([
+    publicCatalog(),
+    purchaseUser(false).catch(() => null),
+  ]);
+  if (user?.role === "admin") {
+    redirect("/admin");
+  }
   return (
     <HomePage
       courses={data.courses.length ? data.courses : undefined}

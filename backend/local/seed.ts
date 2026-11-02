@@ -1,7 +1,9 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { hash } from "bcryptjs";
 import type { PGlite } from "@electric-sql/pglite";
 export async function seedLocal(db: PGlite) {
+  if (process.env.VERCEL || ["production", "preview"].includes(process.env.VERCEL_ENV ?? ""))
+    return;
   if (process.env.NODE_ENV === "production" && process.env.SEED_DEMO_USERS !== "true") return;
   // TEST ACCOUNTS ONLY. Remove/disable demo seeds before production. Passwords
   // are bcrypt hashes; this seed never touches a configured Supabase project.
@@ -14,7 +16,11 @@ export async function seedLocal(db: PGlite) {
     )
       continue;
     const id = randomUUID();
-    const digest = await hash("1234567890", 12);
+    const password =
+      process.env.NODE_ENV === "production"
+        ? process.env.LOCAL_SEED_PASSWORD?.trim() || randomBytes(24).toString("base64url")
+        : "1234567890";
+    const digest = await hash(password, 12);
     await db.transaction(async (tx) => {
       await tx.query(
         "insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data)values($1,$2,now(),$3)",

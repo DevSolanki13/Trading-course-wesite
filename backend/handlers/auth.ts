@@ -1,3 +1,4 @@
+import { validationParser } from "../auth/validation";
 import "server-only";
 import { z } from "zod";
 import { cookies } from "next/headers";
@@ -35,16 +36,10 @@ const password = z
   .regex(/[a-z]/, "Add a lowercase letter.")
   .regex(/[A-Z]/, "Add an uppercase letter.")
   .regex(/[0-9]/, "Add a number.");
-function parse<T>(schema: z.ZodType<T>, input: unknown): T {
-  const result = schema.safeParse(input);
-  if (!result.success)
-    throw new AuthError(
-      400,
-      result.error.issues[0]?.message ?? "Check the supplied information.",
-      "VALIDATION_ERROR",
-    );
-  return result.data;
-}
+const parse = validationParser({
+  fallback: "Check the supplied information.",
+  code: "VALIDATION_ERROR",
+});
 const genericEmail = {
   message:
     "If this address is eligible, an email will arrive shortly. Check your inbox and spam folder.",

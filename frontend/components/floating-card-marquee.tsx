@@ -124,24 +124,33 @@ export function FloatingCardMarquee() {
     reducedMotion.current = media.matches;
     const onMotionChange = () => {
       reducedMotion.current = media.matches;
-      if (media.matches) renderCards();
+      updateAnimation();
     };
     media.addEventListener("change", onMotionChange);
-    let visible = true;
-    let frame = 0;
+    let visible = false;
+    let frame: number | null = null;
     let previous = performance.now();
+    let width = window.innerWidth;
+    const shown: boolean[] = [];
 
     function renderCards() {
-      const radius =
-        window.innerWidth <= 540 ? 420 : window.innerWidth <= 1024 ? 570 : RADIUS;
-      const scaleFactor = window.innerWidth <= 540 ? 0.78 : window.innerWidth <= 1024 ? 0.9 : 1;
+      const radius = width <= 540 ? 420 : width <= 1024 ? 570 : RADIUS;
+      const scaleFactor = width <= 540 ? 0.78 : width <= 1024 ? 0.9 : 1;
       const count = cards.length;
       cardsRef.current.forEach((card, index) => {
         if (!card) return;
         const rawAngle = (index / count) * 360 + DIRECTION * phase.current;
-        const angle = ((rawAngle + 180) % 360 + 360) % 360 - 180;
+        const angle = ((((rawAngle + 180) % 360) + 360) % 360) - 180;
         const distance = Math.abs(angle);
         const visibleAngle = distance <= VISIBLE_ARC;
+        if (!visibleAngle) {
+          if (shown[index] !== false) {
+            card.style.opacity = "0";
+            card.style.pointerEvents = "none";
+            shown[index] = false;
+          }
+          return;
+        }
         const normalized = Math.min(distance / VISIBLE_ARC, 1);
         const x = Math.sin((angle * Math.PI) / 180) * radius * scaleFactor;
         const z = (Math.cos((angle * Math.PI) / 180) - 1) * radius * 0.6 * scaleFactor;
@@ -150,40 +159,57 @@ export function FloatingCardMarquee() {
         const scale = (1 - normalized * 0.25) * scaleFactor;
         const opacity = 1 - normalized * normalized * 0.7;
         card.style.transform = `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) rotateY(${rotateY}deg) scale(${scale})`;
-        card.style.opacity = visibleAngle ? String(opacity) : "0";
-        card.style.zIndex = String(Math.round((1 - normalized) * 100));
-        card.style.pointerEvents = visibleAngle ? "auto" : "none";
+        card.style.opacity = String(opacity);
+        const zIndex = String(Math.round((1 - normalized) * 100));
+        if (card.style.zIndex !== zIndex) card.style.zIndex = zIndex;
+        if (shown[index] !== true) card.style.pointerEvents = "auto";
+        shown[index] = true;
       });
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         visible = entry.isIntersecting;
-        if (visible) {
-          previous = performance.now();
-          frame = requestAnimationFrame(tick);
-        } else cancelAnimationFrame(frame);
+        updateAnimation();
       },
       { threshold: 0.05 },
     );
     observer.observe(root);
 
     const tick = (now: number) => {
-      if (!visible) return;
+      frame = null;
+      if (!visible || document.hidden || reducedMotion.current) return;
       const delta = Math.min(now - previous, 100) / 1000;
       previous = now;
       speed.current += (targetSpeed.current - speed.current) * Math.min(delta * 6, 1);
-      if (!reducedMotion.current) phase.current = (phase.current + speed.current * delta) % 360;
+      phase.current = (phase.current + speed.current * delta) % 360;
       renderCards();
       frame = requestAnimationFrame(tick);
     };
 
+    function updateAnimation() {
+      const running = visible && !document.hidden && !reducedMotion.current;
+      if (!running && frame !== null) {
+        cancelAnimationFrame(frame);
+        frame = null;
+      } else if (running && frame === null) {
+        previous = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    }
+    const onResize = () => {
+      width = window.innerWidth;
+      renderCards();
+    };
     renderCards();
-    frame = requestAnimationFrame(tick);
+    window.addEventListener("resize", onResize);
+    document.addEventListener("visibilitychange", updateAnimation);
     return () => {
-      cancelAnimationFrame(frame);
+      if (frame !== null) cancelAnimationFrame(frame);
       observer.disconnect();
       media.removeEventListener("change", onMotionChange);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", updateAnimation);
     };
   }, []);
 

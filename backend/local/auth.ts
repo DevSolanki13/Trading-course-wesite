@@ -10,11 +10,45 @@ export async function localSession(token: string | undefined): Promise<PurchaseU
   return (
     (
       await db.query<PurchaseUser>(
-        "select p.id,p.full_name as name,u.email,p.role from local_auth.sessions s join profiles p on p.id=s.user_id join auth.users u on u.id=p.id where token_hash=$1 and expires_at>now()and not p.blocked",
+        "select p.id,p.full_name as name,u.email,p.role,p.phone from local_auth.sessions s join profiles p on p.id=s.user_id join auth.users u on u.id=p.id where token_hash=$1 and expires_at>now()and not p.blocked",
         [digest(token)],
       )
     ).rows[0] ?? null
   );
+}
+
+export async function localUpdateProfile(userId: string, name: string, phone?: string | null) {
+  const db = await localDatabase();
+  await db.query("update profiles set full_name=$1, phone=$2 where id=$3", [
+    name,
+    phone || null,
+    userId,
+  ]);
+}
+
+export async function localUpdatePassword(
+  userId: string,
+  currentPassword?: string,
+  newPassword?: string,
+) {
+  const db = await localDatabase();
+  const row = (
+    await db.query<{ id: string; password_hash: string }>(
+      "select id, password_hash from local_auth.credentials where id=$1",
+      [userId],
+    )
+  ).rows[0];
+  if (!row) throw Object.assign(new Error("User credentials not found."), { status: 404 });
+  if (currentPassword) {
+    const valid = await compare(currentPassword, row.password_hash);
+    if (!valid)
+      throw Object.assign(new Error("Your current password was not accepted."), { status: 400 });
+  }
+  const passwordHash = await hash(newPassword!, 12);
+  await db.query("update local_auth.credentials set password_hash=$1 where id=$2", [
+    passwordHash,
+    userId,
+  ]);
 }
 export async function localRateLimit(key: string) {
   const db = await localDatabase();

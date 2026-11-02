@@ -1,9 +1,19 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
+import { PUBLIC_CATALOG_TAG } from "./cache";
+import { requireEnv } from "../config/env";
 import { createAdminClient } from "../database/supabase";
 import type { SiteDocument } from "../../shared/admin";
 import { localDemoEnabled } from "../purchase/mode";
 import { purchaseCatalog } from "../purchase/repository";
+class PartialCatalogue<T> extends Error {
+  readonly catalogue: T;
+  constructor(catalogue: T) {
+    super("Public settings are temporarily unavailable.");
+    this.catalogue = catalogue;
+  }
+}
 type RawCourse = {
   id: string;
   slug: string;
@@ -53,9 +63,12 @@ export const publicCatalog = cache(async function publicCatalog() {
     const list = await purchaseCatalog();
     const { localDatabase } = await import("../local/database");
     const db = await localDatabase();
-    const courseMeta = await db.query<{ id: string; created_at: string; version: number; status: string }>(
-      "select id,created_at,version,status from courses",
-    );
+    const courseMeta = await db.query<{
+      id: string;
+      created_at: string;
+      version: number;
+      status: string;
+    }>("select id,created_at,version,status from courses");
     const metaMap = new Map(courseMeta.rows.map((r) => [r.id, r]));
     return {
       courses: list.map((c) => {
@@ -107,91 +120,11 @@ export const publicCatalog = cache(async function publicCatalog() {
     };
   }
   try {
-    const admin = createAdminClient();
-    const [courses, content, settings] = await Promise.all([
-      admin
-        .from("courses")
-        .select(
-          "id,slug,title,description,level,language,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,version,created_at,status,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
-        )
-        .eq("status", "published")
-        .order("created_at")
-        .limit(100),
-      admin.from("site_content").select("document").eq("id", true).maybeSingle(),
-      admin
-        .from("site_settings")
-        .select("public_telegram_url,public_instagram_url,support_email")
-        .eq("id", true)
-        .maybeSingle(),
-    ]);
-    if (courses.error) throw Error("Course catalogue unavailable");
-    const result = (courses.data as RawCourse[]).map((raw) => {
-      const modules = [...raw.modules]
-        .sort((a, b) => a.position - b.position)
-        .map((m) => ({
-          title: m.title,
-          lessons: m.lessons
-            .filter((l) => l.published)
-            .sort((a, b) => a.position - b.position)
-            .map((l) => ({
-              title: l.title,
-              duration: format(l.duration_seconds),
-              preview: l.is_preview,
-              id: l.id,
-            })),
-        }));
-      const lessons = modules.flatMap((m) => m.lessons);
-      const seconds = [...raw.modules]
-        .flatMap((m) => m.lessons)
-        .filter((l) => l.published)
-        .reduce((n, l) => n + l.duration_seconds, 0);
-      return {
-        id: raw.id,
-        slug: raw.slug,
-        title: raw.title,
-        shortTitle: raw.description.split(".")[0]?.slice(0, 100) ?? raw.title,
-        summary: raw.description,
-        level: raw.level[0].toUpperCase() + raw.level.slice(1),
-        duration: `${Math.floor(seconds / 3600)}h ${String(Math.round((seconds % 3600) / 60)).padStart(2, "0")}m`,
-        lessons: lessons.length,
-        price: (raw.sale_price_paise ?? raw.price_paise) / 100,
-        accessPeriod: raw.access_period,
-        accessUnit: raw.access_unit,
-        artwork: ["foundations", "structure", "risk"].includes(raw.artwork)
-          ? raw.artwork
-          : "foundations",
-        color: "mint",
-        outcomes: Array.isArray(raw.outcomes)
-          ? raw.outcomes.filter((x): x is string => typeof x === "string")
-          : [],
-        audience: raw.audience,
-        prerequisites: raw.prerequisites,
-        created_at: raw.created_at,
-        version: raw.version ?? 1,
-        status: raw.status ?? "published",
-        modules,
-        thumbnailUrl: raw.thumbnail_url,
-        provisional: false,
-        previewLessonId: lessons.find((l) => l.preview)?.id,
-      };
-    });
-    const doc = content.data?.document as SiteDocument | undefined;
-    return {
-      courses: result,
-      content: doc && typeof doc === "object" ? doc : null,
-      telegramUrl: social(settings.data?.public_telegram_url, ["t.me", "telegram.me"]),
-      instagramUrl: social(settings.data?.public_instagram_url, [
-        "instagram.com",
-        "www.instagram.com",
-      ]),
-      supportEmail:
-        typeof settings.data?.support_email === "string" &&
-        /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)
-          ? settings.data.support_email
-          : null,
-      failed: false,
-    };
-  } catch {
+    return await cachedPublicCatalog();
+  } catch (error) {
+    // Preserve the existing partial response, but never retain a transient settings failure.
+    if (error instanceof PartialCatalogue)
+      return error.catalogue as Awaited<ReturnType<typeof loadPublicCatalog>>;
     console.error("Public course catalogue could not be loaded.");
     return {
       courses: [],
@@ -203,3 +136,103 @@ export const publicCatalog = cache(async function publicCatalog() {
     };
   }
 });
+
+// This function has no session/cookie inputs. Errors escape so failures are never cached.
+async function loadPublicCatalog() {
+  const admin = createAdminClient();
+  const [courses, content, settings] = await Promise.all([
+    admin
+      .from("courses")
+      .select(
+        "id,slug,title,description,level,language,price_paise,sale_price_paise,access_period,access_unit,thumbnail_url,artwork,outcomes,audience,prerequisites,version,created_at,status,modules(title,position,lessons(id,title,position,duration_seconds,is_preview,published))",
+      )
+      .eq("status", "published")
+      .order("created_at")
+      .limit(100),
+    admin.from("site_content").select("document").eq("id", true).maybeSingle(),
+    admin
+      .from("site_settings")
+      .select("public_telegram_url,public_instagram_url,support_email")
+      .eq("id", true)
+      .maybeSingle(),
+  ]);
+  if (courses.error) throw Error("Course catalogue unavailable");
+  const result = (courses.data as RawCourse[]).map((raw) => {
+    const modules = [...raw.modules]
+      .sort((a, b) => a.position - b.position)
+      .map((m) => ({
+        title: m.title,
+        lessons: m.lessons
+          .filter((l) => l.published)
+          .sort((a, b) => a.position - b.position)
+          .map((l) => ({
+            title: l.title,
+            duration: format(l.duration_seconds),
+            preview: l.is_preview,
+            id: l.id,
+          })),
+      }));
+    const lessons = modules.flatMap((m) => m.lessons);
+    const seconds = [...raw.modules]
+      .flatMap((m) => m.lessons)
+      .filter((l) => l.published)
+      .reduce((n, l) => n + l.duration_seconds, 0);
+    return {
+      id: raw.id,
+      slug: raw.slug,
+      title: raw.title,
+      shortTitle: raw.description.split(".")[0]?.slice(0, 100) ?? raw.title,
+      summary: raw.description,
+      level: raw.level[0].toUpperCase() + raw.level.slice(1),
+      duration: `${Math.floor(seconds / 3600)}h ${String(Math.round((seconds % 3600) / 60)).padStart(2, "0")}m`,
+      lessons: lessons.length,
+      price: (raw.sale_price_paise ?? raw.price_paise) / 100,
+      accessPeriod: raw.access_period,
+      accessUnit: raw.access_unit,
+      artwork: ["foundations", "structure", "risk"].includes(raw.artwork)
+        ? raw.artwork
+        : "foundations",
+      color: "mint",
+      outcomes: Array.isArray(raw.outcomes)
+        ? raw.outcomes.filter((x): x is string => typeof x === "string")
+        : [],
+      audience: raw.audience,
+      prerequisites: raw.prerequisites,
+      created_at: raw.created_at,
+      version: raw.version ?? 1,
+      status: raw.status ?? "published",
+      modules,
+      thumbnailUrl: raw.thumbnail_url,
+      provisional: false,
+      previewLessonId: lessons.find((l) => l.preview)?.id,
+    };
+  });
+  const doc = content.data?.document as SiteDocument | undefined;
+  const catalogue = {
+    courses: result,
+    content: doc && typeof doc === "object" ? doc : null,
+    telegramUrl: social(settings.data?.public_telegram_url, ["t.me", "telegram.me"]),
+    instagramUrl: social(settings.data?.public_instagram_url, [
+      "instagram.com",
+      "www.instagram.com",
+    ]),
+    supportEmail:
+      typeof settings.data?.support_email === "string" &&
+      /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(settings.data.support_email)
+        ? settings.data.support_email
+        : null,
+    failed: false,
+  };
+  if (content.error || settings.error) throw new PartialCatalogue(catalogue);
+  return catalogue;
+}
+
+function cachedPublicCatalog() {
+  // Read dynamically: NEXT_PUBLIC_* property accesses may be inlined at build time.
+  // Preview/test processes using the same build must not share another project's data.
+  return unstable_cache(
+    loadPublicCatalog,
+    ["public-catalogue-v2", requireEnv("NEXT_PUBLIC_SUPABASE_URL")],
+    { revalidate: 300, tags: [PUBLIC_CATALOG_TAG] },
+  )();
+}

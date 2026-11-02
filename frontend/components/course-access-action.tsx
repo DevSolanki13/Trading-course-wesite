@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "./auth-provider";
 export function CourseAccessAction({
   slug,
   previewId,
@@ -19,19 +20,14 @@ export function CourseAccessAction({
   isAdmin?: boolean;
 }) {
   const [owned, setOwned] = useState(false);
-  const [isAdminUser, setIsAdminUser] = useState(isAdmin);
+  const { user } = useAuth();
+  const isAdminUser = isAdmin || user?.role === "admin";
   useEffect(() => {
     let live = true;
     fetch(`/api/learning/course?slug=${encodeURIComponent(slug)}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (live && d?.course?.owned === true) setOwned(true);
-      })
-      .catch(() => {});
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (live && d?.user?.role === "admin") setIsAdminUser(true);
       })
       .catch(() => {});
     return () => {

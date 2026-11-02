@@ -51,7 +51,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start -- --port 3100",
+    command: "node backend/scripts/release-preview.mjs 3100",
     url: `${origin}/api/health`,
     reuseExistingServer: false,
     timeout: 60_000,

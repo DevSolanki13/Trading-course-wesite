@@ -1,6 +1,8 @@
 import type { Environment } from "../config/environment.ts";
 /** Local sample data never replaces a configured production database implicitly. */
 export function localDemoEnabled(env: Environment = process.env) {
+  // Deployed previews and production must always use real authentication.
+  if (env.VERCEL || env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview") return false;
   if (env.LOCAL_DEMO === "false") return false;
   if (
     env.NODE_ENV === "production" &&

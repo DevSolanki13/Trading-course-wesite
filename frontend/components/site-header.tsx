@@ -16,23 +16,19 @@ import {
   Gear,
 } from "@phosphor-icons/react";
 import { BullMark } from "./bull-mark";
+import { useAuth } from "./auth-provider";
 
 const baseLinks = [{ href: "/courses", label: "Courses" }];
-
-type HeaderUser = {
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: "admin" | "student" | "support";
-};
 
 import { ThemeToggle } from "./theme-toggle";
 export { ThemeToggle };
 
 export function Brand({ footer = false }: { footer?: boolean }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   return (
     <Link
-      href="/"
+      href={isAdmin ? "/admin" : "/"}
       className={`brand ${footer ? "brand-footer" : ""}`}
       aria-label="GlobalBulls home"
     >
@@ -54,42 +50,11 @@ export function SiteHeader() {
     setPrevPathname(pathname);
     setProfileOpen(false);
   }
-  const [signedIn, setSignedIn] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
-  const [user, setUser] = useState<HeaderUser | null>(null);
+  const { user, clear } = useAuth();
+  const signedIn = !!user;
+  const role = user?.role ?? null;
   const [scrolled, setScrolled] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok) {
-          if (active) {
-            setSignedIn(false);
-            setUser(null);
-            setRole(null);
-          }
-          return;
-        }
-        const data = await res.json();
-        if (active && data.user) {
-          setSignedIn(true);
-          setUser(data.user);
-          setRole(data.user.role ?? null);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setSignedIn(false);
-          setUser(null);
-          setRole(null);
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [pathname]);
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -123,6 +88,14 @@ export function SiteHeader() {
     return () => window.removeEventListener("popstate", close);
   }, []);
 
+  useEffect(() => {
+    if (signedIn && role === "admin") {
+      if (pathname === "/" || pathname === "/courses" || pathname.startsWith("/courses/")) {
+        router.replace("/admin");
+      }
+    }
+  }, [signedIn, role, pathname, router]);
+
   async function logout() {
     try {
       await fetch("/api/auth/logout", {
@@ -130,9 +103,7 @@ export function SiteHeader() {
         headers: { "Content-Type": "application/json" },
         body: "{}",
       });
-      setSignedIn(false);
-      setUser(null);
-      setRole(null);
+      clear();
       setProfileOpen(false);
       router.push("/login");
       router.refresh();
@@ -141,10 +112,10 @@ export function SiteHeader() {
     }
   }
 
-  const navLinks = [
-    ...baseLinks,
-    ...(signedIn && role === "admin" ? [{ href: "/admin", label: "Admin workspace" }] : []),
-  ];
+  const navLinks =
+    signedIn && role === "admin"
+      ? [{ href: "/admin", label: "Admin workspace" }]
+      : baseLinks;
 
   return (
     <>
@@ -177,18 +148,14 @@ export function SiteHeader() {
                   onClick={() => setProfileOpen((prev) => !prev)}
                 >
                   {user.name?.trim().charAt(0).toUpperCase() ||
-                    user.email?.trim().charAt(0).toUpperCase() || (
-                      <UserIcon size={18} />
-                    )}
+                    user.email?.trim().charAt(0).toUpperCase() || <UserIcon size={18} />}
                 </button>
                 {profileOpen && (
                   <div className="profile-dropdown-card" role="menu">
                     <div className="profile-dropdown-header">
                       <div className="profile-dropdown-avatar">
                         {user.name?.trim().charAt(0).toUpperCase() ||
-                          user.email?.trim().charAt(0).toUpperCase() || (
-                            <UserIcon size={20} />
-                          )}
+                          user.email?.trim().charAt(0).toUpperCase() || <UserIcon size={20} />}
                       </div>
                       <div className="profile-dropdown-info">
                         <span className="profile-dropdown-name">{user.name || "User"}</span>
@@ -236,15 +203,15 @@ export function SiteHeader() {
                           >
                             <Receipt size={17} /> Purchase history
                           </Link>
+                          <Link
+                            href="/courses"
+                            className="profile-dropdown-item"
+                            onClick={() => setProfileOpen(false)}
+                          >
+                            <Books size={17} /> Explore courses
+                          </Link>
                         </>
                       )}
-                      <Link
-                        href="/courses"
-                        className="profile-dropdown-item"
-                        onClick={() => setProfileOpen(false)}
-                      >
-                        <Books size={17} /> Explore courses
-                      </Link>
                     </div>
                     <button
                       type="button"
@@ -280,17 +247,20 @@ export function SiteHeader() {
                     Choose a page to visit.
                   </Dialog.Description>
                   <nav aria-label="Mobile navigation">
-                    {[
-                      ...navLinks,
-                      ...(signedIn
-                        ? [
-                            {
-                              href: role === "admin" ? "/admin" : "/dashboard",
-                              label: role === "admin" ? "Admin workspace" : "My courses",
-                            },
-                          ]
-                        : [{ href: "/login", label: "Log in" }]),
-                    ].map((link) => (
+                    {(signedIn && role === "admin"
+                      ? [{ href: "/admin", label: "Admin workspace" }]
+                      : [
+                          ...navLinks,
+                          ...(signedIn
+                            ? [
+                                {
+                                  href: "/dashboard",
+                                  label: "My courses",
+                                },
+                              ]
+                            : [{ href: "/login", label: "Log in" }]),
+                        ]
+                    ).map((link) => (
                       <Dialog.Close key={link.href} asChild>
                         <Link
                           href={link.href}

@@ -56,4 +56,6 @@ export type PurchaseUser = {
   name: string;
   email: string;
   role: "student" | "admin" | "support";
+  phone?: string | null;
+  avatar?: string | null;
 };

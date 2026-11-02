@@ -1,19 +1,32 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { MfaPanel } from "../mfa-panel";
 import { BullMark } from "../bull-mark";
 import { ThemeToggle } from "../theme-toggle";
-import { CourseManager } from "./course-manager";
-import { OverviewPanel } from "./overview-panel";
-import { StudentsPanel } from "./students-panel";
-import { OrdersPanel } from "./orders-panel";
-import { RefundsPanel } from "./refunds-panel";
-import { SettingsPanel } from "./settings-panel";
-import { ContentPanel } from "./content-panel";
-import { CouponsPanel } from "./coupons-panel";
-import { OperationsPanel } from "./operations-panel";
+const CourseManager = dynamic(() =>
+  import("./course-manager").then((module) => module.CourseManager),
+);
+const OverviewPanel = dynamic(() =>
+  import("./overview-panel").then((module) => module.OverviewPanel),
+);
+const StudentsPanel = dynamic(() =>
+  import("./students-panel").then((module) => module.StudentsPanel),
+);
+const OrdersPanel = dynamic(() => import("./orders-panel").then((module) => module.OrdersPanel));
+const RefundsPanel = dynamic(() => import("./refunds-panel").then((module) => module.RefundsPanel));
+const SettingsPanel = dynamic(() =>
+  import("./settings-panel").then((module) => module.SettingsPanel),
+);
+const CouponsPanel = dynamic(() => import("./coupons-panel").then((module) => module.CouponsPanel));
+const AnnouncementsPanel = dynamic(() =>
+  import("./announcements-panel").then((module) => module.AnnouncementsPanel),
+);
+const AdminProfilePanel = dynamic(() =>
+  import("./admin-profile-panel").then((module) => module.AdminProfilePanel),
+);
 import {
   ChartBar,
   Books,
@@ -22,13 +35,21 @@ import {
   ArrowUUpLeft,
   Gear,
   CaretDown,
-  Fingerprint,
   Ticket,
-  NotePencil,
   ClipboardText,
-  List,
+  UserCircle,
+  ShieldCheck,
+  SignOut,
+  MegaphoneSimple,
 } from "@phosphor-icons/react";
-type User = { email: string; role: "admin" | "support" | "student"; aal: string };
+type User = {
+  id?: string;
+  name?: string;
+  email: string;
+  phone?: string | null;
+  role: "admin" | "support" | "student";
+  aal: string;
+};
 const allViews = [
   { id: "overview", label: "Overview", Icon: ChartBar },
   { id: "courses", label: "Courses", Icon: Books, admin: true },
@@ -36,10 +57,9 @@ const allViews = [
   { id: "orders", label: "Orders", Icon: Receipt },
   { id: "refunds", label: "Refunds", Icon: ClipboardText },
   { id: "coupons", label: "Coupons", Icon: Ticket, admin: true },
-  { id: "content", label: "Site content", Icon: NotePencil, admin: true },
+  { id: "announcements", label: "Announcements", Icon: MegaphoneSimple, admin: true },
   { id: "settings", label: "Settings", Icon: Gear, admin: true },
-  { id: "operations", label: "Operations", Icon: List, admin: true },
-  { id: "audit", label: "Audit", Icon: Fingerprint, admin: true },
+  { id: "profile", label: "Profile & account", Icon: UserCircle },
 ] as const;
 export function AdminWorkspace() {
   const router = useRouter();
@@ -47,6 +67,34 @@ export function AdminWorkspace() {
   const [view, setView] = useState<string>("courses");
   const [error, setError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("globalbulls_admin_avatar");
+    }
+    return null;
+  });
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onAvatarUpdate = () => {
+      setAvatarUrl(localStorage.getItem("globalbulls_admin_avatar"));
+    };
+    window.addEventListener("globalbulls_avatar_updated", onAvatarUpdate);
+    return () => window.removeEventListener("globalbulls_avatar_updated", onAvatarUpdate);
+  }, []);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    if (profileMenuOpen) {
+      document.addEventListener("mousedown", onDocClick);
+      return () => document.removeEventListener("mousedown", onDocClick);
+    }
+  }, [profileMenuOpen]);
   async function logout() {
     if (loggingOut) return;
     setLoggingOut(true);
@@ -126,19 +174,29 @@ export function AdminWorkspace() {
       </main>
     );
   const views = allViews.filter((v) => !("admin" in v) || user.role === "admin");
-  const workspaceItems = views.filter((item) => ["overview", "courses", "students"].includes(item.id));
+  const workspaceItems = views.filter((item) =>
+    ["overview", "courses", "students"].includes(item.id),
+  );
   const commerceItems = views.filter((item) => ["orders", "refunds", "coupons"].includes(item.id));
-  const manageItems = views.filter((item) => ["content", "settings", "operations", "audit"].includes(item.id));
+  const manageItems = views.filter((item) =>
+    ["announcements", "settings"].includes(item.id),
+  );
   const renderNavItems = (items: typeof views) =>
     items.map(({ id, label, Icon }) => (
       <button
         key={id}
+        type="button"
+        role="tab"
+        aria-selected={view === id}
         className={view === id ? "is-active" : ""}
         aria-current={view === id ? "page" : undefined}
-        onClick={() => setView(id)}
+        onClick={(e) => {
+          setView(id);
+          e.currentTarget.focus();
+        }}
       >
         <Icon size={18} weight={view === id ? "fill" : "regular"} />
-        {label}
+        <span>{label}</span>
       </button>
     ));
   return (
@@ -146,10 +204,13 @@ export function AdminWorkspace() {
       <aside className="admin-sidebar" aria-label="Admin sections">
         <Link href="/" className="admin-brand" aria-label="GlobalBulls storefront">
           <BullMark className="admin-brand-mark" />
-          <span>Global<span>Bulls</span></span>
+          <span>
+            Global<span>Bulls</span>
+          </span>
         </Link>
         <button type="button" className="admin-workspace-switcher">
-          <span>Admin workspace</span><CaretDown size={16} />
+          <span>Admin workspace</span>
+          <CaretDown size={16} />
         </button>
         <div className="admin-nav-group">
           <span className="admin-nav-label">Workspace</span>
@@ -164,13 +225,111 @@ export function AdminWorkspace() {
           {renderNavItems(manageItems)}
         </div>
         <div className="admin-sidebar-bottom">
-          <Link href="/"><ArrowUUpLeft size={18} /> View storefront</Link>
-          <Link href="/account" className="admin-user-menu" aria-label="Open account settings">
-            <span className="admin-avatar">{user.email.slice(0, 1).toUpperCase()}</span>
-            <span><strong>Admin</strong><small>{loggingOut ? "Signing out…" : "Edit account"}</small></span>
-            <CaretDown size={15} />
+          <Link href="/">
+            <ArrowUUpLeft size={18} /> View storefront
           </Link>
-          <button type="button" className="admin-signout" disabled={loggingOut} onClick={() => void logout()}>{loggingOut ? "Signing out…" : "Sign out"}</button>
+          <div className="admin-user-menu-container" ref={profileMenuRef}>
+            <button
+              type="button"
+              className={`admin-user-menu ${profileMenuOpen || view === "profile" ? "is-open" : ""}`}
+              onClick={() => setProfileMenuOpen((prev) => !prev)}
+              aria-label="Open profile settings menu"
+              aria-expanded={profileMenuOpen}
+            >
+              <span className="admin-avatar">
+                {avatarUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={avatarUrl} alt="Avatar" />
+                ) : (
+                  (user.name?.trim().charAt(0) || user.email.slice(0, 1)).toUpperCase()
+                )}
+              </span>
+              <span>
+                <strong>{user.name || "Admin"}</strong>
+                <small>{loggingOut ? "Signing out…" : "Edit account"}</small>
+              </span>
+              <CaretDown
+                size={15}
+                style={{
+                  transform: profileMenuOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.15s ease",
+                }}
+              />
+            </button>
+
+            {profileMenuOpen && (
+              <div className="admin-user-popover" role="menu">
+                <div className="admin-popover-header">
+                  <div className="admin-avatar">
+                    {avatarUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={avatarUrl} alt="Avatar" />
+                    ) : (
+                      (user.name?.trim().charAt(0) || user.email.slice(0, 1)).toUpperCase()
+                    )}
+                  </div>
+                  <div className="admin-popover-info">
+                    <span className="admin-popover-name">{user.name || "Administrator"}</span>
+                    <span className="admin-popover-email">{user.email}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className={`admin-popover-item ${view === "profile" ? "is-active" : ""}`}
+                  onClick={() => {
+                    setView("profile");
+                    setProfileMenuOpen(false);
+                  }}
+                >
+                  <UserCircle size={16} />
+                  <span>Edit profile & credentials</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`admin-popover-item ${view === "settings" ? "is-active" : ""}`}
+                  onClick={() => {
+                    setView("settings");
+                    setProfileMenuOpen(false);
+                  }}
+                >
+                  <Gear size={16} />
+                  <span>Platform settings</span>
+                </button>
+
+                <Link
+                  href="/admin/security"
+                  className="admin-popover-item"
+                  onClick={() => setProfileMenuOpen(false)}
+                >
+                  <ShieldCheck size={16} />
+                  <span>Team security & 2FA</span>
+                </Link>
+
+                <div className="admin-popover-divider" />
+
+                <button
+                  type="button"
+                  className="admin-popover-item"
+                  disabled={loggingOut}
+                  onClick={() => void logout()}
+                  style={{ color: "#ef4444" }}
+                >
+                  <SignOut size={16} />
+                  <span>{loggingOut ? "Signing out…" : "Sign out"}</span>
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            className="admin-signout"
+            disabled={loggingOut}
+            onClick={() => void logout()}
+          >
+            {loggingOut ? "Signing out…" : "Sign out"}
+          </button>
         </div>
       </aside>
       <div className="admin-content">
@@ -191,10 +350,16 @@ export function AdminWorkspace() {
           {view === "orders" && <OrdersPanel role={user.role as "admin" | "support"} />}
           {view === "refunds" && <RefundsPanel role={user.role as "admin" | "support"} />}
           {view === "coupons" && user.role === "admin" && <CouponsPanel />}
-          {view === "content" && user.role === "admin" && <ContentPanel />}
+          {view === "announcements" && user.role === "admin" && <AnnouncementsPanel />}
           {view === "settings" && user.role === "admin" && <SettingsPanel />}
-          {view === "operations" && user.role === "admin" && <OperationsPanel view="operations" />}
-          {view === "audit" && user.role === "admin" && <OperationsPanel view="audit" />}
+          {view === "profile" && (
+            <AdminProfilePanel
+              user={user}
+              onProfileUpdated={(updated) => {
+                setUser((prev) => (prev ? { ...prev, ...updated } : prev));
+              }}
+            />
+          )}
         </div>
       </div>
     </main>

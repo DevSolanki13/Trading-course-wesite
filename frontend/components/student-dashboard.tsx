@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -20,10 +21,15 @@ import {
   ShieldCheck,
   Question,
   GraduationCap,
+  MegaphoneSimple,
+  PushPin,
+  X,
 } from "@phosphor-icons/react";
 import { BullMark } from "./bull-mark";
 import { CourseArtwork } from "./course-artwork";
-import { PurchasePlayer } from "./purchase-player";
+const PurchasePlayer = dynamic(() =>
+  import("./purchase-player").then((module) => module.PurchasePlayer),
+);
 import { ThemeToggle } from "./theme-toggle";
 import type {
   PurchaseUser,
@@ -31,6 +37,7 @@ import type {
   PurchaseOrder,
   PurchaseLessonContent,
 } from "../../shared/purchase";
+import type { Announcement } from "../../shared/announcements";
 import { accessExpiryLabel } from "../../shared/course-access";
 
 interface StudentDashboardProps {
@@ -38,6 +45,7 @@ interface StudentDashboardProps {
   courses: PurchaseCourse[];
   allCourses?: PurchaseCourse[];
   orders: PurchaseOrder[];
+  announcements?: Announcement[];
   initialView?: "courses" | "explore" | "billing" | "account";
   ordersOnly?: boolean;
   local?: boolean;
@@ -50,6 +58,7 @@ export function StudentDashboard({
   courses,
   allCourses = [],
   orders,
+  announcements = [],
   initialView = "courses",
   ordersOnly = false,
   local = false,
@@ -65,6 +74,23 @@ export function StudentDashboard({
   const [exploreLevel, setExploreLevel] = useState("all");
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // Admin Announcements state
+  const [announcementsList, setAnnouncementsList] = useState<Announcement[]>(announcements);
+  const [announcementsCollapsed, setAnnouncementsCollapsed] = useState(false);
+  const [activeAnnouncementIndex, setActiveAnnouncementIndex] = useState(0);
+
+  useEffect(() => {
+    // If not passed initially or to ensure fresh data, fetch active announcements
+    fetch("/api/announcements", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.announcements && Array.isArray(data.announcements)) {
+          setAnnouncementsList(data.announcements);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Active playing course state (when video player is open in the main area)
   const [activeCourseSlug, setActiveCourseSlug] = useState<string | null>(
     initialCourseSlug || null,
@@ -73,6 +99,53 @@ export function StudentDashboard({
   const [activeLessonContent, setActiveLessonContent] = useState<PurchaseLessonContent | null>(
     null,
   );
+
+  const handleSelectView = (
+    targetView: "courses" | "explore" | "billing" | "account",
+    event?: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    setView(targetView);
+    if (targetView === "courses") {
+      handleCloseCourse();
+    } else {
+      setActiveCourseSlug(null);
+      setActiveLessonId(null);
+    }
+    if (typeof window !== "undefined") {
+      const url = targetView === "courses" ? "/dashboard" : `/dashboard?view=${targetView}`;
+      window.history.replaceState(null, "", url);
+    }
+    event?.currentTarget.focus();
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      const urlView = params.get("view") || params.get("tab");
+      const urlCourse = params.get("course");
+      const urlLesson = params.get("lesson");
+      if (
+        urlView === "explore" ||
+        urlView === "billing" ||
+        urlView === "account" ||
+        urlView === "courses"
+      ) {
+        setView(urlView);
+      } else if (!urlCourse) {
+        setView("courses");
+      }
+      if (urlCourse) {
+        setActiveCourseSlug(urlCourse);
+        setActiveLessonId(urlLesson || null);
+      } else {
+        setActiveCourseSlug(null);
+        setActiveLessonId(null);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const handleOpenCourse = (slug: string, lessonId?: string | null) => {
     setActiveCourseSlug(slug);
@@ -264,68 +337,75 @@ export function StudentDashboard({
         </Link>
 
         {/* Workspace pill */}
-        <div className="admin-workspace-switcher" style={{ cursor: "default" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <GraduationCap size={18} color="var(--accent, #00df8f)" />
-            <strong>Student workspace</strong>
-          </span>
-          <span className="student-role-pill">
+        <div className="student-workspace-switcher" role="status" aria-label="Current workspace: Student">
+          <div className="student-workspace-info">
+            <GraduationCap size={17} weight="duotone" color="var(--accent, #00df8f)" />
+            <span>Student workspace</span>
+          </div>
+          <span className="student-workspace-status">
             <i />
             Active
           </span>
         </div>
 
         {/* Navigation Group: STUDY */}
-        <div className="admin-nav-group">
+        <div className="admin-nav-group" role="tablist" aria-label="Study navigation">
           <span className="admin-nav-label">Study</span>
           <button
             type="button"
+            role="tab"
+            aria-selected={view === "courses"}
             className={view === "courses" ? "is-active" : ""}
-            onClick={() => {
-              setView("courses");
-              handleCloseCourse();
-            }}
+            onClick={(e) => handleSelectView("courses", e)}
             aria-current={view === "courses" ? "page" : undefined}
           >
             <Books size={18} weight={view === "courses" ? "fill" : "regular"} />
-            My courses ({enrolledCourses.length})
+            <span>My courses</span>
+            <span className="student-nav-badge">({enrolledCourses.length})</span>
           </button>
         </div>
 
         {/* Navigation Group: DISCOVER */}
-        <div className="admin-nav-group">
+        <div className="admin-nav-group" role="tablist" aria-label="Discover navigation">
           <span className="admin-nav-label">Discover</span>
           <button
             type="button"
+            role="tab"
+            aria-selected={view === "explore"}
             className={view === "explore" ? "is-active" : ""}
-            onClick={() => setView("explore")}
+            onClick={(e) => handleSelectView("explore", e)}
             aria-current={view === "explore" ? "page" : undefined}
           >
             <Compass size={18} weight={view === "explore" ? "fill" : "regular"} />
-            Explore courses
+            <span>Explore courses</span>
           </button>
         </div>
 
         {/* Navigation Group: ACCOUNT */}
-        <div className="admin-nav-group">
+        <div className="admin-nav-group" role="tablist" aria-label="Account navigation">
           <span className="admin-nav-label">Account</span>
           <button
             type="button"
+            role="tab"
+            aria-selected={view === "billing"}
             className={view === "billing" ? "is-active" : ""}
-            onClick={() => setView("billing")}
+            onClick={(e) => handleSelectView("billing", e)}
             aria-current={view === "billing" ? "page" : undefined}
           >
             <Receipt size={18} weight={view === "billing" ? "fill" : "regular"} />
-            Billing & receipts ({orders.length})
+            <span>Billing & receipts</span>
+            <span className="student-nav-badge">({orders.length})</span>
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={view === "account"}
             className={view === "account" ? "is-active" : ""}
-            onClick={() => setView("account")}
+            onClick={(e) => handleSelectView("account", e)}
             aria-current={view === "account" ? "page" : undefined}
           >
             <UserCircle size={18} weight={view === "account" ? "fill" : "regular"} />
-            Profile & settings
+            <span>Profile & settings</span>
           </button>
         </div>
 
@@ -337,7 +417,7 @@ export function StudentDashboard({
           <button
             type="button"
             className="admin-user-menu"
-            onClick={() => setView("account")}
+            onClick={(e) => handleSelectView("account", e)}
             aria-label="Open profile settings"
           >
             <span className="admin-avatar">
@@ -370,7 +450,7 @@ export function StudentDashboard({
             <button
               type="button"
               className="student-breadcrumb-link"
-              onClick={() => setView("courses")}
+              onClick={() => handleSelectView("courses")}
             >
               Student
             </button>
@@ -440,310 +520,501 @@ export function StudentDashboard({
                 />
               </div>
             ) : (
-              <div>
-              {/* Greeting Head */}
-              <div className="student-greeting-head">
-                <div>
-                  <h1>My courses</h1>
-                  <p>
-                    Welcome back, {user.name.split(" ")[0]}. Track your progress, resume modules, and access your enrolled curriculum.
-                  </p>
-                </div>
-                <div className="student-header-actions">
-                  <button
-                    type="button"
-                    className="button button-primary button-sm"
-                    onClick={() => setView("explore")}
-                  >
-                    <Compass size={16} />
-                    <span>Explore catalogue</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* 3 KPI Metrics */}
-              <div className="student-metrics-grid">
-                <div className="student-metric-card">
-                  <div className="student-metric-card-top">
-                    <span>Enrolled courses</span>
-                    <div className="student-metric-icon">
-                      <Books size={18} />
+              <div className="student-dashboard-layout">
+                {/* PRIMARY STAGE: Greeting, Continue Learning, All Courses */}
+                <div className="student-main-stage">
+                  {/* Greeting Head */}
+                  <div className="student-greeting-head">
+                    <div>
+                      <h1>My courses</h1>
+                      <p>
+                        Welcome back, {user.name.split(" ")[0]}. Track your progress, resume modules,
+                        and access your enrolled curriculum.
+                      </p>
                     </div>
-                  </div>
-                  <strong>{stats.totalEnrolled}</strong>
-                  <span className="student-metric-subtext">
-                    {stats.activeAccessCount} active access
-                  </span>
-                </div>
-
-                <div className="student-metric-card">
-                  <div className="student-metric-card-top">
-                    <span>Average progress</span>
-                    <div className="student-metric-icon">
-                      <CheckCircle size={18} />
-                    </div>
-                  </div>
-                  <strong>{stats.avgProgress}%</strong>
-                  <span className="student-metric-subtext">Overall completion rate</span>
-                </div>
-
-                <div className="student-metric-card">
-                  <div className="student-metric-card-top">
-                    <span>Active validity</span>
-                    <div className="student-metric-icon">
-                      <Clock size={18} />
-                    </div>
-                  </div>
-                  <strong>{stats.activeAccessCount > 0 ? "Active" : "None"}</strong>
-                  <span className="student-metric-subtext">Confirmed student access</span>
-                </div>
-              </div>
-
-              {/* Featured "Continue Learning" Hero Card */}
-              {featuredCourse && (
-                <div className="student-hero-banner">
-                  <div className="student-hero-content">
-                    <span className="student-hero-tag">
-                      <i />
-                      In progress · Continue where you left off
-                    </span>
-                    <h2>{featuredCourse.title}</h2>
-                    {featuredNextLesson && (
-                      <div className="student-hero-lesson-label">
-                        <PlayCircle size={16} color="var(--accent, #00df8f)" />
-                        <span>Next up: {featuredNextLesson.title}</span>
-                      </div>
-                    )}
-                    <div className="student-hero-progress-box">
-                      <div className="student-hero-progress-info">
-                        <span>Course progress</span>
-                        <strong>{featuredCourse.progress}% completed</strong>
-                      </div>
-                      <div className="student-progress-bar">
-                        <div
-                          className="student-progress-fill"
-                          style={{ width: `${featuredCourse.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                    <div className="student-hero-actions">
-                      {featuredCourse.owned ? (
-                        <button
-                          type="button"
-                          className="button button-primary"
-                          onClick={() => {
-                            handleOpenCourse(featuredCourse.slug, featuredNextLesson?.id || null);
-                          }}
-                        >
-                          <PlayCircle size={18} />
-                          <span>
-                            {featuredCourse.progress === 100
-                              ? "Review course material"
-                              : featuredCourse.progress > 0
-                                ? "Resume lesson"
-                                : "Start course"}
-                          </span>
-                        </button>
-                      ) : (
-                        <Link
-                          className="button button-primary"
-                          href={`/checkout/${featuredCourse.slug}`}
-                        >
-                          <PlayCircle size={18} />
-                          <span>Renew course access</span>
-                        </Link>
-                      )}
+                    <div className="student-header-actions">
+                      <button
+                        type="button"
+                        className="button button-primary button-sm"
+                        onClick={() => handleSelectView("explore")}
+                      >
+                        <Compass size={16} />
+                        <span>Explore catalogue</span>
+                      </button>
                     </div>
                   </div>
 
-                  <div
-                    className="student-hero-thumb-side"
-                    style={{ cursor: featuredCourse.owned ? "pointer" : "default" }}
-                    onClick={() => {
-                      if (featuredCourse.owned) {
-                        handleOpenCourse(featuredCourse.slug, featuredNextLesson?.id || null);
-                      }
-                    }}
-                  >
-                    {featuredCourse.thumbnail ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={featuredCourse.thumbnail} alt={featuredCourse.title} />
-                    ) : (
-                      <CourseArtwork
-                        kind={
-                          featuredCourse.slug.includes("price")
-                            ? "structure"
-                            : featuredCourse.slug.includes("risk")
-                              ? "risk"
-                              : "foundations"
-                        }
-                      />
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Enrolled Courses Section with Sub-filters */}
-              <div className="student-section-block">
-                <div className="student-section-title-row">
-                  <h3>All enrolled courses</h3>
-                  <span>{enrolledCourses.length} total enrolled</span>
-                </div>
-
-                {/* Sub-filter pills */}
-                <div className="student-filter-pills">
-                  <button
-                    type="button"
-                    className={`student-pill-btn ${courseFilter === "all" ? "is-active" : ""}`}
-                    onClick={() => setCourseFilter("all")}
-                  >
-                    All courses ({enrolledCourses.length})
-                  </button>
-                  <button
-                    type="button"
-                    className={`student-pill-btn ${
-                      courseFilter === "in_progress" ? "is-active" : ""
-                    }`}
-                    onClick={() => setCourseFilter("in_progress")}
-                  >
-                    In progress ({enrolledCourses.filter((c) => c.progress > 0 && c.progress < 100).length})
-                  </button>
-                  <button
-                    type="button"
-                    className={`student-pill-btn ${courseFilter === "completed" ? "is-active" : ""}`}
-                    onClick={() => setCourseFilter("completed")}
-                  >
-                    Completed ({enrolledCourses.filter((c) => c.progress === 100).length})
-                  </button>
-                </div>
-
-                {filteredCourses.length ? (
-                  <div className="student-course-grid">
-                    {filteredCourses.map((course) => {
-                      const allLessons = course.modules.flatMap((m) => m.lessons);
-                      const completedLessons = allLessons.filter((l) => l.completed).length;
-                      const next = allLessons.find((l) => !l.completed) || allLessons[0];
-                      const isExpired = !course.owned;
-
-                      return (
-                        <article className="student-course-card" key={course.id}>
-                          <div
-                            className="student-course-card-thumb"
-                            style={{ cursor: isExpired ? "default" : "pointer" }}
-                            onClick={() => {
-                              if (!isExpired) {
-                                handleOpenCourse(course.slug, next?.id || null);
-                              }
-                            }}
-                          >
-                            {course.thumbnail ? (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img src={course.thumbnail} alt={course.title} />
-                            ) : (
-                              <CourseArtwork
-                                kind={
-                                  course.slug.includes("price")
-                                    ? "structure"
-                                    : course.slug.includes("risk")
-                                      ? "risk"
-                                      : "foundations"
-                                }
-                              />
-                            )}
-                            <span
-                              className={`student-course-status-badge ${
-                                isExpired ? "status-expired" : "status-active"
-                              }`}
-                            >
-                              {isExpired ? "Access expired" : "Active access"}
-                            </span>
+                  {/* Featured "Continue Learning" Hero Card */}
+                  {featuredCourse && (
+                    <div className="student-hero-banner">
+                      <div className="student-hero-content">
+                        <span className="student-hero-tag">
+                          <i />
+                          In progress · Continue where you left off
+                        </span>
+                        <h2>{featuredCourse.title}</h2>
+                        {featuredNextLesson && (
+                          <div className="student-hero-lesson-label">
+                            <PlayCircle size={16} color="var(--accent, #00df8f)" />
+                            <span>Next up: {featuredNextLesson.title}</span>
                           </div>
-
-                          <div className="student-course-card-body">
-                            <h4
-                              style={{ cursor: isExpired ? "default" : "pointer" }}
+                        )}
+                        <div className="student-hero-progress-box">
+                          <div className="student-hero-progress-info">
+                            <span>Course progress</span>
+                            <strong>{featuredCourse.progress}% completed</strong>
+                          </div>
+                          <div className="student-progress-bar">
+                            <div
+                              className="student-progress-fill"
+                              style={{ width: `${featuredCourse.progress}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="student-hero-actions">
+                          {featuredCourse.owned ? (
+                            <button
+                              type="button"
+                              className="button button-primary"
                               onClick={() => {
-                                if (!isExpired) {
-                                handleOpenCourse(course.slug, next?.id || null);
-                              }
-                            }}
-                          >
-                              {course.title}
-                            </h4>
-                            <div className="student-course-meta-row">
+                                handleOpenCourse(featuredCourse.slug, featuredNextLesson?.id || null);
+                              }}
+                            >
+                              <PlayCircle size={18} />
                               <span>
-                                <Clock size={14} />
-                                {course.accessExpiresAt
-                                  ? accessExpiryLabel(course.accessExpiresAt)
-                                  : "Unlimited"}
+                                {featuredCourse.progress === 100
+                                  ? "Review course material"
+                                  : featuredCourse.progress > 0
+                                    ? "Resume lesson"
+                                    : "Start course"}
                               </span>
-                              <span>·</span>
-                              <span>{completedLessons} / {allLessons.length} lessons</span>
-                            </div>
+                            </button>
+                          ) : (
+                            <Link
+                              className="button button-primary"
+                              href={`/checkout/${featuredCourse.slug}`}
+                            >
+                              <PlayCircle size={18} />
+                              <span>Renew course access</span>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
 
-                            <div className="student-course-progress-wrap">
-                              <div className="student-course-progress-label">
-                                <span>Overall completion</span>
-                                <strong>{course.progress}%</strong>
-                              </div>
-                              <div className="student-progress-bar">
-                                <div
-                                  className="student-progress-fill"
-                                  style={{ width: `${course.progress}%` }}
-                                />
-                              </div>
-                            </div>
+                      <div
+                        className="student-hero-thumb-side"
+                        style={{ cursor: featuredCourse.owned ? "pointer" : "default" }}
+                        onClick={() => {
+                          if (featuredCourse.owned) {
+                            handleOpenCourse(featuredCourse.slug, featuredNextLesson?.id || null);
+                          }
+                        }}
+                      >
+                        {featuredCourse.thumbnail ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={featuredCourse.thumbnail} alt={featuredCourse.title} />
+                        ) : (
+                          <CourseArtwork
+                            kind={
+                              featuredCourse.slug.includes("price")
+                                ? "structure"
+                                : featuredCourse.slug.includes("risk")
+                                  ? "risk"
+                                  : "foundations"
+                            }
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
 
-                            <div className="student-course-card-footer">
-                              {isExpired ? (
-                                <Link
-                                  className="button button-primary button-sm"
-                                  style={{ width: "100%", justifyContent: "center" }}
-                                  href={`/checkout/${course.slug}`}
-                                >
-                                  Renew course access
-                                </Link>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="button button-primary button-sm"
-                                  style={{ width: "100%", justifyContent: "center" }}
-                                  onClick={() => {
+                  {/* Enrolled Courses Section with Sub-filters */}
+                  <div className="student-section-block">
+                    <div className="student-section-title-row">
+                      <h3>All enrolled courses</h3>
+                      <span>{enrolledCourses.length} total enrolled</span>
+                    </div>
+
+                    {/* Sub-filter pills */}
+                    <div className="student-filter-pills">
+                      <button
+                        type="button"
+                        className={`student-pill-btn ${courseFilter === "all" ? "is-active" : ""}`}
+                        onClick={() => setCourseFilter("all")}
+                      >
+                        All courses ({enrolledCourses.length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`student-pill-btn ${
+                          courseFilter === "in_progress" ? "is-active" : ""
+                        }`}
+                        onClick={() => setCourseFilter("in_progress")}
+                      >
+                        In progress (
+                        {enrolledCourses.filter((c) => c.progress > 0 && c.progress < 100).length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`student-pill-btn ${courseFilter === "completed" ? "is-active" : ""}`}
+                        onClick={() => setCourseFilter("completed")}
+                      >
+                        Completed ({enrolledCourses.filter((c) => c.progress === 100).length})
+                      </button>
+                    </div>
+
+                    {filteredCourses.length ? (
+                      <div className="student-course-grid">
+                        {filteredCourses.map((course) => {
+                          const allLessons = course.modules.flatMap((m) => m.lessons);
+                          const completedLessons = allLessons.filter((l) => l.completed).length;
+                          const next = allLessons.find((l) => !l.completed) || allLessons[0];
+                          const isExpired = !course.owned;
+
+                          return (
+                            <article className="student-course-card" key={course.id}>
+                              <div
+                                className="student-course-card-thumb"
+                                style={{ cursor: isExpired ? "default" : "pointer" }}
+                                onClick={() => {
+                                  if (!isExpired) {
                                     handleOpenCourse(course.slug, next?.id || null);
+                                  }
+                                }}
+                              >
+                                {course.thumbnail ? (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img src={course.thumbnail} alt={course.title} />
+                                ) : (
+                                  <CourseArtwork
+                                    kind={
+                                      course.slug.includes("price")
+                                        ? "structure"
+                                        : course.slug.includes("risk")
+                                          ? "risk"
+                                          : "foundations"
+                                    }
+                                  />
+                                )}
+                                <span
+                                  className={`student-course-status-badge ${
+                                    isExpired ? "status-expired" : "status-active"
+                                  }`}
+                                >
+                                  {isExpired ? "Access expired" : "Active access"}
+                                </span>
+                              </div>
+
+                              <div className="student-course-card-body">
+                                <h4
+                                  style={{ cursor: isExpired ? "default" : "pointer" }}
+                                  onClick={() => {
+                                    if (!isExpired) {
+                                      handleOpenCourse(course.slug, next?.id || null);
+                                    }
                                   }}
                                 >
-                                  <PlayCircle size={15} />
+                                  {course.title}
+                                </h4>
+                                <div className="student-course-meta-row">
                                   <span>
-                                    {course.progress === 100
-                                      ? "Review course"
-                                      : course.progress > 0
-                                        ? "Continue learning"
-                                        : "Start course"}
+                                    <Clock size={14} />
+                                    {course.accessExpiresAt
+                                      ? accessExpiryLabel(course.accessExpiresAt)
+                                      : "Unlimited"}
                                   </span>
+                                  <span>·</span>
+                                  <span>
+                                    {completedLessons} / {allLessons.length} lessons
+                                  </span>
+                                </div>
+
+                                <div className="student-course-progress-wrap">
+                                  <div className="student-course-progress-label">
+                                    <span>Overall completion</span>
+                                    <strong>{course.progress}%</strong>
+                                  </div>
+                                  <div className="student-progress-bar">
+                                    <div
+                                      className="student-progress-fill"
+                                      style={{ width: `${course.progress}%` }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="student-course-card-footer">
+                                  {isExpired ? (
+                                    <Link
+                                      className="button button-primary button-sm"
+                                      style={{ width: "100%", justifyContent: "center" }}
+                                      href={`/checkout/${course.slug}`}
+                                    >
+                                      Renew course access
+                                    </Link>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="button button-primary button-sm"
+                                      style={{ width: "100%", justifyContent: "center" }}
+                                      onClick={() => {
+                                        handleOpenCourse(course.slug, next?.id || null);
+                                      }}
+                                    >
+                                      <PlayCircle size={15} />
+                                      <span>
+                                        {course.progress === 100
+                                          ? "Review course"
+                                          : course.progress > 0
+                                            ? "Continue learning"
+                                            : "Start course"}
+                                      </span>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="student-empty-state">
+                        <h3>No courses matching this filter</h3>
+                        <p>
+                          You can change the tab filter or browse all courses in the platform
+                          catalogue.
+                        </p>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          onClick={() => setCourseFilter("all")}
+                        >
+                          Show all enrolled courses
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* COMPANION RAIL: Fills the empty widescreen space */}
+                <aside className="student-companion-rail">
+                  {/* Admin Announcement Broadcast */}
+                  {announcementsList.length > 0 && (
+                    <div className="student-announcements-wrapper">
+                      {(() => {
+                        const current =
+                          announcementsList[activeAnnouncementIndex] || announcementsList[0];
+                        if (!current) return null;
+
+                        if (announcementsCollapsed) {
+                          return (
+                            <div
+                              className="student-announcement-collapsed-bar"
+                              onClick={() => setAnnouncementsCollapsed(false)}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") setAnnouncementsCollapsed(false);
+                              }}
+                            >
+                              <div className="collapsed-left">
+                                <span className="live-pulse-dot" />
+                                <MegaphoneSimple size={16} weight="fill" color="var(--accent, #00df8f)" />
+                                <strong>Admin Announcement:</strong>
+                                <span className="collapsed-title">{current.title}</span>
+                              </div>
+                              <button
+                                type="button"
+                                className="collapsed-action"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAnnouncementsCollapsed(false);
+                                }}
+                              >
+                                View
+                              </button>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div
+                            className={`student-announcement-card priority-${current.priority}`}
+                            role="region"
+                            aria-label="Admin Announcement"
+                          >
+                            <div className="announcement-header">
+                              <div className="announcement-badge-cluster">
+                                <span className="announcement-brand-badge">
+                                  <span className="live-pulse-dot" />
+                                  <MegaphoneSimple size={14} weight="fill" />
+                                  ADMIN ANNOUNCEMENT
+                                </span>
+                                <span className="announcement-category-tag">{current.category}</span>
+                                {current.pinned && (
+                                  <span className="announcement-pinned-tag">
+                                    <PushPin size={12} weight="fill" /> Pinned
+                                  </span>
+                                )}
+                                {current.priority === "urgent" && (
+                                  <span className="announcement-priority-tag urgent">⚡ Urgent</span>
+                                )}
+                                {current.priority === "important" && (
+                                  <span className="announcement-priority-tag important">⭐ Important</span>
+                                )}
+                              </div>
+
+                              <div className="announcement-header-right">
+                                {announcementsList.length > 1 && (
+                                  <div className="announcement-pagination">
+                                    <button
+                                      type="button"
+                                      disabled={activeAnnouncementIndex === 0}
+                                      onClick={() =>
+                                        setActiveAnnouncementIndex((prev) => Math.max(0, prev - 1))
+                                      }
+                                      aria-label="Previous announcement"
+                                    >
+                                      ‹
+                                    </button>
+                                    <span>
+                                      {activeAnnouncementIndex + 1} of {announcementsList.length}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      disabled={activeAnnouncementIndex >= announcementsList.length - 1}
+                                      onClick={() =>
+                                        setActiveAnnouncementIndex((prev) =>
+                                          Math.min(announcementsList.length - 1, prev + 1)
+                                        )
+                                      }
+                                      aria-label="Next announcement"
+                                    >
+                                      ›
+                                    </button>
+                                  </div>
+                                )}
+                                <button
+                                  type="button"
+                                  className="announcement-dismiss-btn"
+                                  onClick={() => setAnnouncementsCollapsed(true)}
+                                  aria-label="Minimize announcement"
+                                  title="Minimize announcement"
+                                >
+                                  <X size={15} />
                                 </button>
-                              )}
+                              </div>
+                            </div>
+
+                            <div className="announcement-body">
+                              <h3>{current.title}</h3>
+                              <p>{current.content}</p>
+                            </div>
+
+                            <div className="announcement-footer">
+                              <span className="announcement-author-info">
+                                <ShieldCheck size={14} weight="fill" color="var(--accent, #00df8f)" />
+                                Broadcasted by {current.author_name || "Admin"}
+                              </span>
+                              <span className="announcement-date">
+                                {new Date(current.created_at).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </span>
                             </div>
                           </div>
-                        </article>
-                      );
-                    })}
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Learning Vitals / Metrics Tile Card */}
+                  <div className="student-rail-metrics-card">
+                    <div className="student-rail-card-head">
+                      <h4>Learning Vitals</h4>
+                      <span>Overview</span>
+                    </div>
+
+                    <div className="student-rail-metrics-grid">
+                      <div className="student-rail-metric-tile">
+                        <div className="student-metric-icon">
+                          <Books size={16} />
+                        </div>
+                        <div>
+                          <strong>{stats.totalEnrolled}</strong>
+                          <small>Enrolled courses</small>
+                        </div>
+                      </div>
+
+                      <div className="student-rail-metric-tile">
+                        <div className="student-metric-icon">
+                          <CheckCircle size={16} />
+                        </div>
+                        <div>
+                          <strong>{stats.avgProgress}%</strong>
+                          <small>Avg. completion</small>
+                        </div>
+                      </div>
+
+                      <div className="student-rail-metric-tile full-width">
+                        <div className="student-metric-icon">
+                          <Clock size={16} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <strong>{stats.activeAccessCount > 0 ? "Active Access" : "Expired"}</strong>
+                            <span className="student-role-pill" style={{ padding: "2px 8px", fontSize: "10px" }}>
+                              <i /> Confirmed
+                            </span>
+                          </div>
+                          <small>{stats.activeAccessCount} course license(s) active</small>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="student-empty-state">
-                    <h3>No courses matching this filter</h3>
-                    <p>You can change the tab filter or browse all courses in the platform catalogue.</p>
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      onClick={() => setCourseFilter("all")}
-                    >
-                      Show all enrolled courses
-                    </button>
+
+                  {/* Study Quick Tools Card */}
+                  <div className="student-rail-card">
+                    <div className="student-rail-card-head">
+                      <h4>Study Resources</h4>
+                      <span>Quick access</span>
+                    </div>
+                    <ul className="student-rail-links">
+                      <li>
+                        <button
+                          type="button"
+                          className="student-rail-link-btn"
+                          onClick={() => handleSelectView("explore")}
+                        >
+                          <Compass size={16} color="var(--accent, #00df8f)" />
+                          <span>Browse platform catalogue</span>
+                          <ArrowRight size={14} className="rail-arrow" />
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
+                          className="student-rail-link-btn"
+                          onClick={() => handleSelectView("billing")}
+                        >
+                          <Receipt size={16} color="var(--accent, #00df8f)" />
+                          <span>View tax receipts & invoices</span>
+                          <ArrowRight size={14} className="rail-arrow" />
+                        </button>
+                      </li>
+                      <li>
+                        <Link href="/contact?topic=learning" className="student-rail-link-btn">
+                          <Question size={16} color="var(--accent, #00df8f)" />
+                          <span>Contact instructor / mentor desk</span>
+                          <ArrowRight size={14} className="rail-arrow" />
+                        </Link>
+                      </li>
+                    </ul>
                   </div>
-                )}
+                </aside>
               </div>
-            </div>
-          ))}
+            ))}
 
           {/* =====================================================================
               VIEW: EXPLORE COURSES
@@ -753,7 +1024,9 @@ export function StudentDashboard({
               <div className="student-greeting-head">
                 <div>
                   <h1>Explore courses</h1>
-                  <p>Discover structured trading programs, candlestick analysis, and risk management.</p>
+                  <p>
+                    Discover structured trading programs, candlestick analysis, and risk management.
+                  </p>
                 </div>
               </div>
 
@@ -768,10 +1041,7 @@ export function StudentDashboard({
                     placeholder="Search courses by topic, title or keywords…"
                   />
                 </div>
-                <select
-                  value={exploreLevel}
-                  onChange={(e) => setExploreLevel(e.target.value)}
-                >
+                <select value={exploreLevel} onChange={(e) => setExploreLevel(e.target.value)}>
                   <option value="all">All levels</option>
                   <option value="beginner">Beginner</option>
                   <option value="intermediate">Intermediate</option>
@@ -816,7 +1086,9 @@ export function StudentDashboard({
                           <ul className="student-explore-features">
                             <li>
                               <Check size={14} color="var(--accent, #00df8f)" />
-                              <span>{c.accessPeriod} {c.accessUnit} full access</span>
+                              <span>
+                                {c.accessPeriod} {c.accessUnit} full access
+                              </span>
                             </li>
                             <li>
                               <Check size={14} color="var(--accent, #00df8f)" />
@@ -837,7 +1109,7 @@ export function StudentDashboard({
                                 className="button button-secondary"
                                 style={{ width: "100%", justifyContent: "center" }}
                                 onClick={() => {
-                                  setView("courses");
+                                  handleSelectView("courses");
                                   const firstLesson =
                                     c.modules.flatMap((m) => m.lessons).find((l) => !l.completed) ||
                                     c.modules[0]?.lessons[0];
@@ -924,7 +1196,13 @@ export function StudentDashboard({
                         return (
                           <tr key={order.id}>
                             <td>
-                              <span style={{ fontFamily: "var(--mono)", fontSize: "12px", color: "var(--muted)" }}>
+                              <span
+                                style={{
+                                  fontFamily: "var(--mono)",
+                                  fontSize: "12px",
+                                  color: "var(--muted)",
+                                }}
+                              >
                                 {order.id.slice(0, 8)}…
                               </span>
                             </td>
@@ -936,7 +1214,8 @@ export function StudentDashboard({
                             </td>
                             <td>
                               <strong>
-                                ₹{(order.amount / 100).toLocaleString("en-IN", {
+                                ₹
+                                {(order.amount / 100).toLocaleString("en-IN", {
                                   minimumFractionDigits: 2,
                                 })}
                               </strong>
@@ -974,11 +1253,13 @@ export function StudentDashboard({
               ) : (
                 <div className="student-empty-state">
                   <h3>No purchase history found</h3>
-                  <p>When you purchase a course, your tax receipt and order invoice will appear here.</p>
+                  <p>
+                    When you purchase a course, your tax receipt and order invoice will appear here.
+                  </p>
                   <button
                     type="button"
                     className="button button-primary"
-                    onClick={() => setView("explore")}
+                    onClick={() => handleSelectView("explore")}
                   >
                     Browse courses
                   </button>

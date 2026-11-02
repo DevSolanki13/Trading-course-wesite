@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Caveat, Newsreader } from "next/font/google";
+import localFont from "next/font/local";
 import { AnnotatedChart } from "../components/hero/AnnotatedChart";
 import { TeacherNotes } from "../components/hero/TeacherNotes";
 import { HeroAnnotations } from "../components/hero/HeroAnnotations";
@@ -12,19 +12,26 @@ import { courses as sampleCourses, type Course } from "../content/courses";
 import type { SiteDocument } from "../../shared/admin";
 import "../styles/landing.css";
 import "../components/hero/hero-annotations.css";
+import "../styles/hero-fonts.css";
 
-const annotationFont = Caveat({
-  subsets: ["latin"],
+const annotationFont = localFont({
+  src: "../assets/fonts/caveat-500-latin.woff2",
   weight: "500",
+  style: "normal",
   variable: "--font-annotations",
   display: "swap",
+  adjustFontFallback: false,
+  fallback: ["Caveat Fallback"],
 });
-const headlineFont = Newsreader({
-  subsets: ["latin"],
-  weight: "500",
-  style: ["normal", "italic"],
+const headlineFont = localFont({
+  src: [
+    { path: "../assets/fonts/newsreader-500-latin.woff2", weight: "500", style: "normal" },
+    { path: "../assets/fonts/newsreader-500-italic-latin.woff2", weight: "500", style: "italic" },
+  ],
   variable: "--font-headline",
   display: "swap",
+  adjustFontFallback: false,
+  fallback: ["Newsreader Fallback"],
 });
 
 const ticker = ["NIFTY 50", "BANKNIFTY", "BTC/USD", "ETH/USD", "GOLD", "USD/INR"];

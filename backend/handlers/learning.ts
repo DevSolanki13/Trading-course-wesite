@@ -1,3 +1,4 @@
+import { validationParser } from "../auth/validation";
 import "server-only";
 import { z } from "zod";
 import { AuthError, body, failure, json, limit, sameOrigin } from "../auth/http";
@@ -9,11 +10,10 @@ import { localDemoEnabled } from "../purchase/mode";
 import { purchaseUser } from "../purchase/session";
 import { purchaseCourse } from "../purchase/repository";
 
-function parse<T>(schema: z.ZodType<T>, value: unknown): T {
-  const result = schema.safeParse(value);
-  if (!result.success) throw new AuthError(400, "Check the learning request fields.");
-  return result.data;
-}
+const parse = validationParser({
+  fallback: "Check the learning request fields.",
+  useIssueMessage: false,
+});
 async function optionalAccount(): Promise<LearningAccount | null> {
   try {
     return await learningAccount();
