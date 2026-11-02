@@ -65,8 +65,8 @@ export async function deliverAuthEmail(input: {
         port: 465,
         secure: true,
         auth: {
-          user: requireEnv("GMAIL_USER"),
-          pass: requireEnv("GMAIL_APP_PASSWORD"),
+          user: requireEnv("GMAIL_USER").trim(),
+          pass: requireEnv("GMAIL_APP_PASSWORD").replace(/\s+/g, ""),
         },
       });
       await transporter.sendMail({

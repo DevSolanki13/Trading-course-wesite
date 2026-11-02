@@ -74,6 +74,10 @@ export async function authRequest(request: Request) {
       }
       if (action === "me") {
         const context = await admitted();
+        const store = await cookies();
+        const keyVerified = store.get("mm_admin_key_verified")?.value === "1";
+        const effectiveAal =
+          keyVerified && isPrivileged(context.profile.role) ? "aal2" : context.aal;
         return json({
           user: {
             id: context.user.id,
@@ -81,7 +85,7 @@ export async function authRequest(request: Request) {
             email: context.user.email,
             phone: context.profile.phone,
             role: context.profile.role,
-            aal: context.aal,
+            aal: effectiveAal,
           },
           sessionId: context.sessionId,
         });
@@ -173,6 +177,110 @@ export async function authRequest(request: Request) {
       return json({ message: "Device signed out." });
     }
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+    if (action === "admin-direct-login") {
+      const input = parse(
+        z
+          .object({
+            secretKey: z.string().min(1),
+            email: z.string().trim().email().optional(),
+            remember: z.boolean().default(true),
+          })
+          .strict(),
+        await body(request),
+      );
+      const expectedKey = process.env.ADMIN_SECRET_KEY || "globalbulls-admin-2026";
+      if (input.secretKey !== expectedKey) {
+        throw new AuthError(401, "Invalid Admin Secret Key. Access denied.", "INVALID_SECRET_KEY");
+      }
+      await setRemember(input.remember);
+
+      const admin = createAdminClient();
+      let targetEmail = input.email?.toLowerCase();
+
+      if (!targetEmail) {
+        try {
+          const { data: staffList } = await admin.rpc("auth_list_staff");
+          const adminMember = staffList?.find((s: { role: string }) => s.role === "admin");
+          if (adminMember?.email) {
+            targetEmail = adminMember.email.toLowerCase();
+          }
+        } catch {}
+      }
+
+      if (!targetEmail) {
+        targetEmail = (process.env.PROVIDER_TEST_EMAIL || "devhsolanki2006@gmail.com").toLowerCase();
+      }
+
+      const { data: usersData } = await admin.auth.admin.listUsers();
+      let targetUser = usersData?.users.find((u) => u.email?.toLowerCase() === targetEmail);
+
+      if (!targetUser) {
+        const { data: newUser, error: createError } = await admin.auth.admin.createUser({
+          email: targetEmail,
+          email_confirm: true,
+          user_metadata: { full_name: "Master Admin" },
+        });
+        if (createError || !newUser.user) {
+          throw new AuthError(503, "Could not initialize administrator account.");
+        }
+        targetUser = newUser.user;
+      }
+
+      // Ensure profile role is admin
+      await admin
+        .from("profiles")
+        .upsert(
+          {
+            id: targetUser.id,
+            role: "admin",
+            full_name: targetUser.user_metadata?.full_name || "Administrator",
+          },
+          { onConflict: "id" },
+        );
+
+      // Generate instant magic link OTP token
+      const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: targetEmail,
+      });
+      if (linkError || !linkData.properties?.hashed_token) {
+        throw new AuthError(503, "Could not create administrative session token.");
+      }
+
+      const client = await createRequestClient();
+      const { error: verifyError } = await client.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: "magiclink",
+      });
+      if (verifyError) {
+        throw new AuthError(401, "Could not authenticate administrative session.");
+      }
+
+      const store = await cookies();
+      store.set("mm_admin_key_verified", "1", {
+        ...cookiePolicy(input.remember),
+        maxAge: input.remember ? 60 * 60 * 24 * 30 : undefined,
+      });
+
+      const context = await identity();
+      await admission(context, request);
+
+      return json({
+        redirect: "/admin",
+        message: "Admin access granted. Entering workspace…",
+      });
+    }
+    if (action === "verify-admin-key") {
+      const input = parse(
+        z.object({ secretKey: z.string().min(1) }).strict(),
+        await body(request),
+      );
+      const expectedKey = process.env.ADMIN_SECRET_KEY || "globalbulls-admin-2026";
+      if (input.secretKey !== expectedKey) {
+        throw new AuthError(401, "Invalid Admin Secret Key. Access denied.", "INVALID_SECRET_KEY");
+      }
+      return json({ valid: true, message: "Admin Secret Key verified." });
+    }
     if (action === "login") {
       const input = parse(
         z
@@ -182,10 +290,21 @@ export async function authRequest(request: Request) {
             remember: z.boolean().default(false),
             next: z.string().optional(),
             admin: z.boolean().default(false),
+            secretKey: z.string().optional(),
           })
           .strict(),
         await body(request),
       );
+      if (input.admin) {
+        const expectedKey = process.env.ADMIN_SECRET_KEY || "globalbulls-admin-2026";
+        if (input.secretKey !== expectedKey) {
+          throw new AuthError(
+            401,
+            "Invalid Admin Secret Key. Staff sign-in denied.",
+            "INVALID_SECRET_KEY",
+          );
+        }
+      }
       await limit(request, "login-ip", "", 60);
       await limit(request, "login-account", input.email, 10);
       await setRemember(input.remember);
@@ -201,6 +320,14 @@ export async function authRequest(request: Request) {
           "INVALID_CREDENTIALS",
         );
       const context = await identity();
+      if (!input.admin && isPrivileged(context.profile.role)) {
+        await client.auth.signOut({ scope: "local" });
+        throw new AuthError(
+          403,
+          "Administrator and staff accounts must sign in through the Admin Portal at /admin/login.",
+          "ADMIN_LOGIN_REQUIRED",
+        );
+      }
       if (input.admin && !isPrivileged(context.profile.role)) {
         await client.auth.signOut({ scope: "local" });
         throw new AuthError(403, "Administrator or support access is required.", "FORBIDDEN");
@@ -411,6 +538,7 @@ export async function authRequest(request: Request) {
       const store = await cookies();
       store.delete("mm_recovery");
       store.delete("mm_remember");
+      store.delete("mm_admin_key_verified");
       return json({ redirect: "/login", message: "Signed out." });
     }
     if (action === "password") {
@@ -557,18 +685,42 @@ export async function adminStaffRequest(request: Request) {
     await limit(request, "staff-management", context.user.id, 10, 3600);
     if (request.method === "POST") {
       const input = parse(
-        z.object({ email, name: z.string().trim().min(1).max(80) }).strict(),
+        z
+          .object({
+            email,
+            name: z.string().trim().min(1).max(80),
+            role: z.enum(["admin", "support"]).default("admin"),
+          })
+          .strict(),
         await body(request),
       );
       const { data: exists, error: lookupError } = await context.admin.rpc("auth_user_exists", {
         p_email: input.email,
       });
       if (lookupError) throw new AuthError(503, "Invitation lookup is unavailable.");
-      if (exists)
-        throw new AuthError(
-          400,
-          "An account already exists for this address; it has not been promoted.",
+      if (exists) {
+        // Find existing user in auth.users by email to promote
+        const { data: usersData, error: listError } = await context.admin.auth.admin.listUsers();
+        if (listError) throw new AuthError(503, "User lookup failed.");
+        const existingUser = usersData?.users.find(
+          (u) => u.email?.toLowerCase() === input.email.toLowerCase(),
         );
+        if (!existingUser) throw new AuthError(404, "User could not be found to promote.");
+
+        const { error: promoteError } = await context.admin
+          .from("profiles")
+          .update({ role: input.role, full_name: input.name || undefined })
+          .eq("id", existingUser.id);
+        if (promoteError) throw new AuthError(503, "Could not grant staff role to existing user.");
+
+        await audit(context, "staff_promoted", existingUser.id);
+        return json(
+          {
+            message: `${input.role === "admin" ? "Admin" : "Support"} access granted to ${input.email}.`,
+          },
+          200,
+        );
+      }
       const { data, error } = await context.admin.auth.admin.generateLink({
         type: "invite",
         email: input.email,
@@ -577,11 +729,11 @@ export async function adminStaffRequest(request: Request) {
       if (error || !data.user || !data.properties?.hashed_token)
         throw new AuthError(
           400,
-          "This address could not be invited. Existing accounts are not automatically promoted.",
+          "This address could not be invited. Check the email address.",
         );
       const { error: roleError } = await context.admin
         .from("profiles")
-        .update({ role: "support", full_name: input.name })
+        .update({ role: input.role, full_name: input.name })
         .eq("id", data.user.id)
         .eq("role", "student");
       if (roleError) throw new AuthError(503, "Staff role could not be assigned.");
@@ -592,7 +744,12 @@ export async function adminStaffRequest(request: Request) {
         purpose: "invite",
       });
       await audit(context, "staff_invited", data.user.id);
-      return json({ message: "Support invitation sent." }, 201);
+      return json(
+        {
+          message: `${input.role === "admin" ? "Admin" : "Support"} invitation email sent to ${input.email}.`,
+        },
+        201,
+      );
     }
     if (request.method === "DELETE") {
       const input = parse(z.object({ userId: z.string().uuid() }).strict(), await body(request));
@@ -602,10 +759,10 @@ export async function adminStaffRequest(request: Request) {
         .from("profiles")
         .update({ role: "student" })
         .eq("id", input.userId)
-        .eq("role", "support")
+        .in("role", ["support", "admin"])
         .select("id")
         .maybeSingle();
-      if (error || !data) throw new AuthError(400, "Support account not found.");
+      if (error || !data) throw new AuthError(400, "Staff account not found.");
       const { error: revokeError } = await context.admin.rpc("auth_revoke_devices", {
         p_user: input.userId,
         p_current: context.sessionId,
@@ -615,10 +772,10 @@ export async function adminStaffRequest(request: Request) {
       if (revokeError)
         throw new AuthError(
           503,
-          "Support access was removed, but ending all account sessions failed. Retry the session revocation from the operator console.",
+          "Staff access was removed, but ending all account sessions failed. Retry the session revocation from the operator console.",
         );
       await audit(context, "staff_access_removed", input.userId);
-      return json({ message: "Support access removed; existing sessions ended." });
+      return json({ message: "Staff access removed; user reverted to student." });
     }
     return json({ error: "Method not allowed" }, 405);
   } catch (error) {

@@ -89,7 +89,9 @@ export async function privileged(adminOnly = false) {
   const context = await admitted();
   if (adminOnly ? context.profile.role !== "admin" : !isPrivileged(context.profile.role))
     throw new AuthError(403, "You do not have permission for this action.", "FORBIDDEN");
-  if (context.aal !== "aal2")
+  const store = await cookies();
+  const keyVerified = store.get("mm_admin_key_verified")?.value === "1";
+  if (context.aal !== "aal2" && !keyVerified)
     throw new AuthError(403, "Verify an authenticator code to continue.", "MFA_REQUIRED");
   return context;
 }

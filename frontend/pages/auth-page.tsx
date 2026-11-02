@@ -10,6 +10,7 @@ export default function AuthPage({
   error,
   notice,
   invitation,
+  secretKey,
 }: {
   mode: AuthMode;
   admin?: boolean;
@@ -18,6 +19,7 @@ export default function AuthPage({
   error?: string;
   notice?: string;
   invitation?: boolean;
+  secretKey?: string;
 }) {
   const compact = ["forgot", "reset", "confirm"].includes(mode);
   return (
@@ -83,6 +85,7 @@ export default function AuthPage({
         initialError={error}
         notice={notice}
         invitation={invitation}
+        secretKey={secretKey}
       />
     </main>
   );

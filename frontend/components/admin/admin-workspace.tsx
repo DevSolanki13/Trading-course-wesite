@@ -27,6 +27,9 @@ const AnnouncementsPanel = dynamic(() =>
 const AdminProfilePanel = dynamic(() =>
   import("./admin-profile-panel").then((module) => module.AdminProfilePanel),
 );
+const TeamPanel = dynamic(() =>
+  import("./team-panel").then((module) => module.TeamPanel),
+);
 import {
   ChartBar,
   Books,
@@ -58,6 +61,7 @@ const allViews = [
   { id: "refunds", label: "Refunds", Icon: ClipboardText },
   { id: "coupons", label: "Coupons", Icon: Ticket, admin: true },
   { id: "announcements", label: "Announcements", Icon: MegaphoneSimple, admin: true },
+  { id: "team", label: "Admins & Team", Icon: ShieldCheck, admin: true },
   { id: "settings", label: "Settings", Icon: Gear, admin: true },
   { id: "profile", label: "Profile & account", Icon: UserCircle },
 ] as const;
@@ -179,7 +183,7 @@ export function AdminWorkspace() {
   );
   const commerceItems = views.filter((item) => ["orders", "refunds", "coupons"].includes(item.id));
   const manageItems = views.filter((item) =>
-    ["announcements", "settings"].includes(item.id),
+    ["announcements", "team", "settings"].includes(item.id),
   );
   const renderNavItems = (items: typeof views) =>
     items.map(({ id, label, Icon }) => (
@@ -351,6 +355,7 @@ export function AdminWorkspace() {
           {view === "refunds" && <RefundsPanel role={user.role as "admin" | "support"} />}
           {view === "coupons" && user.role === "admin" && <CouponsPanel />}
           {view === "announcements" && user.role === "admin" && <AnnouncementsPanel />}
+          {view === "team" && user.role === "admin" && <TeamPanel currentUserId={user.id} />}
           {view === "settings" && user.role === "admin" && <SettingsPanel />}
           {view === "profile" && (
             <AdminProfilePanel

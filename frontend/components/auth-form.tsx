@@ -19,6 +19,7 @@ export function AuthForm({
   initialError = "",
   notice = "",
   invitation = false,
+  secretKey = "",
 }: {
   mode: AuthMode;
   admin?: boolean;
@@ -27,6 +28,7 @@ export function AuthForm({
   initialError?: string;
   notice?: string;
   invitation?: boolean;
+  secretKey?: string;
 }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(initialError);
@@ -97,6 +99,15 @@ export function AuthForm({
           remember: form.get("remember") === "on",
           next,
           admin,
+          ...(admin
+            ? {
+                secretKey:
+                  secretKey ||
+                  (typeof window !== "undefined"
+                    ? sessionStorage.getItem("admin_secret_key") || ""
+                    : ""),
+              }
+            : {}),
         };
       else if (mode === "signup")
         payload = {

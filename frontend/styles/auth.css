@@ -625,3 +625,184 @@
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Admin Direct Terminal - Theme Aware (Dark & Light)
+   ========================================================================== */
+.admin-terminal-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: radial-gradient(circle at 50% 18%, rgba(0, 223, 143, 0.08) 0%, rgba(5, 10, 7, 0.95) 55%, #040805 100%);
+  color: #f3f5f3;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.admin-terminal-card {
+  width: 100%;
+  max-width: 450px;
+  background: linear-gradient(180deg, rgba(19, 27, 21, 0.88) 0%, rgba(13, 18, 14, 0.94) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 223, 143, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 44px 36px;
+  position: relative;
+  backdrop-filter: blur(20px);
+  transition: all 0.25s ease;
+}
+
+.admin-terminal-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(0, 223, 143, 0.08);
+  border: 1px solid rgba(0, 223, 143, 0.28);
+  color: var(--accent, #00df8f);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.admin-terminal-title {
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 8px;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.admin-terminal-desc {
+  font-size: 13px;
+  color: #94a397;
+  margin: 0;
+  line-height: 1.6;
+  max-width: 340px;
+}
+
+.admin-terminal-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a397;
+  margin-bottom: 8px;
+}
+
+.admin-terminal-subtext {
+  color: #718076;
+  font-size: 11px;
+}
+
+.admin-terminal-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 42px 12px 44px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.admin-terminal-input:focus {
+  border-color: var(--accent, #00df8f);
+  box-shadow: 0 0 0 3px rgba(0, 223, 143, 0.18);
+}
+
+.admin-terminal-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #a1ada4;
+  cursor: pointer;
+  user-select: none;
+  margin: 2px 0 4px;
+}
+
+.admin-terminal-back {
+  color: #839287;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.admin-terminal-back:hover {
+  color: #ffffff;
+}
+
+/* Light Theme Overrides */
+:root[data-theme="light"] .admin-terminal-page {
+  background: radial-gradient(circle at 50% 18%, rgba(0, 185, 117, 0.08) 0%, rgba(240, 243, 250, 0.95) 55%, #e8edf7 100%);
+  color: #111827;
+}
+
+:root[data-theme="light"] .admin-terminal-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 60px rgba(18, 28, 45, 0.08), 0 4px 12px rgba(18, 28, 45, 0.04), 0 0 0 1px rgba(0, 185, 117, 0.18);
+}
+
+:root[data-theme="light"] .admin-terminal-pill {
+  background: rgba(0, 185, 117, 0.09);
+  border: 1px solid rgba(0, 185, 117, 0.35);
+  color: #047857;
+}
+
+:root[data-theme="light"] .admin-terminal-title {
+  color: #111827;
+}
+
+:root[data-theme="light"] .admin-terminal-desc {
+  color: #4b5563;
+}
+
+:root[data-theme="light"] .admin-terminal-label {
+  color: #374151;
+}
+
+:root[data-theme="light"] .admin-terminal-subtext {
+  color: #6b7280;
+}
+
+:root[data-theme="light"] .admin-terminal-input {
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+:root[data-theme="light"] .admin-terminal-input::placeholder {
+  color: #9ca3af;
+}
+
+:root[data-theme="light"] .admin-terminal-input:focus {
+  border-color: #00b975;
+  box-shadow: 0 0 0 3px rgba(0, 185, 117, 0.2);
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .admin-terminal-checkbox-label {
+  color: #374151;
+}
+
+:root[data-theme="light"] .admin-terminal-back {
+  color: #6b7280;
+}
+
+:root[data-theme="light"] .admin-terminal-back:hover {
+  color: #111827;
+}

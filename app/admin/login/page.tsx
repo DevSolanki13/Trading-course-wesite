@@ -1,6 +1,8 @@
-import AuthPage from "@/frontend/pages/auth-page";
-export const metadata = { title: "Staff sign-in", robots: { index: false, follow: false } };
+import { AdminDirectTerminal } from "@/frontend/components/admin/admin-direct-terminal";
+
+export const metadata = { title: "Admin Portal Sign-In | GlobalBulls", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
+
 export default function AdminLogin() {
-  return <AuthPage mode="login" admin next="/admin" />;
+  return <AdminDirectTerminal />;
 }
