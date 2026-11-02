@@ -44,7 +44,7 @@ export default async function CourseRoute({
   } catch {
     unavailable = true;
   }
-  const isAdmin = user?.role === "admin";
+  const isAdmin = false; // admin users are redirected above
   return (
     <CourseDetailPage
       course={course}

@@ -19,7 +19,7 @@ export default async function Catalogue() {
   if (user?.role === "admin") {
     redirect("/admin");
   }
-  const isAdmin = user?.role === "admin";
+  const isAdmin = false; // admin users are redirected above
   return (
     <CataloguePage
       courses={data.courses.length ? data.courses : undefined}
