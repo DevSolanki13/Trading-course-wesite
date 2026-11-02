@@ -778,6 +778,12 @@
 .admin-course-card-title-link {
   color: var(--foreground);
   text-decoration: none;
+  min-width: 0;
+  max-width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 .admin-course-card-title-link:hover .admin-course-card-title {
   color: var(--brand, #00df8f);
@@ -792,7 +798,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 .admin-course-card-title {
   font-size: 15px;
@@ -801,11 +808,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 .admin-course-card-slug {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
 }
 .admin-course-card-col {
   display: flex;

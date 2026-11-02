@@ -71,8 +71,17 @@ export async function admitted() {
       !device.revoked_at &&
       Date.parse(device.expires_at) > Date.now() &&
       !device.admitted_at
-    )
+    ) {
+      if (isPrivileged(context.profile.role)) {
+        await context.admin
+          .from("device_sessions")
+          .update({ admitted_at: new Date().toISOString(), last_active_at: new Date().toISOString() })
+          .eq("user_id", context.user.id)
+          .eq("auth_session_id", context.sessionId);
+        return context;
+      }
       throw new AuthError(409, "Choose a device to sign out before continuing.", "DEVICE_LIMIT");
+    }
     throw new AuthError(401, "This session has ended. Please sign in again.", "SESSION_REVOKED");
   }
   const { error: activityError } = await context.admin
@@ -114,6 +123,14 @@ export async function admission(
     throw new AuthError(401, "This session has ended. Please sign in again.", "SESSION_REVOKED");
   if (data === "invalid_device")
     throw new AuthError(400, "That device is no longer available. Refresh and try again.");
+  if (data === "limit" && isPrivileged(context.profile.role)) {
+    await context.admin
+      .from("device_sessions")
+      .update({ admitted_at: new Date().toISOString(), last_active_at: new Date().toISOString() })
+      .eq("user_id", context.user.id)
+      .eq("auth_session_id", context.sessionId);
+    return "admitted";
+  }
   return data as "admitted" | "limit";
 }
 
@@ -121,7 +138,8 @@ export async function setRemember(remember: boolean) {
   (await cookies()).set("mm_remember", remember ? "1" : "0", cookiePolicy(remember));
 }
 export function destination(state: string, next: unknown, context: Identity) {
-  if (state === "limit") return `/auth/devices?next=${encodeURIComponent(safeNext(next, "/dashboard"))}`;
+  if (state === "limit" && !isPrivileged(context.profile.role))
+    return `/auth/devices?next=${encodeURIComponent(safeNext(next, "/dashboard"))}`;
   return safeNext(next, isPrivileged(context.profile.role) ? "/admin" : "/dashboard");
 }
 export async function audit(context: Identity, action: string, target: string) {

@@ -557,7 +557,7 @@ export function AdminProfilePanel({ user, onProfileUpdated }: AdminProfilePanelP
               </div>
               <div>
                 <span>Device policy</span>
-                <strong style={{ fontSize: "12px" }}>Single active device enforced</strong>
+                <strong style={{ fontSize: "12px", color: "var(--accent)" }}>Unlimited devices (Admin unrestricted)</strong>
               </div>
             </div>
           </article>
