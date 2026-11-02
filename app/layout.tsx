@@ -10,7 +10,10 @@ export const metadata: Metadata = {
     template: "%s | GlobalBulls",
   },
   description: site.description,
-  robots: { index: false, follow: false },
+  robots:
+    process.env.VERCEL_ENV === "production" && process.env.ALLOW_INDEXING === "true"
+      ? { index: true, follow: true }
+      : { index: false, follow: false },
 };
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;

@@ -17,14 +17,56 @@ export const CARD_WIDTH = 232;
 export const PERSPECTIVE = 1200;
 
 const marqueeCards = [
-  { type: "chart", label: "NIFTY 50", value: "22,487.65", change: "+2.84%", tone: "up" },
-  { type: "line", label: "Portfolio growth", value: "+24.8%", change: "90 days", tone: "up" },
-  { type: "dark", label: "The market rewards", value: "process", change: "not prediction" },
-  { type: "portfolio", label: "Watchlist", value: "03 assets", change: "live sample" },
-  { type: "stat", label: "Students trained", value: "5,000+", change: "and counting" },
-  { type: "live", label: "Live sessions", value: "Every week", change: "Join the room" },
-  { type: "risk", label: "Risk / reward", value: "1 : 3", change: "defined first" },
-  { type: "order", label: "Market depth", value: "Balanced", change: "sample data" },
+  {
+    type: "chart",
+    label: "Illustration",
+    value: "Sample chart",
+    change: "not live data",
+    tone: "gold",
+  },
+  { type: "line", label: "Learning progress", value: "Review", change: "each session", tone: "up" },
+  {
+    type: "dark",
+    label: "The market rewards",
+    value: "process",
+    change: "not prediction",
+    tone: "gold",
+  },
+  {
+    type: "portfolio",
+    label: "Checklist",
+    value: "Plan -> Review",
+    change: "every trade",
+    tone: "gold",
+  },
+  {
+    type: "stat",
+    label: "Course format",
+    value: "Hindi lessons",
+    change: "at your pace",
+    tone: "gold",
+  },
+  {
+    type: "live",
+    label: "Learning format",
+    value: "Guided study",
+    change: "with context",
+    tone: "gold",
+  },
+  {
+    type: "risk",
+    label: "Risk first",
+    value: "Define it",
+    change: "before you enter",
+    tone: "gold",
+  },
+  {
+    type: "order",
+    label: "Market context",
+    value: "Sample only",
+    change: "for education",
+    tone: "gold",
+  },
 ];
 const cards = [...marqueeCards, ...marqueeCards];
 
@@ -66,13 +108,13 @@ function MiniVisual({ type }: { type: string }) {
     return (
       <div className="watchlist">
         <span>
-          NIFTY 50 <b>+2.4%</b>
+          PLAN <b>DEFINE</b>
         </span>
         <span>
-          BANKNIFTY <em>-0.8%</em>
+          REVIEW <em>LEARN</em>
         </span>
         <span>
-          BTC / USD <b>+4.1%</b>
+          PROCESS <b>REPEAT</b>
         </span>
       </div>
     );

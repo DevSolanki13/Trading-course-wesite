@@ -41,7 +41,7 @@ function StatsGrid({ content }: { content?: SiteDocument | null }) {
       <div className="eyebrow">• ABOUT US</div>
       <div className="about-heading">
         <h2 id="about-heading">
-          A trading education built for <span>disciplined,</span> consistent traders.
+          A trading education built for <span>disciplined,</span> consistent practice.
         </h2>
         <p>
           Less noise. More context. A structured way to build the habits that last beyond a single
@@ -70,9 +70,9 @@ function StatsGrid({ content }: { content?: SiteDocument | null }) {
         <article className="stat-practical">
           <span className="card-label">THE APPROACH</span>
           <h3>
-            100%
+            Process-led
             <br />
-            Practical
+            learning
           </h3>
           <blockquote>Practical learning, careful review, and no promises of returns.</blockquote>
         </article>
@@ -113,7 +113,10 @@ export default function HomePage({
 }) {
   return (
     <main id="main-content" className="landing-page">
-      <div className="ticker-strip" aria-label="Sample market ticker">
+      <div
+        className="ticker-strip"
+        aria-label="Illustrative market values for education only, not live prices"
+      >
         <div className="ticker-track">
           {[...ticker, ...ticker].map((item, index) => (
             <span key={`${item}-${index}`} aria-hidden={index >= ticker.length}>
@@ -125,6 +128,7 @@ export default function HomePage({
             </span>
           ))}
         </div>
+        <span className="sr-only">Illustrative values for education only. Not live prices.</span>
       </div>
       <section className="hero-modern container" aria-labelledby="landing-title">
         {unavailable && (
