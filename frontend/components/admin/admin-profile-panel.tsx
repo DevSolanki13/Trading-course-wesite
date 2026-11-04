@@ -33,7 +33,10 @@ export function AdminProfilePanel({ user, onProfileUpdated }: AdminProfilePanelP
   const [phone, setPhone] = useState(user.phone || "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("globalbulls_admin_avatar");
+      return (
+        localStorage.getItem("indianxtrade_admin_avatar") ||
+        localStorage.getItem("globalbulls_admin_avatar")
+      );
     }
     return null;
   });
@@ -53,10 +56,17 @@ export function AdminProfilePanel({ user, onProfileUpdated }: AdminProfilePanelP
   // Listen to avatar updates from other tabs/components
   useEffect(() => {
     const onAvatarUpdate = () => {
-      setAvatarUrl(localStorage.getItem("globalbulls_admin_avatar"));
+      setAvatarUrl(
+        localStorage.getItem("indianxtrade_admin_avatar") ||
+          localStorage.getItem("globalbulls_admin_avatar"),
+      );
     };
+    window.addEventListener("indianxtrade_avatar_updated", onAvatarUpdate);
     window.addEventListener("globalbulls_avatar_updated", onAvatarUpdate);
-    return () => window.removeEventListener("globalbulls_avatar_updated", onAvatarUpdate);
+    return () => {
+      window.removeEventListener("indianxtrade_avatar_updated", onAvatarUpdate);
+      window.removeEventListener("globalbulls_avatar_updated", onAvatarUpdate);
+    };
   }, []);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,8 +89,8 @@ export function AdminProfilePanel({ user, onProfileUpdated }: AdminProfilePanelP
       if (result) {
         setAvatarUrl(result);
         if (typeof window !== "undefined") {
-          localStorage.setItem("globalbulls_admin_avatar", result);
-          window.dispatchEvent(new Event("globalbulls_avatar_updated"));
+          localStorage.setItem("indianxtrade_admin_avatar", result);
+          window.dispatchEvent(new Event("indianxtrade_avatar_updated"));
         }
         toast.success("Profile picture updated!");
       }
@@ -91,8 +101,9 @@ export function AdminProfilePanel({ user, onProfileUpdated }: AdminProfilePanelP
   const handleRemoveAvatar = () => {
     setAvatarUrl(null);
     if (typeof window !== "undefined") {
+      localStorage.removeItem("indianxtrade_admin_avatar");
       localStorage.removeItem("globalbulls_admin_avatar");
-      window.dispatchEvent(new Event("globalbulls_avatar_updated"));
+      window.dispatchEvent(new Event("indianxtrade_avatar_updated"));
     }
     toast.success("Custom profile photo removed.");
   };
@@ -325,7 +336,14 @@ export function AdminProfilePanel({ user, onProfileUpdated }: AdminProfilePanelP
                     style={{ position: "absolute", left: "12px", top: "13px" }}
                   />
                 </div>
-                <small style={{ color: "var(--muted)", fontSize: "11px", marginTop: "4px", display: "block" }}>
+                <small
+                  style={{
+                    color: "var(--muted)",
+                    fontSize: "11px",
+                    marginTop: "4px",
+                    display: "block",
+                  }}
+                >
                   System verified primary administrator email
                 </small>
               </div>
@@ -552,12 +570,16 @@ export function AdminProfilePanel({ user, onProfileUpdated }: AdminProfilePanelP
               <div>
                 <span>Authentication assurance</span>
                 <strong style={{ fontSize: "12px", color: "var(--accent)" }}>
-                  {user.aal === "local-demo" ? "Local sandbox (AAL2 ready)" : user.aal || "Verified AAL2"}
+                  {user.aal === "local-demo"
+                    ? "Local sandbox (AAL2 ready)"
+                    : user.aal || "Verified AAL2"}
                 </strong>
               </div>
               <div>
                 <span>Device policy</span>
-                <strong style={{ fontSize: "12px", color: "var(--accent)" }}>Unlimited devices (Admin unrestricted)</strong>
+                <strong style={{ fontSize: "12px", color: "var(--accent)" }}>
+                  Unlimited devices (Admin unrestricted)
+                </strong>
               </div>
             </div>
           </article>

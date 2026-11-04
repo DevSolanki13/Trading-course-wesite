@@ -26,10 +26,7 @@ export default function Loading() {
           ========================================================================= */}
       <aside className="admin-sidebar" aria-hidden="true">
         <div className="admin-brand">
-          <BullMark className="admin-brand-mark" />
-          <span>
-            Global<span>Bulls</span>
-          </span>
+          <BullMark className="admin-brand-mark" height={54} />
         </div>
 
         {/* Workspace pill */}

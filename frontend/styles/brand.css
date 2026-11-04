@@ -1,4 +1,4 @@
-/* Shared visual language from the GlobalBulls landing page. */
+/* Shared visual language from the indianXtrade landing page. */
 :root:root {
   --background: #111111;
   --surface: #191919;
@@ -42,24 +42,70 @@ body {
   background-size: 72px 72px;
   accent-color: var(--accent);
 }
-.brand-bull-mark {
-  --bull-candle-down: #f04b51;
-  --bull-candle-up: #5ab75c;
-  --bull-chart-outline: var(--background);
-  display: block;
+.brand-mark-wrap,
+.brand-logo-wrap,
+.brand-wordmark-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  width: 51px;
-  height: 42px;
-  color: var(--foreground);
 }
-:root[data-theme="light"] .brand-bull-mark {
-  --bull-candle-down: #df343c;
-  --bull-candle-up: #439447;
+.brand-mark-wrap .brand-mark-light,
+.brand-logo-wrap .brand-logo-light,
+.brand-wordmark-wrap .brand-wordmark-light,
+.brand-mark-light,
+.brand-logo-light {
+  display: none !important;
+}
+.brand-mark-wrap .brand-mark-dark,
+.brand-logo-wrap .brand-logo-dark,
+.brand-wordmark-wrap .brand-wordmark-dark,
+.brand-mark-dark,
+.brand-logo-dark {
+  display: block !important;
+}
+:root[data-theme="light"] .brand-mark-wrap .brand-mark-light,
+:root[data-theme="light"] .brand-logo-wrap .brand-logo-light,
+:root[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-light,
+:root[data-theme="light"] .brand-mark-light,
+:root[data-theme="light"] .brand-logo-light,
+[data-theme="light"] .brand-mark-wrap .brand-mark-light,
+[data-theme="light"] .brand-logo-wrap .brand-logo-light,
+[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-light,
+[data-theme="light"] .brand-mark-light,
+[data-theme="light"] .brand-logo-light {
+  display: block !important;
+}
+:root[data-theme="light"] .brand-mark-wrap .brand-mark-dark,
+:root[data-theme="light"] .brand-logo-wrap .brand-logo-dark,
+:root[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-dark,
+:root[data-theme="light"] .brand-mark-dark,
+:root[data-theme="light"] .brand-logo-dark,
+[data-theme="light"] .brand-mark-wrap .brand-mark-dark,
+[data-theme="light"] .brand-logo-wrap .brand-logo-dark,
+[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-dark,
+[data-theme="light"] .brand-mark-dark,
+[data-theme="light"] .brand-logo-dark {
+  display: none !important;
+}
+
+.brand-bull-mark {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.brand-bull-mark img,
+.brand-logo-wrap img {
+  height: 48px;
+  max-width: 220px;
+  width: auto;
+  object-fit: contain;
 }
 @media (max-width: 540px) {
-  .brand-bull-mark {
-    width: 41px;
-    height: 34px;
+  .brand-bull-mark img,
+  .brand-logo-wrap img {
+    height: 38px;
+    max-width: 170px;
   }
 }
 

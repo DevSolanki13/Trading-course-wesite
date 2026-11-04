@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { adminApi, money, when } from "../../lib/admin-api";
 import type { AdminOrder, RefundEvidence } from "../../../shared/admin";
+import { TableSkeleton } from "./admin-skeletons";
 type Detail = {
   order: AdminOrder & {
     base_paise: number;
@@ -188,13 +189,20 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
           <div className="admin-table-wrap">
             <table>
               <caption className="sr-only">All orders</caption>
+              <colgroup>
+                <col style={{ width: "36%" }} />
+                <col style={{ width: "16%" }} />
+                <col style={{ width: "14%" }} />
+                <col style={{ width: "22%" }} />
+                <col style={{ width: "12%" }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Course</th>
                   <th>Amount</th>
                   <th>State</th>
                   <th>Date</th>
-                  <th></th>
+                  <th className="admin-col-action">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -206,7 +214,7 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
                       <span className="admin-badge">{o.status}</span>
                     </td>
                     <td>{when(o.created_at)}</td>
-                    <td>
+                    <td className="admin-col-action">
                       <button className="text-link" onClick={() => open(o.id)}>
                         Details
                       </button>
@@ -227,7 +235,7 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
           </div>
         </>
       ) : (
-        <p role="status">Loading orders…</p>
+        <TableSkeleton columns={["36%", "16%", "14%", "22%", "12%"]} rows={6} />
       )}
       {detail && (
         <div className="admin-panel admin-detail">

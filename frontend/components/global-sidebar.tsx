@@ -69,11 +69,8 @@ export function GlobalSidebar() {
   const sidebarContent = (
     <>
       <div className="global-sidebar-top">
-        <Link href="/" className="admin-brand" aria-label="GlobalBulls storefront">
-          <BullMark className="admin-brand-mark" />
-          <span>
-            Global<span>Bulls</span>
-          </span>
+        <Link href="/" className="admin-brand" aria-label="indianXtrade storefront">
+          <BullMark className="admin-brand-mark" height={54} />
         </Link>
 
         {user && (
@@ -160,10 +157,7 @@ export function GlobalSidebar() {
                   className={pathname.startsWith("/admin") ? "is-active" : ""}
                   aria-current={pathname.startsWith("/admin") ? "page" : undefined}
                 >
-                  <Gear
-                    size={18}
-                    weight={pathname.startsWith("/admin") ? "fill" : "regular"}
-                  />
+                  <Gear size={18} weight={pathname.startsWith("/admin") ? "fill" : "regular"} />
                   <span>Admin workspace</span>
                 </Link>
               )}
@@ -234,11 +228,8 @@ export function GlobalSidebar() {
     <>
       {/* Mobile Top Header */}
       <div className="global-mobile-top-bar" aria-label="Mobile navigation header">
-        <Link href="/" className="admin-brand" aria-label="GlobalBulls storefront">
-          <BullMark className="admin-brand-mark" />
-          <span>
-            Global<span>Bulls</span>
-          </span>
+        <Link href="/" className="admin-brand" aria-label="indianXtrade storefront">
+          <BullMark className="admin-brand-mark" height={54} />
         </Link>
         <div className="global-mobile-actions">
           <ThemeToggle />

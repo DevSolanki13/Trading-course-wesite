@@ -94,7 +94,9 @@
   border-radius: 9px;
   background: var(--background, #111111);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
   overflow: hidden;
 }
 .checkout-phone-wrap:focus-within {
@@ -462,17 +464,73 @@ body:has(.admin-page) .site-header-spacer {
   height: 88px;
   gap: 32px;
 }
+/* Theme-aware Brand Logo & Mark Switching */
+.brand-mark-wrap,
+.brand-logo-wrap,
+.brand-wordmark-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.brand-mark-wrap .brand-mark-light,
+.brand-logo-wrap .brand-logo-light,
+.brand-wordmark-wrap .brand-wordmark-light,
+.brand-mark-light,
+.brand-logo-light {
+  display: none !important;
+}
+.brand-mark-wrap .brand-mark-dark,
+.brand-logo-wrap .brand-logo-dark,
+.brand-wordmark-wrap .brand-wordmark-dark,
+.brand-mark-dark,
+.brand-logo-dark {
+  display: block !important;
+}
+:root[data-theme="light"] .brand-mark-wrap .brand-mark-light,
+:root[data-theme="light"] .brand-logo-wrap .brand-logo-light,
+:root[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-light,
+:root[data-theme="light"] .brand-mark-light,
+:root[data-theme="light"] .brand-logo-light,
+[data-theme="light"] .brand-mark-wrap .brand-mark-light,
+[data-theme="light"] .brand-logo-wrap .brand-logo-light,
+[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-light,
+[data-theme="light"] .brand-mark-light,
+[data-theme="light"] .brand-logo-light {
+  display: block !important;
+}
+:root[data-theme="light"] .brand-mark-wrap .brand-mark-dark,
+:root[data-theme="light"] .brand-logo-wrap .brand-logo-dark,
+:root[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-dark,
+:root[data-theme="light"] .brand-mark-dark,
+:root[data-theme="light"] .brand-logo-dark,
+[data-theme="light"] .brand-mark-wrap .brand-mark-dark,
+[data-theme="light"] .brand-logo-wrap .brand-logo-dark,
+[data-theme="light"] .brand-wordmark-wrap .brand-wordmark-dark,
+[data-theme="light"] .brand-mark-dark,
+[data-theme="light"] .brand-logo-dark {
+  display: none !important;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   font-size: 24px;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   font-weight: 700;
   white-space: nowrap;
 }
 .brand-light {
-  font-weight: 400;
+  font-weight: 450;
+}
+.brand-accent {
+  font-weight: 800;
+  color: var(--accent);
+}
+.brand-bold {
+  font-weight: 700;
 }
 .brand-period {
   color: var(--accent);
@@ -1965,6 +2023,27 @@ body:has(.admin-page) .site-header-spacer {
 .contact-page {
   padding-bottom: 90px;
 }
+.contact-topic-notice {
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  margin-top: 24px;
+}
+.contact-topic-notice strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.contact-topic-notice p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
 .contact-grid {
   display: grid;
   grid-template-columns: 0.85fr 1.15fr;
@@ -2454,7 +2533,6 @@ body:has(.admin-page) .site-header-spacer {
     gap: 12px;
   }
   .brand {
-    font-size: 21px;
     gap: 7px;
   }
   .brand-symbol {
@@ -3102,7 +3180,7 @@ body:has(.admin-page) .site-header-spacer {
   }
 }
 
-/* GlobalBulls visual language */
+/* indianXtrade visual language */
 :root {
   --gold: #c9a96a;
 }
@@ -3208,7 +3286,9 @@ h3 {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
   padding: 0;
 }
 .profile-avatar-button:hover,
@@ -3373,6 +3453,34 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.global-sidebar .admin-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 58px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  text-decoration: none;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.global-sidebar .admin-brand:hover {
+  background: var(--raised, rgba(255, 255, 255, 0.04));
+  border-color: var(--line, rgba(255, 255, 255, 0.08));
+}
+
+.global-sidebar .admin-brand img {
+  width: 100% !important;
+  max-width: 216px !important;
+  height: auto !important;
+  max-height: 54px !important;
+  object-fit: contain;
+  margin: 0 auto;
 }
 
 .global-sidebar-nav {

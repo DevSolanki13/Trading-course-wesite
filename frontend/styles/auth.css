@@ -635,9 +635,16 @@
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  background: radial-gradient(circle at 50% 18%, rgba(0, 223, 143, 0.08) 0%, rgba(5, 10, 7, 0.95) 55%, #040805 100%);
+  background: radial-gradient(
+    circle at 50% 18%,
+    rgba(0, 223, 143, 0.08) 0%,
+    rgba(5, 10, 7, 0.95) 55%,
+    #040805 100%
+  );
   color: #f3f5f3;
-  transition: background 0.25s ease, color 0.25s ease;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
 }
 
 .admin-terminal-card {
@@ -645,7 +652,10 @@
   max-width: 450px;
   background: linear-gradient(180deg, rgba(19, 27, 21, 0.88) 0%, rgba(13, 18, 14, 0.94) 100%);
   border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 223, 143, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(0, 223, 143, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 44px 36px;
   position: relative;
@@ -712,7 +722,11 @@
   color: #ffffff;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .admin-terminal-input:focus {
@@ -747,14 +761,22 @@
 
 /* Light Theme Overrides */
 :root[data-theme="light"] .admin-terminal-page {
-  background: radial-gradient(circle at 50% 18%, rgba(0, 185, 117, 0.08) 0%, rgba(240, 243, 250, 0.95) 55%, #e8edf7 100%);
+  background: radial-gradient(
+    circle at 50% 18%,
+    rgba(0, 185, 117, 0.08) 0%,
+    rgba(240, 243, 250, 0.95) 55%,
+    #e8edf7 100%
+  );
   color: #111827;
 }
 
 :root[data-theme="light"] .admin-terminal-card {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 24px 60px rgba(18, 28, 45, 0.08), 0 4px 12px rgba(18, 28, 45, 0.04), 0 0 0 1px rgba(0, 185, 117, 0.18);
+  box-shadow:
+    0 24px 60px rgba(18, 28, 45, 0.08),
+    0 4px 12px rgba(18, 28, 45, 0.04),
+    0 0 0 1px rgba(0, 185, 117, 0.18);
 }
 
 :root[data-theme="light"] .admin-terminal-pill {

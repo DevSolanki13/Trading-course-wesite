@@ -92,21 +92,10 @@ export function AdminDirectTerminal() {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "10px",
-              marginBottom: "12px",
+              marginBottom: "14px",
             }}
           >
-            <BullMark className="admin-brand-mark" style={{ width: "26px", height: "26px" }} />
-            <span
-              style={{
-                fontSize: "17px",
-                fontWeight: 700,
-                letterSpacing: "-0.02em",
-                color: "inherit",
-              }}
-            >
-              Global<span style={{ color: "var(--accent, #00df8f)" }}>Bulls</span>
-            </span>
+            <BullMark height={46} />
           </div>
 
           {/* Title in Modern Clean Sans */}
@@ -114,7 +103,8 @@ export function AdminDirectTerminal() {
 
           {/* Subtitle */}
           <p className="admin-terminal-desc">
-            Enter your secret key to directly access the control workspace. No Google sign-in required.
+            Enter your secret key to directly access the control workspace. No Google sign-in
+            required.
           </p>
         </div>
 
@@ -229,7 +219,11 @@ export function AdminDirectTerminal() {
                 marginBottom: "8px",
               }}
             >
-              <label htmlFor="admin-email" className="admin-terminal-label" style={{ marginBottom: 0 }}>
+              <label
+                htmlFor="admin-email"
+                className="admin-terminal-label"
+                style={{ marginBottom: 0 }}
+              >
                 Admin Email{" "}
                 <span style={{ textTransform: "none", fontWeight: 400, opacity: 0.7 }}>
                   (optional)

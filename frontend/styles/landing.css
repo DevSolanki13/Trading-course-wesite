@@ -62,6 +62,33 @@ body:has(.landing-page) {
   background: color-mix(in srgb, var(--surface) 76%, transparent);
   backdrop-filter: blur(14px);
 }
+.ticker-label-badge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--lp-border);
+  font: 10px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+}
+@media (max-width: 640px) {
+  .ticker-label-badge {
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--lp-border);
+    justify-content: center;
+    padding: 6px 12px;
+    box-shadow: none;
+  }
+}
 .ticker-track {
   display: flex;
   width: max-content;

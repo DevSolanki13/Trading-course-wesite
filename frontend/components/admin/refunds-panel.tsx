@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { adminApi, operation, when } from "../../lib/admin-api";
 import type { RefundRow } from "../../../shared/admin";
+import { RefundsSkeleton } from "./admin-skeletons";
 export function RefundsPanel({ role }: { role: "admin" | "support" }) {
   const [state, setState] = useState("");
   const [page, setPage] = useState(0);
@@ -238,7 +239,7 @@ export function RefundsPanel({ role }: { role: "admin" | "support" }) {
           </div>
         </>
       ) : (
-        <p role="status">Loading refund queue…</p>
+        <RefundsSkeleton />
       )}
       {role === "admin" && (
         <form className="admin-panel admin-form admin-exception" onSubmit={goodwill}>

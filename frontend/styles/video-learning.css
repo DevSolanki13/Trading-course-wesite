@@ -1,6 +1,6 @@
 /* ============================================================================
    VIDEO LEARNING PLAYER STYLESHEET
-   Matching GlobalBulls Dark Design System (#07090C / #111111 / #00df8f)
+   Matching indianXtrade Dark Design System (#07090C / #111111 / #00df8f)
    ============================================================================ */
 
 /* Hide global storefront header/footer/spacers inside the dedicated learning portal */
@@ -201,7 +201,9 @@ body:has(.video-learning-page) .site-header-spacer {
   font-size: 13px;
   color: #d1d5db;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
   background: transparent;
   border: none;
   width: 100%;
@@ -636,7 +638,9 @@ body:has(.video-learning-page) .site-header-spacer {
   align-items: center;
   justify-content: center;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .vlp-center-play-wrap:hover .vlp-center-play-btn {
@@ -651,7 +655,12 @@ body:has(.video-learning-page) .site-header-spacer {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.85) 70%, rgba(0, 0, 0, 0.95) 100%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.85) 70%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
   padding: 24px 18px 12px 18px;
   z-index: 20;
   display: flex;
@@ -729,7 +738,9 @@ body:has(.video-learning-page) .site-header-spacer {
   justify-content: center;
   padding: 4px;
   border-radius: 6px;
-  transition: color 0.15s ease, transform 0.15s ease;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .vlp-ctrl-btn:hover {
@@ -1112,8 +1123,6 @@ body:has(.video-learning-page) .site-header-spacer {
   }
 }
 
-
-
 /* ============================================================================
    EMBEDDED INSIDE STUDENT DASHBOARD WORKSPACE (IN THE MAIN CONTENT AREA)
    ============================================================================ */
@@ -1230,3 +1239,26 @@ body:has(.video-learning-page) .site-header-spacer {
   color: var(--foreground, #131b19);
 }
 
+:root[data-theme="light"] .vlp-card-panel {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="light"] .vlp-summary-title,
+:root[data-theme="light"] .vlp-learn-title {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-summary-text {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-tab-btn {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-tab-btn:hover,
+:root[data-theme="light"] .vlp-tab-btn.is-active {
+  color: var(--foreground, #131b19);
+}

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { adminApi, money } from "../../lib/admin-api";
+import { OverviewSkeleton } from "./admin-skeletons";
 type Overview = {
   gross: number;
   refunded: number;
@@ -18,20 +19,31 @@ type Overview = {
 export function OverviewPanel() {
   const [range, setRange] = useState("month");
   const [data, setData] = useState<Overview | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+
   useEffect(() => {
     let live = true;
     adminApi<Overview>(`overview?range=${range}`)
       .then((d) => {
-        if (live) setData(d);
+        if (live) {
+          setData(d);
+          setError("");
+          setLoading(false);
+        }
       })
       .catch((e) => {
-        if (live) setError(e.message);
+        if (live) {
+          setError(e.message || "Could not load business metrics.");
+          setLoading(false);
+        }
       });
     return () => {
       live = false;
     };
-  }, [range]);
+  }, [range, reloadTrigger]);
+
   const max = Math.max(1, ...(data?.chart.map((d) => d.total) ?? []));
   return (
     <section>
@@ -42,7 +54,14 @@ export function OverviewPanel() {
         </div>
         <label className="admin-range">
           Period
-          <select value={range} onChange={(e) => setRange(e.target.value)}>
+          <select
+            value={range}
+            onChange={(e) => {
+              setRange(e.target.value);
+              setLoading(true);
+              setError("");
+            }}
+          >
             <option value="today">Today (IST)</option>
             <option value="week">This week</option>
             <option value="month">This month</option>
@@ -51,12 +70,37 @@ export function OverviewPanel() {
         </label>
       </div>
       {error && (
-        <p className="auth-error" role="alert">
-          {error}
-        </p>
+        <div
+          className="admin-error-box"
+          style={{
+            padding: "16px",
+            background: "color-mix(in srgb, var(--surface) 95%, #ff4d4f)",
+            border: "1px solid var(--danger, #ff4d4f)",
+            borderRadius: "8px",
+            marginBottom: "20px",
+          }}
+          role="alert"
+        >
+          <p style={{ color: "var(--danger, #ff4d4f)", margin: "0 0 10px", fontSize: "14px" }}>
+            {error}
+          </p>
+          <button
+            type="button"
+            className="button button-secondary button-sm"
+            onClick={() => {
+              setLoading(true);
+              setError("");
+              setReloadTrigger((v) => v + 1);
+            }}
+          >
+            Retry loading
+          </button>
+        </div>
       )}
-      {!data ? (
-        <p role="status">Loading business overview…</p>
+      {loading && !data ? (
+        <OverviewSkeleton />
+      ) : !data ? (
+        <p>No overview data available. Check server connection.</p>
       ) : (
         <>
           <div className="admin-metrics">

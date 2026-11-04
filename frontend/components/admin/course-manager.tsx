@@ -22,6 +22,7 @@ import { adminApi, operation, formText, formNumber, money } from "../../lib/admi
 import type { AdminCourse, AdminLesson, AdminModule } from "../../../shared/admin";
 import { CourseLearnersPanel } from "./course-learners-panel";
 import { CourseArtwork } from "../course-artwork";
+import { CoursesSkeleton } from "./admin-skeletons";
 
 type Summary = Pick<
   AdminCourse,
@@ -47,15 +48,34 @@ export function CourseManager() {
   const [loading, setLoading] = useState(true);
   const [learnersCourseId, setLearnersCourseId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<Summary | null>(null);
   async function list() {
-    const d = await adminApi<{ items: Summary[] }>("courses");
-    setItems(d.items);
+    setLoading(true);
+    setError("");
+    try {
+      const d = await adminApi<{ items: Summary[] }>("courses");
+      setItems(d.items);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load courses.");
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
+    let cancelled = false;
     adminApi<{ items: Summary[] }>("courses")
-      .then((d) => setItems(d.items))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .then((d) => {
+        if (!cancelled) setItems(d.items);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load courses.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
   async function open(id: string) {
     setError("");
@@ -70,14 +90,7 @@ export function CourseManager() {
     await open(id);
     await list();
   }
-  async function deleteCourse(c: Summary) {
-    if (
-      !window.confirm(
-        `Are you sure you want to permanently delete "${c.title}"? This cannot be undone.`
-      )
-    ) {
-      return;
-    }
+  async function executeDelete(c: Summary) {
     setDeletingId(c.id);
     setError("");
     try {
@@ -85,6 +98,7 @@ export function CourseManager() {
         courseId: c.id,
         version: c.version,
       });
+      setConfirmingDelete(null);
       await list();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to delete course.");
@@ -118,179 +132,251 @@ export function CourseManager() {
         />
       )}
       {!learnersCourseId && (
-      <>
-      <div className="admin-section-head">
-        <div>
-          <h2>Courses</h2>
-          <p>Create a curriculum, verify its videos and publish when it is ready.</p>
-        </div>
-        <button className="button button-primary" onClick={() => setCreating(true)}>
-          <Plus size={17} /> New course
-        </button>
-      </div>
-      {error && (
-        <p className="auth-error" role="alert">
-          {error}
-        </p>
-      )}
-      {loading ? (
-        <p role="status">Loading courses…</p>
-      ) : items.length ? (
-        <div className="admin-course-horizontal-list">
-          {items.map((c) => {
-            const formattedDate = c.created_at || c.updated_at
-              ? new Date(c.created_at || c.updated_at).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "—";
-            const validity = `${c.access_period || 1} ${c.access_unit || "months"}`;
-            const isDeleting = deletingId === c.id;
+        <>
+          <div className="admin-section-head">
+            <div>
+              <h2>Courses</h2>
+              <p>Create a curriculum, verify its videos and publish when it is ready.</p>
+            </div>
+            <button className="button button-primary" onClick={() => setCreating(true)}>
+              <Plus size={17} /> New course
+            </button>
+          </div>
+          {loading ? (
+            <CoursesSkeleton />
+          ) : error ? (
+            <div
+              className="admin-error-box"
+              role="alert"
+              style={{
+                padding: "20px",
+                background: "rgba(239, 68, 68, 0.08)",
+                border: "1px solid rgba(239, 68, 68, 0.2)",
+                borderRadius: "8px",
+                margin: "16px 0",
+              }}
+            >
+              <p style={{ color: "var(--error, #ef4444)", margin: "0 0 12px", fontWeight: 500 }}>
+                {error}
+              </p>
+              <button
+                type="button"
+                className="button button-secondary button-sm"
+                onClick={() => void list()}
+              >
+                Retry loading courses
+              </button>
+            </div>
+          ) : items.length ? (
+            <div className="admin-course-horizontal-list">
+              {items.map((c) => {
+                const formattedDate =
+                  c.created_at || c.updated_at
+                    ? new Date(c.created_at || c.updated_at).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
+                    : "—";
+                const validity = `${c.access_period || 1} ${c.access_unit || "months"}`;
+                const isDeleting = deletingId === c.id;
 
-            return (
-              <article className="admin-course-horizontal-card" key={c.id}>
-                <div className="admin-course-card-main-with-thumb">
-                  <div
-                    className="admin-course-thumb-wrap"
-                    onClick={() => open(c.id)}
-                    style={{ cursor: "pointer" }}
-                    title={`Edit ${c.title}`}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        open(c.id);
-                      }
-                    }}
-                  >
-                    {(() => {
-                      const thumb = (
-                        c.thumbnail_url ||
-                        (c as unknown as { thumbnailUrl?: string | null }).thumbnailUrl
-                      )?.trim();
-                      if (thumb) {
-                        return (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            src={thumb}
-                            alt={c.title}
-                            className="admin-course-thumb-img"
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
-                        );
-                      }
-                      return (
-                        <CourseArtwork
-                          kind={c.artwork || "foundations"}
-                          className="admin-course-thumb-artwork"
-                        />
-                      );
-                    })()}
-                  </div>
-                  <div className="admin-course-card-info">
-                    <div className="admin-course-card-title-row">
-                      <span className={`admin-badge status-${c.status}`}>{c.status}</span>
+                return (
+                  <article className="admin-course-horizontal-card" key={c.id}>
+                    <div className="admin-course-card-main-with-thumb">
                       <button
                         type="button"
+                        className="admin-course-thumb-wrap"
                         onClick={() => open(c.id)}
-                        className="admin-course-card-title-link"
+                        aria-label={`Edit ${c.title}`}
                         style={{
-                          background: "none",
+                          cursor: "pointer",
                           border: "none",
+                          background: "none",
                           padding: 0,
                           textAlign: "left",
-                          cursor: "pointer",
-                          font: "inherit",
+                          display: "block",
                         }}
                       >
-                        <strong className="admin-course-card-title">{c.title}</strong>
+                        {(() => {
+                          const thumb = (
+                            c.thumbnail_url ||
+                            (c as unknown as { thumbnailUrl?: string | null }).thumbnailUrl
+                          )?.trim();
+                          if (thumb) {
+                            return (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={thumb}
+                                alt={c.title}
+                                className="admin-course-thumb-img"
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                  display: "block",
+                                }}
+                              />
+                            );
+                          }
+                          return (
+                            <CourseArtwork
+                              kind={c.artwork || "foundations"}
+                              className="admin-course-thumb-artwork"
+                            />
+                          );
+                        })()}
+                      </button>
+                      <div className="admin-course-card-info">
+                        <div className="admin-course-card-title-row">
+                          <span className={`admin-badge status-${c.status}`}>{c.status}</span>
+                          <button
+                            type="button"
+                            onClick={() => open(c.id)}
+                            className="admin-course-card-title-link"
+                            style={{
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              textAlign: "left",
+                              cursor: "pointer",
+                              font: "inherit",
+                            }}
+                          >
+                            <strong className="admin-course-card-title">{c.title}</strong>
+                          </button>
+                        </div>
+                        <span className="admin-course-card-slug">/{c.slug}</span>
+                      </div>
+                    </div>
+
+                    <div className="admin-course-card-col">
+                      <span className="admin-course-col-label">
+                        <CalendarBlank size={14} /> Date
+                      </span>
+                      <span className="admin-course-col-val">{formattedDate}</span>
+                    </div>
+
+                    <div className="admin-course-card-col">
+                      <span className="admin-course-col-label">
+                        <Clock size={14} /> Validity
+                      </span>
+                      <span className="admin-course-col-val">{validity}</span>
+                    </div>
+
+                    <div className="admin-course-card-col">
+                      <span className="admin-course-col-label">
+                        <CurrencyInr size={14} /> Price
+                      </span>
+                      <div className="admin-course-col-val admin-course-price">
+                        {c.sale_price_paise && c.sale_price_paise < c.price_paise ? (
+                          <>
+                            <span className="price-sale">{money(c.sale_price_paise)}</span>
+                            <s className="price-original">{money(c.price_paise)}</s>
+                          </>
+                        ) : (
+                          <span>{money(c.price_paise)}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="admin-course-card-actions">
+                      <button
+                        type="button"
+                        className="button button-secondary button-sm"
+                        onClick={() => setLearnersCourseId(c.id)}
+                        title="View learners"
+                      >
+                        <Users size={15} />
+                        <span>Learners</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-secondary button-sm"
+                        onClick={() => open(c.id)}
+                        title="Edit curriculum"
+                      >
+                        <PencilSimple size={15} />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-danger button-sm"
+                        disabled={isDeleting}
+                        onClick={() => setConfirmingDelete(c)}
+                        title="Delete course"
+                      >
+                        <Trash size={15} />
+                        <span>{isDeleting ? "Deleting…" : "Delete"}</span>
                       </button>
                     </div>
-                    <span className="admin-course-card-slug">/{c.slug}</span>
-                  </div>
-                </div>
-
-                <div className="admin-course-card-col">
-                  <span className="admin-course-col-label">
-                    <CalendarBlank size={14} /> Date
-                  </span>
-                  <span className="admin-course-col-val">{formattedDate}</span>
-                </div>
-
-                <div className="admin-course-card-col">
-                  <span className="admin-course-col-label">
-                    <Clock size={14} /> Validity
-                  </span>
-                  <span className="admin-course-col-val">{validity}</span>
-                </div>
-
-                <div className="admin-course-card-col">
-                  <span className="admin-course-col-label">
-                    <CurrencyInr size={14} /> Price
-                  </span>
-                  <div className="admin-course-col-val admin-course-price">
-                    {c.sale_price_paise && c.sale_price_paise < c.price_paise ? (
-                      <>
-                        <span className="price-sale">{money(c.sale_price_paise)}</span>
-                        <s className="price-original">{money(c.price_paise)}</s>
-                      </>
-                    ) : (
-                      <span>{money(c.price_paise)}</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="admin-course-card-actions">
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="admin-empty">
+              <h3>Your first course starts here.</h3>
+              <p>
+                Add the course details, modules and protected lessons. Drafts are visible only to
+                administrators.
+              </p>
+            </div>
+          )}
+          {confirmingDelete && (
+            <div
+              className="admin-modal-backdrop"
+              onClick={() => !deletingId && setConfirmingDelete(null)}
+            >
+              <div
+                className="admin-modal-dialog"
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="delete-dialog-title"
+                aria-describedby="delete-dialog-desc"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3
+                  id="delete-dialog-title"
+                  style={{ margin: "0 0 12px", color: "var(--danger, #ef4444)" }}
+                >
+                  Delete course: {confirmingDelete.title}
+                </h3>
+                <p
+                  id="delete-dialog-desc"
+                  style={{
+                    fontSize: "14px",
+                    lineHeight: "1.6",
+                    color: "var(--muted)",
+                    margin: "0 0 20px",
+                  }}
+                >
+                  Are you sure you want to permanently delete this course? This action is permanent
+                  and cannot be undone. Active enrolled learners will immediately lose access to the
+                  curriculum.
+                </p>
+                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                   <button
                     type="button"
-                    className="button button-secondary button-sm"
-                    onClick={() => setLearnersCourseId(c.id)}
-                    title="View learners"
+                    className="button button-secondary"
+                    disabled={Boolean(deletingId)}
+                    onClick={() => setConfirmingDelete(null)}
                   >
-                    <Users size={15} />
-                    <span>Learners</span>
+                    Cancel
                   </button>
                   <button
                     type="button"
-                    className="button button-secondary button-sm"
-                    onClick={() => open(c.id)}
-                    title="Edit curriculum"
+                    className="button button-danger"
+                    disabled={Boolean(deletingId)}
+                    onClick={() => void executeDelete(confirmingDelete)}
                   >
-                    <PencilSimple size={15} />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="button button-danger button-sm"
-                    disabled={isDeleting}
-                    onClick={() => void deleteCourse(c)}
-                    title="Delete course"
-                  >
-                    <Trash size={15} />
-                    <span>{isDeleting ? "Deleting…" : "Delete"}</span>
+                    {deletingId ? "Deleting course…" : "Permanently delete course"}
                   </button>
                 </div>
-              </article>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="admin-empty">
-          <h3>Your first course starts here.</h3>
-          <p>
-            Add the course details, modules and protected lessons. Drafts are visible only to
-            administrators.
-          </p>
-        </div>
-      )}
-      </>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </section>
   );
@@ -405,10 +491,7 @@ function CourseEditor({
         </div>
         {course && (
           <div className="admin-header-actions">
-            <Link
-              className="admin-preview-outline-btn"
-              href={`/learn/${course.slug}`}
-            >
+            <Link className="admin-preview-outline-btn" href={`/learn/${course.slug}`}>
               <Eye size={17} />
               <span>Preview course outline</span>
             </Link>
@@ -473,7 +556,12 @@ function CourseEditor({
       {tab === "details" && (
         <div className="admin-editor-grid">
           <div className="admin-editor-left">
-            <form id="course-details-form" className="admin-form" key={course?.version ?? 0} onSubmit={save}>
+            <form
+              id="course-details-form"
+              className="admin-form"
+              key={course?.version ?? 0}
+              onSubmit={save}
+            >
               {/* Card 1: Course information */}
               <div className="admin-editor-card">
                 <div className="admin-section-header">
@@ -575,7 +663,15 @@ function CourseEditor({
                       required
                       pattern="[a-z0-9]+(-[a-z0-9]+)*"
                       maxLength={120}
-                      defaultValue={course?.slug ?? (title ? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : "")}
+                      defaultValue={
+                        course?.slug ??
+                        (title
+                          ? title
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, "-")
+                              .replace(/^-|-$/g, "")
+                          : "")
+                      }
                       placeholder="market-foundations"
                     />
                   </label>
@@ -728,7 +824,9 @@ function CourseEditor({
                   <div className="admin-section-header">
                     <div className="admin-section-title-wrap">
                       <h3 style={{ color: "#ef4444" }}>Course actions</h3>
-                      <p>Archive this course from the storefront or permanently delete this draft.</p>
+                      <p>
+                        Archive this course from the storefront or permanently delete this draft.
+                      </p>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "4px" }}>
@@ -758,7 +856,11 @@ function CourseEditor({
                       className="button button-danger"
                       disabled={pending}
                       onClick={async () => {
-                        if (!window.confirm("Permanently delete this draft course and its curriculum?"))
+                        if (
+                          !window.confirm(
+                            "Permanently delete this draft course and its curriculum?",
+                          )
+                        )
                           return;
                         setPending(true);
                         setError("");
@@ -804,18 +906,29 @@ function CourseEditor({
               </div>
             ) : (
               <div className={`admin-course-artwork artwork-${artwork}`}>
-                <span>{(title || "NEW COURSE").split(" ").slice(0, 2).join(" ").toUpperCase()}</span>
+                <span>
+                  {(title || "NEW COURSE").split(" ").slice(0, 2).join(" ").toUpperCase()}
+                </span>
               </div>
             )}
 
             <span className="admin-preview-label">Course title</span>
             <h3>{title || "Course title"}</h3>
-            <p>{description || "Learn the foundations of financial markets, price movement and confident trading."}</p>
-            <div className="admin-preview-price">
-              ₹{price ? price.toFixed(2) : "0.00"}
-            </div>
+            <p>
+              {description ||
+                "Learn the foundations of financial markets, price movement and confident trading."}
+            </p>
+            <div className="admin-preview-price">₹{price ? price.toFixed(2) : "0.00"}</div>
             <div className="admin-preview-access">
-              <Clock size={16} /> {accessPeriod} {accessUnit === "days" ? (accessPeriod === 1 ? "day" : "days") : (accessPeriod === 1 ? "month" : "months")} access
+              <Clock size={16} /> {accessPeriod}{" "}
+              {accessUnit === "days"
+                ? accessPeriod === 1
+                  ? "day"
+                  : "days"
+                : accessPeriod === 1
+                  ? "month"
+                  : "months"}{" "}
+              access
             </div>
 
             <div className="admin-editor-tip-card">
@@ -1183,7 +1296,10 @@ function LessonEditor({
   }
   return (
     <details className="admin-lesson-editor" open={Boolean(lesson)}>
-      <summary><span>{lesson ? "Edit lesson" : "Add lesson"}</span>{lesson && <small>{moduleId ? "Curriculum lesson" : "New lesson"}</small>}</summary>
+      <summary>
+        <span>{lesson ? "Edit lesson" : "Add lesson"}</span>
+        {lesson && <small>{moduleId ? "Curriculum lesson" : "New lesson"}</small>}
+      </summary>
       <form
         className="admin-form"
         onSubmit={async (e) => {
@@ -1210,8 +1326,21 @@ function LessonEditor({
         </label>
         <div className="admin-video-section">
           <span className="admin-field-label">Lesson video</span>
-          <div className="admin-video-tabs"><button type="button" className="is-active"><UploadSimple size={16} /> Upload video</button><button type="button"><LinkSimple size={16} /> Use video ID</button></div>
-          <div className="admin-upload-zone"><UploadSimple size={28} /><strong>Drag a video here, or <span>browse files</span></strong><small>Video will be processed for secure playback.</small></div>
+          <div className="admin-video-tabs">
+            <button type="button" className="is-active">
+              <UploadSimple size={16} /> Upload video
+            </button>
+            <button type="button">
+              <LinkSimple size={16} /> Use video ID
+            </button>
+          </div>
+          <div className="admin-upload-zone">
+            <UploadSimple size={28} />
+            <strong>
+              Drag a video here, or <span>browse files</span>
+            </strong>
+            <small>Video will be processed for secure playback.</small>
+          </div>
         </div>
         <div className="admin-form-grid">
           <label>

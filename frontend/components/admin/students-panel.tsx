@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Devices, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { adminApi, operation, when, money } from "../../lib/admin-api";
 import type { StudentRow, StudentDetail } from "../../../shared/admin";
+import { TableSkeleton } from "./admin-skeletons";
 type List = { items: StudentRow[]; total: number };
 export function StudentsPanel({ role }: { role: "admin" | "support" }) {
   const [query, setQuery] = useState("");
@@ -12,6 +14,32 @@ export function StudentsPanel({ role }: { role: "admin" | "support" }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+
+  const students = useMemo(() => {
+    if (!items?.items) return [];
+    const map = new Map<string, StudentRow>();
+    for (const s of items.items) {
+      const key = (s.email || s.id).toLowerCase().trim();
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, s);
+      } else {
+        const isPlaceholder = (name?: string) =>
+          !name ||
+          name.trim().toLowerCase() === "test" ||
+          name.trim().toLowerCase() === "unnamed learner";
+        const preferCurrent = isPlaceholder(existing.full_name) && !isPlaceholder(s.full_name);
+        const maxDevices = Math.max(existing.active_devices ?? 0, s.active_devices ?? 0);
+        const chosen = preferCurrent ? s : existing;
+        map.set(key, {
+          ...chosen,
+          active_devices: maxDevices,
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [items]);
+
   async function load() {
     const d = await adminApi<List>(`students?q=${encodeURIComponent(search)}&page=${page}`);
     setItems(d);
@@ -71,43 +99,112 @@ export function StudentsPanel({ role }: { role: "admin" | "support" }) {
         </p>
       )}
       <form
-        className="admin-inline-form"
+        className="admin-search-bar"
+        role="search"
         onSubmit={(e) => {
           e.preventDefault();
           setPage(0);
           setSearch(query.trim());
         }}
       >
-        <label>
-          Search name or email
-          <input value={query} maxLength={120} onChange={(e) => setQuery(e.target.value)} />
-        </label>
-        <button className="button button-secondary">Search</button>
+        <div className="admin-search-input-wrap">
+          <MagnifyingGlass size={16} className="admin-search-icon" aria-hidden="true" />
+          <input
+            value={query}
+            maxLength={120}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search name or email…"
+            aria-label="Search name or email"
+          />
+          {query && (
+            <button
+              type="button"
+              className="admin-search-clear"
+              onClick={() => {
+                setQuery("");
+                setSearch("");
+                setPage(0);
+              }}
+              aria-label="Clear search query"
+            >
+              <X size={13} />
+            </button>
+          )}
+        </div>
+        <button type="submit" className="button button-secondary admin-search-btn">
+          Search
+        </button>
+        {search && (
+          <button
+            type="button"
+            className="text-link admin-search-reset"
+            onClick={() => {
+              setQuery("");
+              setSearch("");
+              setPage(0);
+            }}
+          >
+            Clear filter
+          </button>
+        )}
       </form>
       {!items ? (
-        <p role="status">Loading students…</p>
+        <TableSkeleton columns={["34%", "32%", "12%", "12%", "10%"]} rows={6} />
       ) : (
         <>
           <div className="admin-table-wrap">
             <table>
               <caption className="sr-only">Student accounts</caption>
+              <colgroup>
+                <col style={{ width: "34%" }} />
+                <col style={{ width: "32%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "12%" }} />
+                <col style={{ width: "10%" }} />
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Name</th>
+                  <th>Learner</th>
                   <th>Email</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th></th>
+                  <th className="admin-col-action">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {items.items.map((s) => (
+                {students.map((s) => (
                   <tr key={s.id}>
-                    <td>{s.full_name || "Unnamed learner"}</td>
-                    <td className="admin-break">{s.email}</td>
-                    <td>{s.role}</td>
-                    <td>{s.blocked ? "Blocked" : "Active"}</td>
                     <td>
+                      <div className="student-name-group">
+                        <span className="student-name">{s.full_name || "Unnamed learner"}</span>
+                        {typeof s.active_devices === "number" && s.active_devices > 0 && (
+                          <span
+                            className={`device-badge ${s.active_devices >= 2 ? "is-max" : ""}`}
+                            title={`${s.active_devices} device${s.active_devices > 1 ? "s" : ""} currently active (limit is 2)`}
+                          >
+                            <Devices size={13} weight="bold" aria-hidden="true" />
+                            <span>
+                              {s.active_devices >= 2
+                                ? "2 devices active"
+                                : `${s.active_devices} device`}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="admin-break">{s.email}</td>
+                    <td>
+                      <span className="admin-role-tag">{s.role}</span>
+                    </td>
+                    <td>
+                      <span
+                        className={`admin-status-pill ${s.blocked ? "is-danger" : "is-success"}`}
+                      >
+                        <span className="admin-status-dot" aria-hidden="true" />
+                        {s.blocked ? "Blocked" : "Active"}
+                      </span>
+                    </td>
+                    <td className="admin-col-action">
                       <button className="text-link" onClick={() => open(s.id)}>
                         View
                       </button>
@@ -116,6 +213,14 @@ export function StudentsPanel({ role }: { role: "admin" | "support" }) {
                 ))}
               </tbody>
             </table>
+            {!students.length && (
+              <div className="admin-empty">
+                <h3>No students found</h3>
+                <p>
+                  {search ? `No accounts match "${search}".` : "No student accounts enrolled yet."}
+                </p>
+              </div>
+            )}
           </div>
           <div className="admin-pagination">
             <span>{items.total} accounts</span>

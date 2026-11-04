@@ -125,10 +125,10 @@ export function AnnouncementsPanel() {
       toast.success(
         item.active
           ? "Announcement hidden from students' dashboard."
-          : "Announcement is now active on students' dashboard."
+          : "Announcement is now active on students' dashboard.",
       );
       setAnnouncements((prev) =>
-        prev.map((a) => (a.id === item.id ? { ...a, active: !a.active } : a))
+        prev.map((a) => (a.id === item.id ? { ...a, active: !a.active } : a)),
       );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error updating status.");
@@ -162,14 +162,18 @@ export function AnnouncementsPanel() {
       <div className="admin-section-head">
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <span className="auth-section-label" style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+            <span
+              className="auth-section-label"
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+            >
               <MegaphoneSimple size={14} weight="fill" color="var(--accent, #00df8f)" />
               Broadcasts
             </span>
           </div>
           <h2>Admin Announcements</h2>
           <p>
-            Publish announcements, live session invites, and updates directly to the students&apos; dashboard.
+            Publish announcements, live session invites, and updates directly to the students&apos;
+            dashboard.
           </p>
         </div>
 
@@ -199,7 +203,10 @@ export function AnnouncementsPanel() {
               </div>
               <div>
                 <h3>Compose Admin Announcement</h3>
-                <p>Broadcasts will show prominently at the top of every enrolled student&apos;s dashboard.</p>
+                <p>
+                  Broadcasts will show prominently at the top of every enrolled student&apos;s
+                  dashboard.
+                </p>
               </div>
             </div>
             <button
@@ -228,7 +235,10 @@ export function AnnouncementsPanel() {
               />
             </div>
 
-            <div className="admin-form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+            <div
+              className="admin-form-row"
+              style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}
+            >
               <div className="admin-field-group">
                 <label htmlFor="announcement-category">Category</label>
                 <select
@@ -257,7 +267,10 @@ export function AnnouncementsPanel() {
                 </select>
               </div>
 
-              <div className="admin-field-group" style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+              <div
+                className="admin-field-group"
+                style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}
+              >
                 <label
                   style={{
                     display: "flex",
@@ -279,7 +292,11 @@ export function AnnouncementsPanel() {
                     onChange={(e) => setPinned(e.target.checked)}
                     style={{ accentColor: "var(--accent, #00df8f)", width: "16px", height: "16px" }}
                   />
-                  <PushPin size={16} weight={pinned ? "fill" : "regular"} color={pinned ? "var(--accent, #00df8f)" : "inherit"} />
+                  <PushPin
+                    size={16}
+                    weight={pinned ? "fill" : "regular"}
+                    color={pinned ? "var(--accent, #00df8f)" : "inherit"}
+                  />
                   <span>Pin to top of student dashboard</span>
                 </label>
               </div>
@@ -298,7 +315,9 @@ export function AnnouncementsPanel() {
                 required
                 maxLength={4000}
               />
-              <span className="admin-field-help">Line breaks and links will be neatly preserved on the student screen.</span>
+              <span className="admin-field-help">
+                Line breaks and links will be neatly preserved on the student screen.
+              </span>
             </div>
 
             {/* Live Preview Box */}
@@ -306,9 +325,7 @@ export function AnnouncementsPanel() {
               <span className="admin-preview-label">
                 <Eye size={14} /> Live Student Dashboard Preview
               </span>
-              <div
-                className={`student-announcement-preview-card priority-${priority}`}
-              >
+              <div className={`student-announcement-preview-card priority-${priority}`}>
                 <div className="preview-top-bar">
                   <div className="preview-badge-group">
                     <span className="preview-admin-pill">
@@ -321,13 +338,19 @@ export function AnnouncementsPanel() {
                         <PushPin size={12} weight="fill" /> PINNED
                       </span>
                     )}
-                    {priority === "urgent" && <span className="preview-urgent-pill">⚡ URGENT</span>}
-                    {priority === "important" && <span className="preview-important-pill">⭐ IMPORTANT</span>}
+                    {priority === "urgent" && (
+                      <span className="preview-urgent-pill">⚡ URGENT</span>
+                    )}
+                    {priority === "important" && (
+                      <span className="preview-important-pill">⭐ IMPORTANT</span>
+                    )}
                   </div>
                   <span className="preview-time-label">Just now</span>
                 </div>
 
-                <h4 className="preview-title">{title || "Your Announcement Headline Will Appear Here"}</h4>
+                <h4 className="preview-title">
+                  {title || "Your Announcement Headline Will Appear Here"}
+                </h4>
                 <p className="preview-content">
                   {content ||
                     "This is a live preview showing how students will read your broadcast when they open their dashboard."}
@@ -342,7 +365,10 @@ export function AnnouncementsPanel() {
               </div>
             </div>
 
-            <div className="admin-form-actions" style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+            <div
+              className="admin-form-actions"
+              style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}
+            >
               <button
                 type="button"
                 className="button button-secondary"
@@ -351,11 +377,7 @@ export function AnnouncementsPanel() {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="button button-primary"
-                disabled={submitting}
-              >
+              <button type="submit" className="button button-primary" disabled={submitting}>
                 <MegaphoneSimple size={16} weight="fill" />
                 <span>{submitting ? "Publishing…" : "Publish to students"}</span>
               </button>
@@ -366,7 +388,14 @@ export function AnnouncementsPanel() {
 
       {/* Announcements List */}
       <div className="admin-panel">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "16px",
+          }}
+        >
           <div>
             <h3 style={{ fontSize: "16px", margin: 0 }}>Active & past broadcasts</h3>
             <p className="admin-help" style={{ margin: "4px 0 0" }}>
@@ -379,7 +408,36 @@ export function AnnouncementsPanel() {
         </div>
 
         {loading ? (
-          <p role="status">Loading announcements…</p>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              padding: "12px 0",
+            }}
+            role="status"
+            aria-label="Loading broadcasts"
+          >
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: "16px 0",
+                  borderBottom: "1px solid var(--border)",
+                }}
+              >
+                <div
+                  className="admin-skeleton admin-skeleton-title"
+                  style={{ width: "40%", marginBottom: 8 }}
+                />
+                <div
+                  className="admin-skeleton admin-skeleton-text"
+                  style={{ width: "85%", marginBottom: 8 }}
+                />
+                <div className="admin-skeleton admin-skeleton-text" style={{ width: "30%" }} />
+              </div>
+            ))}
+          </div>
         ) : announcements.length === 0 ? (
           <div className="admin-empty-state" style={{ padding: "40px 20px", textAlign: "center" }}>
             <div
@@ -398,8 +456,16 @@ export function AnnouncementsPanel() {
               <MegaphoneSimple size={24} weight="duotone" />
             </div>
             <h4 style={{ margin: "0 0 6px", fontSize: "15px" }}>No announcements published yet</h4>
-            <p style={{ margin: "0 auto 18px", maxWidth: "420px", fontSize: "13px", color: "var(--muted, #8b949e)" }}>
-              Publish your first announcement to share live trading schedules, market updates, or curriculum alerts with your students.
+            <p
+              style={{
+                margin: "0 auto 18px",
+                maxWidth: "420px",
+                fontSize: "13px",
+                color: "var(--muted, #8b949e)",
+              }}
+            >
+              Publish your first announcement to share live trading schedules, market updates, or
+              curriculum alerts with your students.
             </p>
             <button
               type="button"

@@ -138,7 +138,8 @@ export function AdminLoginGate() {
                 lineHeight: "1.55",
               }}
             >
-              This URL is restricted to authorized GlobalBulls administrators. Enter your security key to proceed.
+              This URL is restricted to authorized indianXtrade administrators. Enter your security
+              key to proceed.
             </p>
 
             {error && (
@@ -269,10 +270,14 @@ export function AdminLoginGate() {
       )}
 
       {/* Main Admin Login page rendered once unlocked (or blurred behind modal) */}
-      <div style={{ filter: unlocked ? "none" : "blur(12px)", pointerEvents: unlocked ? "auto" : "none" }}>
+      <div
+        style={{
+          filter: unlocked ? "none" : "blur(12px)",
+          pointerEvents: unlocked ? "auto" : "none",
+        }}
+      >
         <AuthPage mode="login" admin next="/admin" secretKey={secretKey} />
       </div>
     </>
   );
 }
-

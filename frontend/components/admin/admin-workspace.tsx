@@ -27,9 +27,7 @@ const AnnouncementsPanel = dynamic(() =>
 const AdminProfilePanel = dynamic(() =>
   import("./admin-profile-panel").then((module) => module.AdminProfilePanel),
 );
-const TeamPanel = dynamic(() =>
-  import("./team-panel").then((module) => module.TeamPanel),
-);
+const TeamPanel = dynamic(() => import("./team-panel").then((module) => module.TeamPanel));
 import {
   ChartBar,
   Books,
@@ -45,6 +43,8 @@ import {
   SignOut,
   MegaphoneSimple,
 } from "@phosphor-icons/react";
+import { AdminWorkspaceSkeleton } from "./admin-skeletons";
+
 type User = {
   id?: string;
   name?: string;
@@ -68,13 +68,42 @@ const allViews = [
 export function AdminWorkspace() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<string>("courses");
+  const [view, setView] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("view");
+      if (p && allViews.some((v) => v.id === p)) return p;
+    }
+    return "courses";
+  });
   const [error, setError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  const handleSelectView = (nextView: string) => {
+    setView(nextView);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("view", nextView);
+      window.history.pushState({ view: nextView }, "", url.toString());
+    }
+  };
+
+  useEffect(() => {
+    const onPopState = () => {
+      const p = new URLSearchParams(window.location.search).get("view") || "courses";
+      if (allViews.some((v) => v.id === p)) {
+        setView(p);
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("globalbulls_admin_avatar");
+      return (
+        localStorage.getItem("indianxtrade_admin_avatar") ||
+        localStorage.getItem("globalbulls_admin_avatar")
+      );
     }
     return null;
   });
@@ -82,10 +111,17 @@ export function AdminWorkspace() {
 
   useEffect(() => {
     const onAvatarUpdate = () => {
-      setAvatarUrl(localStorage.getItem("globalbulls_admin_avatar"));
+      setAvatarUrl(
+        localStorage.getItem("indianxtrade_admin_avatar") ||
+          localStorage.getItem("globalbulls_admin_avatar"),
+      );
     };
+    window.addEventListener("indianxtrade_avatar_updated", onAvatarUpdate);
     window.addEventListener("globalbulls_avatar_updated", onAvatarUpdate);
-    return () => window.removeEventListener("globalbulls_avatar_updated", onAvatarUpdate);
+    return () => {
+      window.removeEventListener("indianxtrade_avatar_updated", onAvatarUpdate);
+      window.removeEventListener("globalbulls_avatar_updated", onAvatarUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -156,12 +192,7 @@ export function AdminWorkspace() {
         </Link>
       </main>
     );
-  if (!user)
-    return (
-      <main id="main-content" className="container admin-page">
-        <p role="status">Checking staff access…</p>
-      </main>
-    );
+  if (!user) return <AdminWorkspaceSkeleton />;
   if (user.aal !== "aal2" && user.aal !== "local-demo")
     return (
       <main id="main-content" className="container admin-page">
@@ -190,12 +221,10 @@ export function AdminWorkspace() {
       <button
         key={id}
         type="button"
-        role="tab"
-        aria-selected={view === id}
         className={view === id ? "is-active" : ""}
         aria-current={view === id ? "page" : undefined}
         onClick={(e) => {
-          setView(id);
+          handleSelectView(id);
           e.currentTarget.focus();
         }}
       >
@@ -206,25 +235,46 @@ export function AdminWorkspace() {
   return (
     <main id="main-content" className="admin-page">
       <aside className="admin-sidebar" aria-label="Admin sections">
-        <Link href="/" className="admin-brand" aria-label="GlobalBulls storefront">
-          <BullMark className="admin-brand-mark" />
-          <span>
-            Global<span>Bulls</span>
-          </span>
+        <Link href="/" className="admin-brand" aria-label="indianXtrade storefront">
+          <BullMark className="admin-brand-mark" height={54} />
         </Link>
-        <button type="button" className="admin-workspace-switcher">
-          <span>Admin workspace</span>
-          <CaretDown size={16} />
-        </button>
-        <div className="admin-nav-group">
+        <div
+          className="student-workspace-switcher"
+          role="status"
+          aria-label="Current workspace: Admin"
+        >
+          <div className="student-workspace-info">
+            <ShieldCheck size={17} weight="duotone" color="var(--accent, #00df8f)" />
+            <span>Staff workspace</span>
+          </div>
+          <span className="student-workspace-status">
+            <i />
+            Active
+          </span>
+        </div>
+        <nav className="admin-mobile-tabs" aria-label="Admin mobile navigation">
+          {views.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className={view === id ? "is-active" : ""}
+              aria-current={view === id ? "page" : undefined}
+              onClick={() => handleSelectView(id)}
+            >
+              <Icon size={15} weight={view === id ? "fill" : "regular"} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="admin-nav-group" aria-label="Workspace navigation">
           <span className="admin-nav-label">Workspace</span>
           {renderNavItems(workspaceItems)}
         </div>
-        <div className="admin-nav-group">
+        <div className="admin-nav-group" aria-label="Commerce navigation">
           <span className="admin-nav-label">Commerce</span>
           {renderNavItems(commerceItems)}
         </div>
-        <div className="admin-nav-group">
+        <div className="admin-nav-group" aria-label="Manage navigation">
           <span className="admin-nav-label">Manage</span>
           {renderNavItems(manageItems)}
         </div>
@@ -262,7 +312,7 @@ export function AdminWorkspace() {
             </button>
 
             {profileMenuOpen && (
-              <div className="admin-user-popover" role="menu">
+              <div className="admin-user-popover" aria-label="Administrator account options">
                 <div className="admin-popover-header">
                   <div className="admin-avatar">
                     {avatarUrl ? (
@@ -282,7 +332,7 @@ export function AdminWorkspace() {
                   type="button"
                   className={`admin-popover-item ${view === "profile" ? "is-active" : ""}`}
                   onClick={() => {
-                    setView("profile");
+                    handleSelectView("profile");
                     setProfileMenuOpen(false);
                   }}
                 >
@@ -294,7 +344,7 @@ export function AdminWorkspace() {
                   type="button"
                   className={`admin-popover-item ${view === "settings" ? "is-active" : ""}`}
                   onClick={() => {
-                    setView("settings");
+                    handleSelectView("settings");
                     setProfileMenuOpen(false);
                   }}
                 >

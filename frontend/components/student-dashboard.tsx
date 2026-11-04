@@ -99,6 +99,9 @@ export function StudentDashboard({
   const [activeLessonContent, setActiveLessonContent] = useState<PurchaseLessonContent | null>(
     null,
   );
+  const [lessonState, setLessonState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [lessonErrorMessage, setLessonErrorMessage] = useState<string | null>(null);
+  const [lessonFetchTrigger, setLessonFetchTrigger] = useState(0);
 
   const handleSelectView = (
     targetView: "courses" | "explore" | "billing" | "account",
@@ -113,7 +116,7 @@ export function StudentDashboard({
     }
     if (typeof window !== "undefined") {
       const url = targetView === "courses" ? "/dashboard" : `/dashboard?view=${targetView}`;
-      window.history.replaceState(null, "", url);
+      window.history.pushState(null, "", url);
     }
     event?.currentTarget.focus();
   };
@@ -150,24 +153,33 @@ export function StudentDashboard({
   const handleOpenCourse = (slug: string, lessonId?: string | null) => {
     setActiveCourseSlug(slug);
     setActiveLessonId(lessonId || null);
+    setActiveLessonContent(null);
+    setLessonState("loading");
+    setLessonErrorMessage(null);
     if (typeof window !== "undefined") {
       const url = lessonId
         ? `/dashboard?course=${encodeURIComponent(slug)}&lesson=${encodeURIComponent(lessonId)}`
         : `/dashboard?course=${encodeURIComponent(slug)}`;
-      window.history.replaceState(null, "", url);
+      window.history.pushState(null, "", url);
     }
   };
 
   const handleCloseCourse = () => {
     setActiveCourseSlug(null);
     setActiveLessonId(null);
+    setActiveLessonContent(null);
+    setLessonState("idle");
+    setLessonErrorMessage(null);
     if (typeof window !== "undefined") {
-      window.history.replaceState(null, "", "/dashboard");
+      window.history.pushState(null, "", "/dashboard");
     }
   };
 
   const handleLessonChange = (lessonId: string) => {
     setActiveLessonId(lessonId);
+    setActiveLessonContent(null);
+    setLessonState("loading");
+    setLessonErrorMessage(null);
     if (typeof window !== "undefined" && activeCourseSlug) {
       window.history.replaceState(
         null,
@@ -252,6 +264,15 @@ export function StudentDashboard({
     });
   }, [enrolledCourses, courseFilter]);
 
+  // Available levels derived dynamically from published courses
+  const availableLevels = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of catalogueList) {
+      if (c.level) set.add(c.level.trim());
+    }
+    return Array.from(set);
+  }, [catalogueList]);
+
   // Filtered catalogue courses for explore tab
   const filteredExploreCourses = useMemo(() => {
     return catalogueList.filter((c) => {
@@ -292,36 +313,42 @@ export function StudentDashboard({
       return;
     }
     let cancelled = false;
-    fetch(`/api/purchase/lesson?id=${encodeURIComponent(currentActiveLessonId)}`)
-      .then((r) => r.json())
+    const controller = new AbortController();
+
+    fetch(`/api/purchase/lesson?id=${encodeURIComponent(currentActiveLessonId)}`, {
+      signal: controller.signal,
+    })
+      .then(async (r) => {
+        if (!r.ok) {
+          const errData = await r.json().catch(() => ({}));
+          throw new Error(errData?.error || `Unable to load lesson (HTTP ${r.status})`);
+        }
+        return r.json();
+      })
       .then((data) => {
-        if (!cancelled && data.lesson) {
-          setActiveLessonContent(data.lesson);
+        if (!cancelled) {
+          if (data.lesson) {
+            setActiveLessonContent(data.lesson);
+            setLessonState("ready");
+          } else {
+            setLessonState("error");
+            setLessonErrorMessage("Lesson content could not be found.");
+          }
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!cancelled && err.name !== "AbortError") {
+          setLessonState("error");
+          setLessonErrorMessage(
+            err instanceof Error ? err.message : "Failed to load lesson content.",
+          );
+        }
+      });
     return () => {
       cancelled = true;
+      controller.abort();
     };
-  }, [currentActiveLessonId]);
-
-  const activeLessonToPlay: PurchaseLessonContent | null = useMemo(() => {
-    if (!activeLessonSummary) return null;
-    if (activeLessonContent && activeLessonContent.id === activeLessonSummary.id) {
-      return activeLessonContent;
-    }
-    return {
-      id: activeLessonSummary.id,
-      title: activeLessonSummary.title,
-      duration: activeLessonSummary.duration,
-      preview: activeLessonSummary.preview,
-      completed: activeLessonSummary.completed,
-      content:
-        "In this lesson you'll learn what drives market movement, how market structure forms through highs and lows, and why understanding structure is essential for making better trading decisions.",
-      videoUrl: "/sample-lesson.mp4",
-      isDemo: true,
-    };
-  }, [activeLessonSummary, activeLessonContent]);
+  }, [currentActiveLessonId, lessonFetchTrigger]);
 
   return (
     <main id="main-content" className="admin-page student-dashboard-page">
@@ -329,15 +356,16 @@ export function StudentDashboard({
           LEFT SIDEBAR (Identical to Admin Workspace)
           ========================================================================= */}
       <aside className="admin-sidebar" aria-label="Student dashboard navigation">
-        <Link href="/" className="admin-brand" aria-label="GlobalBulls storefront">
-          <BullMark className="admin-brand-mark" />
-          <span>
-            Global<span>Bulls</span>
-          </span>
+        <Link href="/" className="admin-brand" aria-label="indianXtrade storefront">
+          <BullMark className="admin-brand-mark" height={54} />
         </Link>
 
         {/* Workspace pill */}
-        <div className="student-workspace-switcher" role="status" aria-label="Current workspace: Student">
+        <div
+          className="student-workspace-switcher"
+          role="status"
+          aria-label="Current workspace: Student"
+        >
           <div className="student-workspace-info">
             <GraduationCap size={17} weight="duotone" color="var(--accent, #00df8f)" />
             <span>Student workspace</span>
@@ -454,7 +482,7 @@ export function StudentDashboard({
             >
               Student
             </button>
-            <span style={{ color: "rgba(255, 255, 255, 0.2)" }}>/</span>
+            <span style={{ color: "var(--border, rgba(255, 255, 255, 0.2))" }}>/</span>
             <span className="student-breadcrumb-current">
               {view === "courses" &&
                 (activeCourse ? (
@@ -467,7 +495,11 @@ export function StudentDashboard({
                     >
                       My courses
                     </button>
-                    <span style={{ color: "rgba(255, 255, 255, 0.2)", margin: "0 8px" }}>/</span>
+                    <span
+                      style={{ color: "var(--border, rgba(255, 255, 255, 0.2))", margin: "0 8px" }}
+                    >
+                      /
+                    </span>
                     <span>{activeCourse.title}</span>
                   </>
                 ) : (
@@ -508,17 +540,94 @@ export function StudentDashboard({
               VIEW: MY COURSES (Combined Overview + Courses)
               ===================================================================== */}
           {view === "courses" &&
-            (activeCourse && activeLessonToPlay ? (
-              <div className="student-active-player-wrap">
-                <PurchasePlayer
-                  key={activeLessonToPlay.id}
-                  course={activeCourse}
-                  lesson={activeLessonToPlay}
-                  user={user}
-                  onBack={handleCloseCourse}
-                  onLessonChange={handleLessonChange}
-                />
-              </div>
+            (activeCourse ? (
+              activeLessonContent ? (
+                <div className="student-active-player-wrap">
+                  <PurchasePlayer
+                    key={activeLessonContent.id}
+                    course={activeCourse}
+                    lesson={activeLessonContent}
+                    user={user}
+                    onBack={handleCloseCourse}
+                    onLessonChange={handleLessonChange}
+                  />
+                </div>
+              ) : lessonState === "error" ? (
+                <div className="student-active-player-wrap" style={{ padding: "40px 24px" }}>
+                  <div
+                    style={{
+                      maxWidth: "520px",
+                      margin: "60px auto",
+                      textAlign: "center",
+                      background: "var(--surface)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "12px",
+                      padding: "32px 24px",
+                    }}
+                    role="alert"
+                  >
+                    <h3
+                      style={{
+                        fontSize: "18px",
+                        color: "var(--danger, #ff4d4f)",
+                        margin: "0 0 8px",
+                      }}
+                    >
+                      We couldn&apos;t load this lesson
+                    </h3>
+                    <p style={{ color: "var(--muted)", fontSize: "14px", margin: "0 0 20px" }}>
+                      {lessonErrorMessage ||
+                        "An unexpected error occurred while loading this lesson. Please check your connection or retry."}
+                    </p>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "12px",
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="button button-primary button-sm"
+                        onClick={() => {
+                          setLessonState("loading");
+                          setLessonErrorMessage(null);
+                          setLessonFetchTrigger((v) => v + 1);
+                        }}
+                      >
+                        Retry loading
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-secondary button-sm"
+                        onClick={handleCloseCourse}
+                      >
+                        Back to courses
+                      </button>
+                      <Link
+                        href="/contact?topic=learning"
+                        className="button button-secondary button-sm"
+                      >
+                        Contact support
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="student-active-player-wrap"
+                  style={{ padding: "40px 24px", textAlign: "center" }}
+                >
+                  <div style={{ maxWidth: "480px", margin: "60px auto" }}>
+                    <div className="admin-loading-spinner" style={{ margin: "0 auto 16px" }} />
+                    <h3 style={{ fontSize: "18px", margin: "0 0 8px" }}>Loading classroom...</h3>
+                    <p style={{ color: "var(--muted)", fontSize: "14px", margin: 0 }}>
+                      Preparing lesson materials and authorized stream.
+                    </p>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="student-dashboard-layout">
                 {/* PRIMARY STAGE: Greeting, Continue Learning, All Courses */}
@@ -528,8 +637,8 @@ export function StudentDashboard({
                     <div>
                       <h1>My courses</h1>
                       <p>
-                        Welcome back, {user.name.split(" ")[0]}. Track your progress, resume modules,
-                        and access your enrolled curriculum.
+                        Welcome back, {user.name.split(" ")[0]}. Track your progress, resume
+                        modules, and access your enrolled curriculum.
                       </p>
                     </div>
                     <div className="student-header-actions">
@@ -577,7 +686,10 @@ export function StudentDashboard({
                               type="button"
                               className="button button-primary"
                               onClick={() => {
-                                handleOpenCourse(featuredCourse.slug, featuredNextLesson?.id || null);
+                                handleOpenCourse(
+                                  featuredCourse.slug,
+                                  featuredNextLesson?.id || null,
+                                );
                               }}
                             >
                               <PlayCircle size={18} />
@@ -813,12 +925,17 @@ export function StudentDashboard({
                               role="button"
                               tabIndex={0}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") setAnnouncementsCollapsed(false);
+                                if (e.key === "Enter" || e.key === " ")
+                                  setAnnouncementsCollapsed(false);
                               }}
                             >
                               <div className="collapsed-left">
                                 <span className="live-pulse-dot" />
-                                <MegaphoneSimple size={16} weight="fill" color="var(--accent, #00df8f)" />
+                                <MegaphoneSimple
+                                  size={16}
+                                  weight="fill"
+                                  color="var(--accent, #00df8f)"
+                                />
                                 <strong>Admin Announcement:</strong>
                                 <span className="collapsed-title">{current.title}</span>
                               </div>
@@ -849,17 +966,23 @@ export function StudentDashboard({
                                   <MegaphoneSimple size={14} weight="fill" />
                                   ADMIN ANNOUNCEMENT
                                 </span>
-                                <span className="announcement-category-tag">{current.category}</span>
+                                <span className="announcement-category-tag">
+                                  {current.category}
+                                </span>
                                 {current.pinned && (
                                   <span className="announcement-pinned-tag">
                                     <PushPin size={12} weight="fill" /> Pinned
                                   </span>
                                 )}
                                 {current.priority === "urgent" && (
-                                  <span className="announcement-priority-tag urgent">⚡ Urgent</span>
+                                  <span className="announcement-priority-tag urgent">
+                                    ⚡ Urgent
+                                  </span>
                                 )}
                                 {current.priority === "important" && (
-                                  <span className="announcement-priority-tag important">⭐ Important</span>
+                                  <span className="announcement-priority-tag important">
+                                    ⭐ Important
+                                  </span>
                                 )}
                               </div>
 
@@ -881,10 +1004,12 @@ export function StudentDashboard({
                                     </span>
                                     <button
                                       type="button"
-                                      disabled={activeAnnouncementIndex >= announcementsList.length - 1}
+                                      disabled={
+                                        activeAnnouncementIndex >= announcementsList.length - 1
+                                      }
                                       onClick={() =>
                                         setActiveAnnouncementIndex((prev) =>
-                                          Math.min(announcementsList.length - 1, prev + 1)
+                                          Math.min(announcementsList.length - 1, prev + 1),
                                         )
                                       }
                                       aria-label="Next announcement"
@@ -912,7 +1037,11 @@ export function StudentDashboard({
 
                             <div className="announcement-footer">
                               <span className="announcement-author-info">
-                                <ShieldCheck size={14} weight="fill" color="var(--accent, #00df8f)" />
+                                <ShieldCheck
+                                  size={14}
+                                  weight="fill"
+                                  color="var(--accent, #00df8f)"
+                                />
                                 Broadcasted by {current.author_name || "Admin"}
                               </span>
                               <span className="announcement-date">
@@ -962,9 +1091,20 @@ export function StudentDashboard({
                           <Clock size={16} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <strong>{stats.activeAccessCount > 0 ? "Active Access" : "Expired"}</strong>
-                            <span className="student-role-pill" style={{ padding: "2px 8px", fontSize: "10px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <strong>
+                              {stats.activeAccessCount > 0 ? "Active Access" : "Expired"}
+                            </strong>
+                            <span
+                              className="student-role-pill"
+                              style={{ padding: "2px 8px", fontSize: "10px" }}
+                            >
                               <i /> Confirmed
                             </span>
                           </div>
@@ -1039,13 +1179,20 @@ export function StudentDashboard({
                     value={exploreQuery}
                     onChange={(e) => setExploreQuery(e.target.value)}
                     placeholder="Search courses by topic, title or keywords…"
+                    aria-label="Search courses by topic, title or keywords"
                   />
                 </div>
-                <select value={exploreLevel} onChange={(e) => setExploreLevel(e.target.value)}>
+                <select
+                  value={exploreLevel}
+                  onChange={(e) => setExploreLevel(e.target.value)}
+                  aria-label="Filter courses by difficulty level"
+                >
                   <option value="all">All levels</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
+                  {availableLevels.map((lvl) => (
+                    <option key={lvl.toLowerCase()} value={lvl.toLowerCase()}>
+                      {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -1234,6 +1381,14 @@ export function StudentDashboard({
                                 >
                                   View receipt
                                 </Link>
+                              ) : order.status === "pending" ? (
+                                <Link
+                                  href={`/checkout/status/${order.id}`}
+                                  className="button button-secondary button-sm"
+                                  style={{ padding: "4px 10px", fontSize: "12px" }}
+                                >
+                                  Check status
+                                </Link>
                               ) : (
                                 <Link
                                   href={`/checkout/${order.slug || order.courseId}`}
@@ -1329,24 +1484,56 @@ export function StudentDashboard({
                     <h3 style={{ margin: "0 0 8px", fontSize: "16px" }}>
                       Security & Single Session
                     </h3>
-                    <p style={{ margin: "0 0 16px", fontSize: "13px", color: "var(--muted)", lineHeight: 1.5 }}>
-                      To protect course materials and comply with our terms, your account is tied
-                      to verified single-device playback. If you switch devices, your previous
-                      session is cleanly released.
+                    <p
+                      style={{
+                        margin: "0 0 16px",
+                        fontSize: "13px",
+                        color: "var(--muted)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      To protect course materials and comply with our terms, your account is tied to
+                      verified single-device playback. If you switch devices, your previous session
+                      is cleanly released.
                     </p>
-                    <Link href="/account" className="button button-secondary button-sm" style={{ alignSelf: "flex-start" }}>
-                      <ShieldCheck size={16} />
-                      <span>Manage registered devices</span>
-                    </Link>
+                    {local ? (
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--muted)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <ShieldCheck size={16} /> Device management active in production deployment
+                      </span>
+                    ) : (
+                      <Link
+                        href="/account"
+                        className="button button-secondary button-sm"
+                        style={{ alignSelf: "flex-start" }}
+                      >
+                        <ShieldCheck size={16} />
+                        <span>Manage registered devices</span>
+                      </Link>
+                    )}
                   </div>
 
                   <div className="student-profile-card">
                     <h3 style={{ margin: "0 0 8px", fontSize: "16px" }}>
                       Refund Support & Assistance
                     </h3>
-                    <p style={{ margin: "0 0 16px", fontSize: "13px", color: "var(--muted)", lineHeight: 1.5 }}>
-                      Need help with an order, or have questions about course access? Our support team
-                      is available to assist you.
+                    <p
+                      style={{
+                        margin: "0 0 16px",
+                        fontSize: "13px",
+                        color: "var(--muted)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Need help with an order, or have questions about course access? Our support
+                      team is available to assist you.
                     </p>
                     <Link
                       href="/contact?topic=refund"
@@ -1363,6 +1550,46 @@ export function StudentDashboard({
           )}
         </div>
       </div>
+
+      {/* Mobile navigation bar — visible on screens <= 900px */}
+      <nav className="workspace-mobile-nav" aria-label="Student workspace navigation">
+        <button
+          type="button"
+          className={view === "courses" ? "is-active" : ""}
+          aria-current={view === "courses" ? "page" : undefined}
+          onClick={(e) => handleSelectView("courses", e)}
+        >
+          <Books size={20} weight={view === "courses" ? "fill" : "regular"} />
+          <span>My courses</span>
+        </button>
+        <button
+          type="button"
+          className={view === "explore" ? "is-active" : ""}
+          aria-current={view === "explore" ? "page" : undefined}
+          onClick={(e) => handleSelectView("explore", e)}
+        >
+          <Compass size={20} weight={view === "explore" ? "fill" : "regular"} />
+          <span>Explore</span>
+        </button>
+        <button
+          type="button"
+          className={view === "billing" ? "is-active" : ""}
+          aria-current={view === "billing" ? "page" : undefined}
+          onClick={(e) => handleSelectView("billing", e)}
+        >
+          <Receipt size={20} weight={view === "billing" ? "fill" : "regular"} />
+          <span>Billing</span>
+        </button>
+        <button
+          type="button"
+          className={view === "account" ? "is-active" : ""}
+          aria-current={view === "account" ? "page" : undefined}
+          onClick={(e) => handleSelectView("account", e)}
+        >
+          <UserCircle size={20} weight={view === "account" ? "fill" : "regular"} />
+          <span>Profile</span>
+        </button>
+      </nav>
     </main>
   );
 }

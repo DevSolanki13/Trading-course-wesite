@@ -1,12 +1,12 @@
 /* ==========================================================================
-   GlobalBulls Î“Ã‡Ã¶ Student Dashboard Styles
+   indianXtrade — Student Dashboard Styles
    Inherits Admin Workspace Aesthetic: Deep Charcoal, Machined Cards, Emerald Accents
    ========================================================================== */
 
 .student-dashboard-page {
   width: 100%;
   min-height: 100vh;
-  background: var(--background, #07090C);
+  background: var(--background, #07090c);
 }
 
 /* Ensure global storefront nav/footer are hidden inside the full student app shell */
@@ -97,7 +97,9 @@ body:has(.student-dashboard-page) .site-footer {
   background: color-mix(in srgb, var(--accent, #00df8f) 16%, transparent) !important;
   color: var(--foreground, #ffffff) !important;
   border-left: 3px solid var(--accent, #00df8f) !important;
-  box-shadow: inset 3px 0 0 var(--accent, #00df8f), 0 2px 8px rgba(0, 223, 143, 0.08);
+  box-shadow:
+    inset 3px 0 0 var(--accent, #00df8f),
+    0 2px 8px rgba(0, 223, 143, 0.08);
   font-weight: 600;
 }
 
@@ -120,7 +122,11 @@ body:has(.student-dashboard-page) .site-footer {
 }
 
 .student-dashboard-page .admin-sidebar .admin-nav-group button.is-active .student-nav-badge,
-.student-dashboard-page .admin-sidebar .admin-nav-group button[aria-current="page"] .student-nav-badge {
+.student-dashboard-page
+  .admin-sidebar
+  .admin-nav-group
+  button[aria-current="page"]
+  .student-nav-badge {
   color: var(--accent, #00df8f);
   background: rgba(0, 223, 143, 0.16);
   border-color: rgba(0, 223, 143, 0.3);
@@ -136,7 +142,7 @@ body:has(.student-dashboard-page) .site-footer {
   min-height: 72px;
   padding: 18px 40px;
   border-bottom: 1px solid var(--line, rgba(255, 255, 255, 0.08));
-  background: color-mix(in srgb, var(--background, #07090C) 90%, #071018);
+  background: color-mix(in srgb, var(--background, #07090c) 90%, #071018);
 }
 
 .student-breadcrumb {
@@ -508,7 +514,9 @@ body:has(.student-dashboard-page) .site-footer {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .student-metric-card:hover {
@@ -743,7 +751,9 @@ body:has(.student-dashboard-page) .site-footer {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease;
 }
 
 .student-course-card:hover {
@@ -1229,8 +1239,6 @@ body:has(.student-dashboard-page) .site-footer {
   background: rgba(0, 0, 0, 0.08);
 }
 
-
-
 /* ==========================================================================
    Admin Announcement Card & Collapsed Bar (Student Dashboard)
    ========================================================================== */
@@ -1245,18 +1253,24 @@ body:has(.student-dashboard-page) .site-footer {
   border: 1px solid rgba(0, 223, 143, 0.28);
   border-radius: 14px;
   padding: 20px 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .student-announcement-card.priority-important {
   border-color: rgba(245, 158, 11, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(245, 158, 11, 0.06);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(245, 158, 11, 0.06);
 }
 
 .student-announcement-card.priority-urgent {
   border-color: rgba(239, 68, 68, 0.45);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(239, 68, 68, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 24px rgba(239, 68, 68, 0.08);
 }
 
 .announcement-header {

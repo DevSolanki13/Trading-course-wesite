@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { adminApi, operation, formNumber, formText } from "../../lib/admin-api";
 import type { SettingsView } from "../../../shared/admin";
+import { SettingsSkeleton } from "./admin-skeletons";
 export function SettingsPanel() {
   const [data, setData] = useState<SettingsView | null>(null);
   const [error, setError] = useState("");
@@ -67,7 +68,7 @@ export function SettingsPanel() {
         </p>
       )}
       {!data ? (
-        <p role="status">Loading settings…</p>
+        <SettingsSkeleton />
       ) : (
         <form className="admin-form admin-settings" key={data.version} onSubmit={save}>
           <div className="admin-panel">

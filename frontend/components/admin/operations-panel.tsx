@@ -120,6 +120,12 @@ export function OperationsPanel({ view }: { view: "operations" | "audit" }) {
           <div className="admin-table-wrap">
             <table>
               <caption className="sr-only">Audit events</caption>
+              <colgroup>
+                <col style={{ width: "20%" }} />
+                <col style={{ width: "22%" }} />
+                <col style={{ width: "28%" }} />
+                <col style={{ width: "30%" }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Time</th>
