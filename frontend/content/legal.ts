@@ -54,7 +54,7 @@ export const legalPages = {
       },
       {
         title: "Governing law and disputes",
-        body: "These Terms are governed by the laws of India. Any dispute arising out of or in connection with these Terms shall first be attempted to be resolved amicably by contacting us. If not resolved within 30 days, it shall be referred to arbitration by a sole arbitrator under the Arbitration and Conciliation Act, 1996, seated in Bhopal, Madhya Pradesh, and conducted in English. Subject to arbitration, the courts at Bhopal, Madhya Pradesh shall have exclusive jurisdiction. Nothing in this clause limits your rights under applicable consumer protection law.",
+        body: "These Terms are governed by the laws of India. Any dispute arising out of or in connection with these Terms shall first be attempted to be resolved amicably by contacting us. If not resolved within 30 days, it shall be referred to arbitration by a sole arbitrator under the Arbitration and Conciliation Act, 1996, seated in Guwahati, Assam, and conducted in English. Subject to arbitration, the courts at Guwahati, Assam shall have exclusive jurisdiction. Nothing in this clause limits your rights under applicable consumer protection law.",
       },
       {
         title: "Grievance redressal",
