@@ -6,7 +6,7 @@ export const site = {
   business: {
     operator: "Nikhil Pandey",
     phone: "+91 91810 53438",
-    city: "Bhopal, Madhya Pradesh 462011, India",
+    city: "Khanapara, Guwahati, Assam 781022, India",
   },
   telegramUrl: null as string | null,
   instagramUrl: null as string | null,
