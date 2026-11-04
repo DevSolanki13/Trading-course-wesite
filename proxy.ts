@@ -17,6 +17,16 @@ export async function proxy(request: NextRequest) {
     localDemoEnabled(),
   );
   const requestHeaders = new Headers(request.headers);
+  // If an OAuth code arrives on root or another route (e.g. Supabase fallback), forward to callback handler
+  if (
+    request.nextUrl.searchParams.has("code") &&
+    !request.nextUrl.pathname.startsWith("/auth/callback")
+  ) {
+    const callbackUrl = new URL("/auth/callback", request.url);
+    callbackUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(callbackUrl, 303);
+  }
+
   const protectedPage = /^\/(dashboard|checkout)(\/|$)/.test(request.nextUrl.pathname);
   const hasSession = localDemoEnabled()
     ? !!request.cookies.get("mm_local_session")

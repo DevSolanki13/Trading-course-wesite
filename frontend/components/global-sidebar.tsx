@@ -34,14 +34,15 @@ export function GlobalSidebar() {
     setMobileOpen(false);
   }
 
-  // Don't double-render a sidebar on pages that have their own dedicated workspace sidebar
+  // Hide navigation bar on the landing page, and don't double-render on pages with their own dedicated workspace sidebar
+  const isLandingPage = pathname === "/";
   const hasDedicatedSidebar =
     pathname.startsWith("/admin") ||
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
     pathname.startsWith("/learn/");
 
-  if (hasDedicatedSidebar) {
+  if (isLandingPage || hasDedicatedSidebar) {
     return null;
   }
 

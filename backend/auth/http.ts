@@ -12,7 +12,18 @@ export class AuthError extends Error {
     this.code = code;
   }
 }
-export function appOrigin() {
+export function appOrigin(request?: Request) {
+  if (request) {
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+    if (forwardedHost) {
+      return `${forwardedProto}://${forwardedHost}`;
+    }
+    const host = request.headers.get("host");
+    if (host && !host.includes("localhost") && !host.includes("127.0.0.1")) {
+      return `https://${host}`;
+    }
+  }
   const url = new URL(requireEnv("NEXT_PUBLIC_APP_URL"));
   if (url.protocol !== "https:" && !["localhost", "127.0.0.1"].includes(url.hostname))
     throw new AuthError(503, "Secure application URL is not configured.");
@@ -20,7 +31,7 @@ export function appOrigin() {
 }
 export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  const expected = new URL(appOrigin());
+  const expected = new URL(appOrigin(request));
   if (origin === expected.origin) return;
   try {
     const incoming = new URL(origin ?? "");

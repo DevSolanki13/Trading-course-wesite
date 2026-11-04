@@ -494,7 +494,7 @@ export async function authRequest(request: Request) {
       const { data, error } = await client.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${appOrigin()}/auth/callback`,
+          redirectTo: `${appOrigin(request)}/auth/callback`,
           skipBrowserRedirect: true,
           queryParams: { prompt: "select_account" },
         },
@@ -682,10 +682,10 @@ export async function oauthCallback(request: Request) {
     const state = await admission(context, request);
     store.delete("mm_oauth_next");
     store.delete("mm_oauth_admin");
-    return NextResponse.redirect(new URL(destination(state, next, context), appOrigin()), 303);
+    return NextResponse.redirect(new URL(destination(state, next, context), appOrigin(request)), 303);
   } catch (error) {
     console.error("OAuth callback error:", error);
-    return NextResponse.redirect(new URL("/login?error=oauth", appOrigin()), 303);
+    return NextResponse.redirect(new URL("/login?error=oauth", appOrigin(request)), 303);
   }
 }
 
