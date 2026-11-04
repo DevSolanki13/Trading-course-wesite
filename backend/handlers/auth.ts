@@ -58,6 +58,35 @@ async function options() {
   return { googleEnabled: google && process.env.GOOGLE_OAUTH_CONFIGURED === "true" };
 }
 
+function isValidAdminSecretKey(providedKey: string): boolean {
+  if (!providedKey) return false;
+  const configuredKey = process.env.ADMIN_SECRET_KEY;
+  const isProd =
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL === "1" ||
+    process.env.VERCEL_ENV === "production";
+  const insecureSampleKeys = new Set([
+    "indianxtrade-admin",
+    "globalbulls-admin-2026",
+    "globalbulls-admin",
+    "admin",
+  ]);
+
+  if (isProd) {
+    if (!configuredKey || configuredKey.length < 16 || insecureSampleKeys.has(configuredKey)) {
+      throw new AuthError(
+        503,
+        "Admin secret key is not securely configured in production.",
+        "INSECURE_CONFIGURATION",
+      );
+    }
+    return providedKey === configuredKey && !insecureSampleKeys.has(providedKey);
+  }
+
+  const expected = configuredKey || "indianxtrade-admin";
+  return providedKey === expected;
+}
+
 export async function authRequest(request: Request) {
   if (localDemoEnabled()) return localAuthRequest(request);
   try {
@@ -190,12 +219,7 @@ export async function authRequest(request: Request) {
           .strict(),
         await body(request),
       );
-      const expectedKey = process.env.ADMIN_SECRET_KEY || "indianxtrade-admin";
-      const validKey =
-        input.secretKey === expectedKey ||
-        input.secretKey === "indianxtrade-admin" ||
-        input.secretKey === "globalbulls-admin-2026";
-      if (!validKey) {
+      if (!isValidAdminSecretKey(input.secretKey)) {
         throw new AuthError(401, "Invalid Admin Secret Key. Access denied.", "INVALID_SECRET_KEY");
       }
       await setRemember(input.remember);
@@ -278,12 +302,7 @@ export async function authRequest(request: Request) {
     }
     if (action === "verify-admin-key") {
       const input = parse(z.object({ secretKey: z.string().min(1) }).strict(), await body(request));
-      const expectedKey = process.env.ADMIN_SECRET_KEY || "indianxtrade-admin";
-      const validKey =
-        input.secretKey === expectedKey ||
-        input.secretKey === "indianxtrade-admin" ||
-        input.secretKey === "globalbulls-admin-2026";
-      if (!validKey) {
+      if (!isValidAdminSecretKey(input.secretKey)) {
         throw new AuthError(401, "Invalid Admin Secret Key. Access denied.", "INVALID_SECRET_KEY");
       }
       return json({ valid: true, message: "Admin Secret Key verified." });
@@ -303,12 +322,7 @@ export async function authRequest(request: Request) {
         await body(request),
       );
       if (input.admin) {
-        const expectedKey = process.env.ADMIN_SECRET_KEY || "indianxtrade-admin";
-        const validKey =
-          input.secretKey === expectedKey ||
-          input.secretKey === "indianxtrade-admin" ||
-          input.secretKey === "globalbulls-admin-2026";
-        if (!validKey) {
+        if (!isValidAdminSecretKey(input.secretKey || "")) {
           throw new AuthError(
             401,
             "Invalid Admin Secret Key. Staff sign-in denied.",

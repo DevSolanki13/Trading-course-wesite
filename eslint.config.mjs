@@ -6,6 +6,12 @@ export default defineConfig([
   ...nextVitals,
   ...nextTypescript,
   {
+    files: ["app/**/opengraph-image.tsx", "app/**/twitter-image.tsx"],
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
+  {
     files: ["frontend/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [

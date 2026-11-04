@@ -27,7 +27,6 @@ export default function OpenGraphImage() {
       }}
     >
       <div style={{ display: "flex", alignItems: "center" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={logoSrc}
           width={220}
