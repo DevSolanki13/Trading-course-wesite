@@ -23,19 +23,23 @@ const baseLinks = [{ href: "/courses", label: "Courses" }];
 import { ThemeToggle } from "./theme-toggle";
 export { ThemeToggle };
 
-export function Brand({ footer = false }: { footer?: boolean }) {
+export function Brand({
+  footer = false,
+  isLanding = false,
+}: {
+  footer?: boolean;
+  isLanding?: boolean;
+}) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const height = footer ? 38 : isLanding ? 34 : 46;
   return (
     <Link
       href={isAdmin ? "/admin" : "/"}
-      className={`brand ${footer ? "brand-footer" : ""}`}
-      aria-label="GlobalBulls home"
+      className={`brand ${footer ? "brand-footer" : ""} ${isLanding ? "brand-landing" : ""}`}
+      aria-label="indianXtrade home"
     >
-      <BullMark className="brand-bull-mark" />
-      <span>
-        <span className="brand-light">Global</span>Bulls
-      </span>
+      <BullMark className="brand-bull-mark" height={height} />
     </Link>
   );
 }
@@ -43,6 +47,7 @@ export function Brand({ footer = false }: { footer?: boolean }) {
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
+  const isLanding = pathname === "/";
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -115,171 +120,195 @@ export function SiteHeader() {
   const navLinks =
     signedIn && role === "admin"
       ? [{ href: "/admin", label: "Admin workspace" }]
-      : baseLinks;
+      : signedIn
+        ? [
+            { href: "/courses", label: "Courses" },
+            { href: "/dashboard", label: "My classroom" },
+          ]
+        : baseLinks;
+
+  const isWorkspace =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname.startsWith("/learn/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
+
+  if (isWorkspace) {
+    return null;
+  }
 
   return (
     <>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
-      <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
+      <header
+        className={`site-header ${isLanding ? "site-header-landing" : ""} ${scrolled ? "is-scrolled" : ""}`}
+      >
         <div className="container header-inner">
-          <Brand />
-          <nav className="desktop-nav" aria-label="Main navigation">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={pathname === link.href ? "page" : undefined}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          <Brand isLanding={isLanding} />
+          {!isLanding && (
+            <nav className="desktop-nav" aria-label="Main navigation">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={pathname === link.href ? "page" : undefined}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="header-actions">
             <ThemeToggle />
-            {signedIn && user ? (
-              <div className="profile-menu-container" ref={profileRef}>
-                <button
-                  type="button"
-                  className="profile-avatar-button"
-                  aria-label="Account details"
-                  aria-expanded={profileOpen}
-                  onClick={() => setProfileOpen((prev) => !prev)}
-                >
-                  {user.name?.trim().charAt(0).toUpperCase() ||
-                    user.email?.trim().charAt(0).toUpperCase() || <UserIcon size={18} />}
-                </button>
-                {profileOpen && (
-                  <div className="profile-dropdown-card" role="menu">
-                    <div className="profile-dropdown-header">
-                      <div className="profile-dropdown-avatar">
-                        {user.name?.trim().charAt(0).toUpperCase() ||
-                          user.email?.trim().charAt(0).toUpperCase() || <UserIcon size={20} />}
-                      </div>
-                      <div className="profile-dropdown-info">
-                        <span className="profile-dropdown-name">{user.name || "User"}</span>
-                        <span className="profile-dropdown-email">{user.email || ""}</span>
-                        <span className="profile-dropdown-role">
-                          {user.role === "admin"
-                            ? "Administrator"
-                            : user.role === "support"
-                              ? "Support"
-                              : "Student"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="profile-dropdown-links">
-                      {user.role === "admin" ? (
-                        <>
-                          <Link
-                            href="/admin"
-                            className="profile-dropdown-item"
-                            onClick={() => setProfileOpen(false)}
-                          >
-                            <Gear size={17} /> Admin workspace
-                          </Link>
-                          <Link
-                            href="/admin/security"
-                            className="profile-dropdown-item"
-                            onClick={() => setProfileOpen(false)}
-                          >
-                            <ShieldCheck size={17} /> Team security
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <Link
-                            href="/dashboard"
-                            className="profile-dropdown-item"
-                            onClick={() => setProfileOpen(false)}
-                          >
-                            <Books size={17} /> My courses
-                          </Link>
-                          <Link
-                            href="/dashboard/orders"
-                            className="profile-dropdown-item"
-                            onClick={() => setProfileOpen(false)}
-                          >
-                            <Receipt size={17} /> Purchase history
-                          </Link>
-                          <Link
-                            href="/courses"
-                            className="profile-dropdown-item"
-                            onClick={() => setProfileOpen(false)}
-                          >
-                            <Books size={17} /> Explore courses
-                          </Link>
-                        </>
-                      )}
-                    </div>
+            {!isLanding && (
+              <>
+                {signedIn && user ? (
+                  <div className="profile-menu-container" ref={profileRef}>
                     <button
                       type="button"
-                      className="profile-dropdown-logout"
-                      onClick={() => void logout()}
+                      className="profile-avatar-button"
+                      aria-label="Account details"
+                      aria-expanded={profileOpen}
+                      onClick={() => setProfileOpen((prev) => !prev)}
                     >
-                      <SignOut size={17} /> Sign out
+                      {user.name?.trim().charAt(0).toUpperCase() ||
+                        user.email?.trim().charAt(0).toUpperCase() || <UserIcon size={18} />}
                     </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link className="login-link" href="/login">
-                Log in <ArrowUpRight size={15} />
-              </Link>
-            )}
-            <Dialog.Root open={open} onOpenChange={setOpen}>
-              <Dialog.Trigger asChild>
-                <button className="icon-button mobile-menu-button" aria-label="Open navigation">
-                  <List size={23} />
-                </button>
-              </Dialog.Trigger>
-              <Dialog.Portal>
-                <Dialog.Overlay className="dialog-overlay" />
-                <Dialog.Content className="mobile-menu">
-                  <div className="menu-heading">
-                    <Dialog.Title>Explore GlobalBulls</Dialog.Title>
-                    <Dialog.Close className="icon-button" aria-label="Close navigation">
-                      <X size={22} />
-                    </Dialog.Close>
-                  </div>
-                  <Dialog.Description className="sr-only">
-                    Choose a page to visit.
-                  </Dialog.Description>
-                  <nav aria-label="Mobile navigation">
-                    {(signedIn && role === "admin"
-                      ? [{ href: "/admin", label: "Admin workspace" }]
-                      : [
-                          ...navLinks,
-                          ...(signedIn
-                            ? [
-                                {
-                                  href: "/dashboard",
-                                  label: "My courses",
-                                },
-                              ]
-                            : [{ href: "/login", label: "Log in" }]),
-                        ]
-                    ).map((link) => (
-                      <Dialog.Close key={link.href} asChild>
-                        <Link
-                          href={link.href}
-                          aria-current={pathname === link.href ? "page" : undefined}
+                    {profileOpen && (
+                      <div className="profile-dropdown-card" aria-label="Account options">
+                        <div className="profile-dropdown-header">
+                          <div className="profile-dropdown-avatar">
+                            {user.name?.trim().charAt(0).toUpperCase() ||
+                              user.email?.trim().charAt(0).toUpperCase() || <UserIcon size={20} />}
+                          </div>
+                          <div className="profile-dropdown-info">
+                            <span className="profile-dropdown-name">{user.name || "User"}</span>
+                            <span className="profile-dropdown-email">{user.email || ""}</span>
+                            <span className="profile-dropdown-role">
+                              {user.role === "admin"
+                                ? "Administrator"
+                                : user.role === "support"
+                                  ? "Support"
+                                  : "Student"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="profile-dropdown-links">
+                          {user.role === "admin" ? (
+                            <>
+                              <Link
+                                href="/admin"
+                                className="profile-dropdown-item"
+                                onClick={() => setProfileOpen(false)}
+                              >
+                                <Gear size={17} /> Admin workspace
+                              </Link>
+                              <Link
+                                href="/admin/security"
+                                className="profile-dropdown-item"
+                                onClick={() => setProfileOpen(false)}
+                              >
+                                <ShieldCheck size={17} /> Team security
+                              </Link>
+                            </>
+                          ) : (
+                            <>
+                              <Link
+                                href="/dashboard"
+                                className="profile-dropdown-item"
+                                onClick={() => setProfileOpen(false)}
+                              >
+                                <Books size={17} /> My courses
+                              </Link>
+                              <Link
+                                href="/dashboard/orders"
+                                className="profile-dropdown-item"
+                                onClick={() => setProfileOpen(false)}
+                              >
+                                <Receipt size={17} /> Purchase history
+                              </Link>
+                              <Link
+                                href="/courses"
+                                className="profile-dropdown-item"
+                                onClick={() => setProfileOpen(false)}
+                              >
+                                <Books size={17} /> Explore courses
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          className="profile-dropdown-logout"
+                          onClick={() => void logout()}
                         >
-                          {link.label}
-                          <ArrowUpRight size={21} />
-                        </Link>
-                      </Dialog.Close>
-                    ))}
-                  </nav>
-                  <p>
-                    Learn the process.
-                    <br />
-                    Respect the risk.
-                  </p>
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog.Root>
+                          <SignOut size={17} /> Sign out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link className="login-link" href="/login">
+                    Log in <ArrowUpRight size={15} />
+                  </Link>
+                )}
+                <Dialog.Root open={open} onOpenChange={setOpen}>
+                  <Dialog.Trigger asChild>
+                    <button className="icon-button mobile-menu-button" aria-label="Open navigation">
+                      <List size={23} />
+                    </button>
+                  </Dialog.Trigger>
+                  <Dialog.Portal>
+                    <Dialog.Overlay className="dialog-overlay" />
+                    <Dialog.Content className="mobile-menu">
+                      <div className="menu-heading">
+                        <Dialog.Title>Explore indianXtrade</Dialog.Title>
+                        <Dialog.Close className="icon-button" aria-label="Close navigation">
+                          <X size={22} />
+                        </Dialog.Close>
+                      </div>
+                      <Dialog.Description className="sr-only">
+                        Choose a page to visit.
+                      </Dialog.Description>
+                      <nav aria-label="Mobile navigation">
+                        {(signedIn && role === "admin"
+                          ? [{ href: "/admin", label: "Admin workspace" }]
+                          : [
+                              ...navLinks,
+                              ...(signedIn
+                                ? [
+                                    {
+                                      href: "/dashboard",
+                                      label: "My courses",
+                                    },
+                                  ]
+                                : [{ href: "/login", label: "Log in" }]),
+                            ]
+                        ).map((link) => (
+                          <Dialog.Close key={link.href} asChild>
+                            <Link
+                              href={link.href}
+                              aria-current={pathname === link.href ? "page" : undefined}
+                            >
+                              {link.label}
+                              <ArrowUpRight size={21} />
+                            </Link>
+                          </Dialog.Close>
+                        ))}
+                      </nav>
+                      <p>
+                        Learn the process.
+                        <br />
+                        Respect the risk.
+                      </p>
+                    </Dialog.Content>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </>
+            )}
           </div>
         </div>
       </header>
