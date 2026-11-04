@@ -917,7 +917,8 @@ body:has(.student-dashboard-page) .site-footer {
   border-radius: 6px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--foreground, #ffffff);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .student-explore-card-body {
@@ -1201,6 +1202,30 @@ body:has(.student-dashboard-page) .site-footer {
 :root[data-theme="light"] .student-course-card-body h4,
 :root[data-theme="light"] .student-explore-card-body h4 {
   color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .student-explore-price-tag {
+  background: #ffffff;
+  color: #0b1311;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  font-weight: 750;
+}
+
+:root[data-theme="light"] .student-explore-level-badge {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+:root[data-theme="light"] .student-explore-card-body p {
+  color: #4b5563;
+}
+
+:root[data-theme="light"] .student-explore-features {
+  color: #374151;
+  border-top-color: rgba(0, 0, 0, 0.08);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
 }
 
 :root[data-theme="light"] .student-hero-lesson-label {
