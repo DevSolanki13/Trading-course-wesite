@@ -1,31 +1,68 @@
 export const legalPages = {
   terms: {
-    title: "Terms of use",
-    intro: "The proposed terms for learning with GlobalBulls.",
+    title: "Terms and conditions",
+    intro: "The agreement that applies when you use GlobalBulls or purchase one of our courses.",
+    updated: "4 November 2026",
     sections: [
       {
-        title: "Preview status",
-        body: "This website is a development preview. The brand, course outlines and prices are provisional. Enrolment and payments are not available. The business identity, support contact and final contractual terms must be confirmed before sales begin.",
+        title: "Agreement",
+        body: "By accessing this website, you agree to be bound by these Terms and Conditions (“Terms”), a legally binding agreement between GlobalBulls, operated by Nikhil Pandey (“we”, “us” or “our”), and you, the user (“you” or “your”). Please read these Terms carefully before using the website. If you do not agree to them, you may not use the website. We may update these Terms by posting changes on this page. Please review them from time to time; if a change is not acceptable to you, you should stop using the website.",
       },
       {
-        title: "Educational purpose",
-        body: "Course content is intended for education. It is not personalised investment advice, a trading-call service or a guarantee of financial outcomes. Trading can lead to substantial losses.",
+        title: "Eligibility",
+        body: "You represent and warrant that you are at least 18 years old, or are using the website with the consent and supervision of a parent or guardian, and that you have the right, power and authority to agree to these Terms and perform your obligations under them.",
       },
       {
-        title: "Accounts and access",
-        body: "Verified accounts are available in staging, with at most two admitted devices. You can review and revoke devices from your account. Purchases remain disabled. Future purchased courses are intended to include online access for the period shown at checkout, subject to final terms and lawful availability. Sharing or reselling account access is not permitted.",
+        title: "Definitions",
+        body: "“Platform” or “Website” means the GlobalBulls website and any related pages where our courses are offered. “Course” means a recorded video course or related learning material offered on the Platform. “Payment Instrument” includes credit card, debit card, net banking, UPI, wallets or any other payment method made available through our payment partner. “Transaction” means an order placed by you to purchase a Course by paying the listed price (“Transaction Amount”). “User” means any person using the Platform or purchasing a Course.",
       },
       {
-        title: "Course content and intellectual property",
-        body: "Videos are intended for streaming within the platform, with DRM and a personalised watermark. Downloading, redistributing or publicly sharing protected lessons is not permitted. No technical measure can guarantee prevention of screen recording.",
+        title: "Educational purpose only",
+        body: "Our Courses teach stock market concepts, chart reading, price action and risk management for educational purposes only. Nothing on the Platform is investment advice, a research recommendation, a trading tip or signal, or an offer to manage money. We are not a SEBI-registered investment adviser or research analyst. Trading and investing involve substantial risk, including the loss of capital, and no Course guarantees profits or any financial result. You are solely responsible for your own trading and investment decisions.",
       },
       {
-        title: "Prices, tax and payment",
-        body: "Illustrative prices shown in this preview are not offers for sale. Final prices, discounts, applicable GST and the full payable amount will be displayed before a future payment. Access will be granted only after server-side payment confirmation.",
+        title: "Accounts and course access",
+        body: "You must create an account to purchase and watch a Course. After confirmed payment, you receive online access to the purchased Course for the access period shown at checkout, streamed through your account. Access ends automatically when that period expires. Each account may be used on a limited number of devices at a time. Your account is personal: sharing login details, reselling access or allowing others to watch through your account is not permitted and may lead to suspension without refund.",
       },
       {
-        title: "Refunds and support",
-        body: "The proposed refund policy is a seven-day window with less than 10% of course content watched. Review the dedicated refund policy for its boundaries. Applicable consumer rights are not excluded by this draft. Business contact, dispute procedure and jurisdiction remain pending owner review.",
+        title: "Intellectual property",
+        body: "All Course videos, materials, text, graphics and branding on the Platform belong to us or our licensors. You receive a personal, non-transferable licence to view purchased Courses for your own learning. You may not download, record, copy, redistribute, sell, publicly share or create derivative works from any Course content. Videos may carry a personalised watermark to discourage unauthorised sharing.",
+      },
+      {
+        title: "Prices and payment",
+        body: "Course prices are shown in Indian Rupees on the Platform, including any applicable taxes stated at checkout. Payments are processed securely by our payment partner, Instamojo; we do not store your card, UPI or bank credentials. You agree to pay through legitimate sources of funds and accepted Payment Instruments, and to provide accurate payment details. Course access is granted only after the payment is confirmed.",
+      },
+      {
+        title: "Your responsibilities",
+        body: "You agree to provide true, complete and up-to-date information, such as your name, email address and phone number, as required to complete a Transaction and deliver the Course. You agree that we may collect, store and use this information to provide the Course, support you and contact you about your purchase, as described in our Privacy policy.",
+      },
+      {
+        title: "Prohibited actions",
+        body: "You agree not to: copy, download, record or redistribute Course content; share your account or resell access; systematically scrape or extract data from the Platform; create accounts by automated means or under false pretences; circumvent, disable or interfere with security features, video protection or access limits; attempt to obtain other users’ account information; misuse support services or submit false reports; upload viruses or other harmful material; harass or threaten our staff or other users; reverse engineer the Platform’s software; or use the Platform in any manner inconsistent with applicable laws.",
+      },
+      {
+        title: "Refunds and cancellation",
+        body: "Refunds and cancellations are governed by our Refund and Cancellation Policy, which forms part of these Terms.",
+      },
+      {
+        title: "Limitation of liability",
+        body: "The Platform and Courses are provided on an “as is” basis for education. To the maximum extent permitted by law, we are not liable for any trading or investment losses, or for any indirect or consequential loss, arising from your use of the Platform or Course content. If a Course does not match its description, your remedy is to request a refund under our Refund and Cancellation Policy. You agree to indemnify us against claims, losses and costs arising from your breach of these Terms.",
+      },
+      {
+        title: "Reviews",
+        body: "Where you can leave reviews or ratings, they must reflect your own first-hand experience and must not contain abusive, discriminatory, false or misleading content. We may accept, reject or remove reviews at our discretion. By posting a review, you grant us a perpetual, non-exclusive, royalty-free licence to display and distribute it on the Platform.",
+      },
+      {
+        title: "Governing law and disputes",
+        body: "These Terms are governed by the laws of India. Any dispute arising out of or in connection with these Terms shall first be attempted to be resolved amicably by contacting us. If not resolved within 30 days, it shall be referred to arbitration by a sole arbitrator under the Arbitration and Conciliation Act, 1996, seated in Bhopal, Madhya Pradesh, and conducted in English. Subject to arbitration, the courts at Bhopal, Madhya Pradesh shall have exclusive jurisdiction. Nothing in this clause limits your rights under applicable consumer protection law.",
+      },
+      {
+        title: "Grievance redressal",
+        body: "For any question or complaint about a Course, your account or a Transaction, including double debits, unauthorised transactions or refund requests, please contact us using the details on our Contact page. We aim to acknowledge complaints within 48 hours and resolve them within 30 days.",
+      },
+      {
+        title: "Disclaimer",
+        body: "We do not guarantee that the Platform will be uninterrupted, secure or free from errors or viruses. Links to third-party websites are provided for information only and do not imply endorsement. You must keep your account password, order ID and any one-time codes confidential. We are not liable for losses arising from unauthorised use of your Payment Instrument or from payment authorisation failures outside our control.",
       },
     ],
   },
@@ -61,32 +98,38 @@ export const legalPages = {
     ],
   },
   "refund-policy": {
-    title: "Refund policy",
-    intro: "A seven-day window, with a clear limit on course consumption.",
+    title: "Refund and cancellation policy",
+    intro:
+      "A seven-day refund window, with a clear limit on how much of a course has been watched.",
+    updated: "4 November 2026",
     sections: [
       {
-        title: "No purchases in this preview",
-        body: "New enrolment and payment are disabled in this staging preview. An existing confirmed paid order, if present, may have a request reviewed, but actual money cannot be returned through this preview until the payment provider is connected. The policy below describes planned launch rules and requires business approval before sales begin.",
+        title: "Cancellation",
+        body: "Completing a Transaction creates a binding agreement to purchase the Course. Because Course access is delivered digitally and immediately after payment, an order cannot be cancelled once payment is confirmed, except through a refund under this policy.",
       },
       {
-        title: "Eligibility",
-        body: "A refund request must be made before seven full days have elapsed from confirmed payment, and less than 10% of the purchased course must have been watched. Exactly 10% watched is outside the limit. Exactly seven days after payment is outside the proposed window. Account screens will display relevant times in IST.",
+        title: "Refund eligibility",
+        body: "You may request a full refund within 7 days of the confirmed payment date, provided you have watched less than 10% of the purchased Course. If different limits were shown at checkout for your purchase, the limits shown at checkout apply. Requests made after 7 days, or after 10% or more of the Course has been watched, are not eligible. You may also request a refund at any time if the Course does not match its description on the Platform; please state clearly what does not match.",
       },
       {
         title: "How viewing is measured",
-        body: "Consumption is based on watched duration divided by the purchased course’s total duration. A completion checkbox is not the measure. Repeated viewing of the same content should not count twice, and public previews are excluded from paid-course consumption. The final player and measurement process will be verified before launch.",
+        body: "The amount watched is calculated from the unique duration of Course videos you have played, divided by the Course’s total duration. Re-watching the same part does not count twice, and free preview lessons are not counted.",
       },
       {
-        title: "Request and review",
-        body: "Eligible students will request a refund from their order history and provide a reason. Support staff or the administrator will review it and communicate approval or rejection. Exceptional goodwill refunds may be made by the administrator with a recorded explanation.",
+        title: "How to request a refund",
+        body: "Request a refund from your account’s order history, or email us using the address on our Contact page with your registered email, the Course name, your order or payment reference and the reason for the request. We may ask for additional details before approving it.",
       },
       {
-        title: "Processing and access",
-        body: "Approved refunds will be submitted through Cashfree. An accepted API request does not mean the money has reached the original payment method; provider-confirmed status will be shown. Access to the refunded purchase will be revoked, and private-community eligibility will be reassessed. Other valid course purchases are not cancelled by one refund.",
+        title: "Review and processing",
+        body: "We review requests and respond within 3 working days. Approved refunds are initiated to the original payment method through our payment partner within 5–7 working days; the time for the amount to reach your account depends on your bank or payment provider. Once a refund is approved, access to that Course is removed. Other Courses you have purchased are not affected.",
       },
       {
-        title: "Timing and applicable rights",
-        body: "Refund settlement time depends on the payment provider and payment method; no guaranteed settlement time is stated in this preview. Final support details and policy terms will be published before enrolment. This draft does not remove rights available under applicable consumer law.",
+        title: "Failed or duplicate payments",
+        body: "If money was debited but your order was not confirmed, or you were charged twice for the same Course, contact us with the payment reference. Such amounts are refunded in full once verified, regardless of the conditions above.",
+      },
+      {
+        title: "Your rights",
+        body: "This policy does not limit any rights you have under applicable consumer protection law in India.",
       },
     ],
   },

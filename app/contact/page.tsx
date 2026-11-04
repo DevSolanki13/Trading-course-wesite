@@ -6,12 +6,13 @@ export const metadata = pageMetadata(
 );
 import ContactPage from "@/frontend/pages/contact-page";
 import { publicCatalog } from "@/backend/public/catalogue";
+import { site } from "@/frontend/content/site";
 export const dynamic = "force-dynamic";
 export default async function Contact() {
   const data = await publicCatalog();
   return (
     <ContactPage
-      supportEmail={data.supportEmail}
+      supportEmail={data.supportEmail ?? site.supportEmail}
       telegramUrl={data.telegramUrl}
       instagramUrl={data.instagramUrl}
       content={data.content}

@@ -50,6 +50,21 @@ export default function ContactPage({
               <span className="contact-pending">Support address awaiting confirmation</span>
             </>
           )}
+          <h2>Business details</h2>
+          <p>
+            {site.name} is operated by {site.business.operator}.
+            <br />
+            {site.business.city}
+            <br />
+            Phone:{" "}
+            <a href={`tel:${site.business.phone.replace(/\s/g, "")}`}>{site.business.phone}</a>
+            {supportEmail ? (
+              <>
+                <br />
+                Email: <a href={`mailto:${supportEmail}`}>{supportEmail}</a>
+              </>
+            ) : null}
+          </p>
           <h2 id="community">Find the community</h2>
           <div className="contact-socials">
             {telegramUrl ? (
@@ -82,8 +97,11 @@ export default function ContactPage({
         </section>
       </div>
       <div className="contact-policy-links">
+        <Link href="/terms">
+          Terms and conditions <ArrowUpRight size={16} />
+        </Link>
         <Link href="/refund-policy">
-          Refund policy <ArrowUpRight size={16} />
+          Refund and cancellation policy <ArrowUpRight size={16} />
         </Link>
         <Link href="/privacy">
           Privacy information <ArrowUpRight size={16} />

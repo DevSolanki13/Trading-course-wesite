@@ -2,7 +2,12 @@ export const site = {
   name: "GlobalBulls",
   description:
     "A structured approach to trading education. Learn market foundations, price action and risk management through Hindi lessons.",
-  supportEmail: null as string | null,
+  supportEmail: "support@indianxtrade.com" as string | null,
+  business: {
+    operator: "Nikhil Pandey",
+    phone: "+91 91810 53438",
+    city: "Bhopal, Madhya Pradesh 462011, India",
+  },
   telegramUrl: null as string | null,
   instagramUrl: null as string | null,
   heroVideoSrc: null as string | null,

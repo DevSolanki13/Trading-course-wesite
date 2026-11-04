@@ -9,7 +9,11 @@ export default function LegalPage({ slug }: { slug: LegalSlug }) {
       <header className="page-intro">
         <h1>{page.title}</h1>
         <p>{page.intro}</p>
-        <span className="legal-updated">Draft for owner review · 29 October 2026</span>
+        <span className="legal-updated">
+          {"updated" in page
+            ? `Last updated · ${page.updated}`
+            : "Draft for owner review · 29 October 2026"}
+        </span>
       </header>
       <div className="legal-layout">
         <nav aria-label="Policy navigation">
