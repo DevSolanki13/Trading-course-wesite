@@ -3,7 +3,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MfaPanel } from "./mfa-panel";
-import { ArrowUpRight, SignOut, ShieldCheck, Devices, UserCircle } from "@phosphor-icons/react";
+import {
+  ArrowUpRight,
+  SignOut,
+  ShieldCheck,
+  Devices,
+  UserCircle,
+  Eye,
+  EyeSlash,
+} from "@phosphor-icons/react";
 type User = {
   id: string;
   name: string;
@@ -143,6 +151,9 @@ export function AccountWorkspace({ admin = false }: { admin?: boolean }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   useEffect(() => {
     let active = true;
     api("/api/auth/me")
@@ -363,37 +374,70 @@ export function AccountWorkspace({ admin = false }: { admin?: boolean }) {
               <form className="auth-form" onSubmit={password}>
                 <label htmlFor="current-password">
                   Current password
-                  <input
-                    id="current-password"
-                    name="current"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                  />
+                  <div className="auth-password-wrapper">
+                    <input
+                      id="current-password"
+                      name="current"
+                      type={showCurrentPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="auth-password-toggle"
+                      onClick={() => setShowCurrentPassword((prev) => !prev)}
+                      aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                      title={showCurrentPassword ? "Hide password" : "Show password"}
+                    >
+                      {showCurrentPassword ? <EyeSlash size={19} /> : <Eye size={19} />}
+                    </button>
+                  </div>
                 </label>
                 <label htmlFor="new-password">
                   New password
-                  <input
-                    id="new-password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={12}
-                    maxLength={128}
-                    required
-                  />
+                  <div className="auth-password-wrapper">
+                    <input
+                      id="new-password"
+                      name="password"
+                      type={showNewPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      minLength={12}
+                      maxLength={128}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="auth-password-toggle"
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                      title={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? <EyeSlash size={19} /> : <Eye size={19} />}
+                    </button>
+                  </div>
                 </label>
                 <label htmlFor="repeat-password">
                   Confirm new password
-                  <input
-                    id="repeat-password"
-                    name="confirmation"
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={12}
-                    maxLength={128}
-                    required
-                  />
+                  <div className="auth-password-wrapper">
+                    <input
+                      id="repeat-password"
+                      name="confirmation"
+                      type={showRepeatPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      minLength={12}
+                      maxLength={128}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="auth-password-toggle"
+                      onClick={() => setShowRepeatPassword((prev) => !prev)}
+                      aria-label={showRepeatPassword ? "Hide password" : "Show password"}
+                      title={showRepeatPassword ? "Hide password" : "Show password"}
+                    >
+                      {showRepeatPassword ? <EyeSlash size={19} /> : <Eye size={19} />}
+                    </button>
+                  </div>
                 </label>
                 <p className="auth-field-help">
                   Use at least 12 characters, including uppercase, lowercase and a number.

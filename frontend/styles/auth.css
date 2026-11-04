@@ -98,6 +98,52 @@
 .auth-form input:focus-visible {
   outline-offset: 2px;
 }
+.auth-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 8px;
+}
+.auth-password-wrapper input {
+  margin-top: 0 !important;
+  padding-right: 44px !important;
+}
+.auth-password-wrapper input::-ms-reveal,
+.auth-password-wrapper input::-ms-clear {
+  display: none;
+}
+.auth-password-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  z-index: 2;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+.auth-password-toggle:hover {
+  color: var(--foreground);
+  background-color: rgba(125, 125, 125, 0.12);
+}
+.auth-password-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  color: var(--foreground);
+}
 .auth-submit {
   width: 100%;
   font-size: 14px !important;

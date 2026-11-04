@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CircleNotch, CheckCircle } from "@phosphor-icons/react";
+import { ArrowRight, CircleNotch, CheckCircle, Eye, EyeSlash } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 export type AuthMode = "login" | "signup" | "forgot" | "reset" | "confirm";
@@ -35,6 +35,8 @@ export function AuthForm({
   const [message, setMessage] = useState(notice);
   const [google, setGoogle] = useState(false);
   const [demoHint, setDemoHint] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   useEffect(() => {
     if (!["login", "signup", "forgot"].includes(mode)) return;
     let live = true;
@@ -216,30 +218,52 @@ export function AuthForm({
         {["login", "signup", "reset"].includes(mode) && (
           <label htmlFor="password">
             {mode === "reset" ? "New password" : "Password"}
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              required
-              minLength={mode === "login" ? 1 : 12}
-              maxLength={demoHint ? 72 : 128}
-              placeholder={mode === "login" ? "Your password" : "At least 12 characters"}
-            />
+            <div className="auth-password-wrapper">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                required
+                minLength={mode === "login" ? 1 : 12}
+                maxLength={demoHint ? 72 : 128}
+                placeholder={mode === "login" ? "Your password" : "At least 12 characters"}
+              />
+              <button
+                type="button"
+                className="auth-password-toggle"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeSlash size={19} /> : <Eye size={19} />}
+              </button>
+            </div>
           </label>
         )}
         {mode === "reset" && (
           <label htmlFor="confirmation">
             Confirm new password
-            <input
-              id="confirmation"
-              name="confirmation"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={12}
-              maxLength={128}
-            />
+            <div className="auth-password-wrapper">
+              <input
+                id="confirmation"
+                name="confirmation"
+                type={showConfirmation ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                minLength={12}
+                maxLength={128}
+              />
+              <button
+                type="button"
+                className="auth-password-toggle"
+                onClick={() => setShowConfirmation((prev) => !prev)}
+                aria-label={showConfirmation ? "Hide password" : "Show password"}
+                title={showConfirmation ? "Hide password" : "Show password"}
+              >
+                {showConfirmation ? <EyeSlash size={19} /> : <Eye size={19} />}
+              </button>
+            </div>
           </label>
         )}
         {mode === "signup" && (
@@ -320,7 +344,7 @@ export function AuthForm({
       <div className="auth-card-footer">
         {mode === "login" ? (
           <p>
-            New to GlobalBulls?{" "}
+            New to indianXtrade?{" "}
             <Link href={`/signup?next=${encodeURIComponent(next)}`}>Create an account</Link>
           </p>
         ) : (
