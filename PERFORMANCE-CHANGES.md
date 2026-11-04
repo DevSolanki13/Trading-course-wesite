@@ -2,12 +2,12 @@
 
 ## Changes in this pass
 
-| File | Change | Reason | Behavior impact |
-| --- | --- | --- | --- |
-| `app/robots.ts` | Added production-only indexing gate and public sitemap rules. | Prevent accidental indexing of previews and private routes while allowing an explicit launch switch. | No visual or application-route change. |
-| `app/layout.tsx` | Made root metadata indexing conditional on `VERCEL_ENV=production` and `ALLOW_INDEXING=true`. | Keep preview and local environments `noindex`. | No visual change. |
-| `frontend/components/floating-card-marquee.tsx` | Replaced outcome-like figures with process and clearly illustrative copy; preserved card count, geometry, animation, and controls. | Avoid presenting fabricated market or student results as factual. | Content changed; layout and motion are preserved. |
-| `frontend/pages/home-page.tsx` | Relabeled ticker values as illustrative/not live and replaced outcome-oriented wording. | Make educational sample data unambiguous. | Content changed; layout and interactions are preserved. |
+| File                                            | Change                                                                                                                             | Reason                                                                                               | Behavior impact                                         |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `app/robots.ts`                                 | Added production-only indexing gate and public sitemap rules.                                                                      | Prevent accidental indexing of previews and private routes while allowing an explicit launch switch. | No visual or application-route change.                  |
+| `app/layout.tsx`                                | Made root metadata indexing conditional on `VERCEL_ENV=production` and `ALLOW_INDEXING=true`.                                      | Keep preview and local environments `noindex`.                                                       | No visual change.                                       |
+| `frontend/components/floating-card-marquee.tsx` | Replaced outcome-like figures with process and clearly illustrative copy; preserved card count, geometry, animation, and controls. | Avoid presenting fabricated market or student results as factual.                                    | Content changed; layout and motion are preserved.       |
+| `frontend/pages/home-page.tsx`                  | Relabeled ticker values as illustrative/not live and replaced outcome-oriented wording.                                            | Make educational sample data unambiguous.                                                            | Content changed; layout and interactions are preserved. |
 
 ## Existing optimizations retained
 

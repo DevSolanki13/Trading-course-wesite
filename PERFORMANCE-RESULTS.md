@@ -2,15 +2,15 @@
 
 ## Before and after
 
-| Metric | Before | After | Status |
-| --- | --- | --- | --- |
-| Local mobile Lighthouse performance | 69 baseline; 88 repeatable optimized run | Not re-measured in this pass | Pending isolated rerun |
-| LCP | 1.07 s baseline; 1.22 s repeatable optimized run | Not re-measured | Pending |
-| CLS | 0.0024 baseline; 0.0023 repeatable optimized run | Not re-measured | Pending |
-| Total blocking time | 6,786 ms baseline; 452 ms repeatable optimized run | Not re-measured | Pending |
-| Production build | Passed | Passed | Verified |
-| TypeScript | Passed after the change | Passed | Verified |
-| Unit tests | 17 tests passed | 17 tests passed | Verified |
+| Metric                              | Before                                             | After                        | Status                 |
+| ----------------------------------- | -------------------------------------------------- | ---------------------------- | ---------------------- |
+| Local mobile Lighthouse performance | 69 baseline; 88 repeatable optimized run           | Not re-measured in this pass | Pending isolated rerun |
+| LCP                                 | 1.07 s baseline; 1.22 s repeatable optimized run   | Not re-measured              | Pending                |
+| CLS                                 | 0.0024 baseline; 0.0023 repeatable optimized run   | Not re-measured              | Pending                |
+| Total blocking time                 | 6,786 ms baseline; 452 ms repeatable optimized run | Not re-measured              | Pending                |
+| Production build                    | Passed                                             | Passed                       | Verified               |
+| TypeScript                          | Passed after the change                            | Passed                       | Verified               |
+| Unit tests                          | 17 tests passed                                    | 17 tests passed              | Verified               |
 
 The recorded 98 Lighthouse score from the prior report was not reproducible and
 is intentionally not treated as a release result.

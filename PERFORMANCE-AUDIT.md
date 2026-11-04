@@ -8,14 +8,14 @@ production deployment, payment, or shared database mutation was performed.
 
 ## Confirmed evidence
 
-| Area | Evidence | Severity | Risk |
-| --- | --- | --- | --- |
-| Public catalogue | `backend/public/catalogue.ts` uses a five-minute `unstable_cache` entry, a project-specific cache key, and tag invalidation. | Medium | Public content can become stale for up to five minutes unless an admin write invalidates it. |
-| Authentication | `frontend/components/auth-provider.tsx` deduplicates same-route `/api/auth/me` calls and rejects stale responses. | Medium | Session refresh remains intentionally dynamic and private. |
-| Marquee | `frontend/components/floating-card-marquee.tsx` uses `requestAnimationFrame`, `IntersectionObserver`, reduced-motion handling, hidden-tab pausing, and transform updates. | Medium | The component remains client-side work on the homepage. |
-| Route rendering | Public pages remain `force-dynamic` because they combine public catalogue data with session-sensitive redirects. | Medium | Removing dynamic rendering without a security design could leak personalized state. |
-| Indexing | `app/robots.ts` and root metadata now gate indexing behind production `ALLOW_INDEXING=true`. | High | Launch configuration must explicitly enable indexing only when public content is approved. |
-| Public copy | Homepage market figures are explicitly illustrative and no longer present outcome-like claims. | High | Claims should still be reviewed against approved marketing copy before launch. |
+| Area             | Evidence                                                                                                                                                                  | Severity | Risk                                                                                         |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| Public catalogue | `backend/public/catalogue.ts` uses a five-minute `unstable_cache` entry, a project-specific cache key, and tag invalidation.                                              | Medium   | Public content can become stale for up to five minutes unless an admin write invalidates it. |
+| Authentication   | `frontend/components/auth-provider.tsx` deduplicates same-route `/api/auth/me` calls and rejects stale responses.                                                         | Medium   | Session refresh remains intentionally dynamic and private.                                   |
+| Marquee          | `frontend/components/floating-card-marquee.tsx` uses `requestAnimationFrame`, `IntersectionObserver`, reduced-motion handling, hidden-tab pausing, and transform updates. | Medium   | The component remains client-side work on the homepage.                                      |
+| Route rendering  | Public pages remain `force-dynamic` because they combine public catalogue data with session-sensitive redirects.                                                          | Medium   | Removing dynamic rendering without a security design could leak personalized state.          |
+| Indexing         | `app/robots.ts` and root metadata now gate indexing behind production `ALLOW_INDEXING=true`.                                                                              | High     | Launch configuration must explicitly enable indexing only when public content is approved.   |
+| Public copy      | Homepage market figures are explicitly illustrative and no longer present outcome-like claims.                                                                            | High     | Claims should still be reviewed against approved marketing copy before launch.               |
 
 ## Historical measurements
 
