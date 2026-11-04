@@ -1,5 +1,5 @@
 ---
-name: GlobalBulls
+name: indianXtrade
 description: Trading education in Hindi; learn the process and respect the risk.
 colors:
   background: "#111111"
@@ -18,9 +18,9 @@ colors:
   light-accent: "#08784f"
 ---
 
-# GlobalBulls design system
+# indianXtrade design system
 
-This documents the existing implementation. Cleanup and speed work must preserve its content, layout, colors, typography, motion and user flows. It supersedes the previous Market Method/blue-theme guidance. Product facts and unresolved launch requirements remain governed by [PRODUCT.md](./PRODUCT.md).
+This documents the existing implementation. Cleanup and speed work must preserve its content, layout, colors, typography, motion and user flows. Product facts and unresolved launch requirements remain governed by [PRODUCT.md](./PRODUCT.md).
 
 ## Source of truth
 

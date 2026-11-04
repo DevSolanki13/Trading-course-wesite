@@ -28,6 +28,10 @@ const AdminProfilePanel = dynamic(() =>
   import("./admin-profile-panel").then((module) => module.AdminProfilePanel),
 );
 const TeamPanel = dynamic(() => import("./team-panel").then((module) => module.TeamPanel));
+const ContentPanel = dynamic(() => import("./content-panel").then((module) => module.ContentPanel));
+const OperationsPanel = dynamic(() =>
+  import("./operations-panel").then((module) => module.OperationsPanel),
+);
 import {
   ChartBar,
   Books,
@@ -42,6 +46,8 @@ import {
   ShieldCheck,
   SignOut,
   MegaphoneSimple,
+  Article,
+  Pulse,
 } from "@phosphor-icons/react";
 import { AdminWorkspaceSkeleton } from "./admin-skeletons";
 
@@ -61,6 +67,8 @@ const allViews = [
   { id: "refunds", label: "Refunds", Icon: ClipboardText },
   { id: "coupons", label: "Coupons", Icon: Ticket, admin: true },
   { id: "announcements", label: "Announcements", Icon: MegaphoneSimple, admin: true },
+  { id: "content", label: "Site content", Icon: Article, admin: true },
+  { id: "operations", label: "Operations & audit", Icon: Pulse, admin: true },
   { id: "team", label: "Admins & Team", Icon: ShieldCheck, admin: true },
   { id: "settings", label: "Settings", Icon: Gear, admin: true },
   { id: "profile", label: "Profile & account", Icon: UserCircle },
@@ -405,6 +413,8 @@ export function AdminWorkspace() {
           {view === "refunds" && <RefundsPanel role={user.role as "admin" | "support"} />}
           {view === "coupons" && user.role === "admin" && <CouponsPanel />}
           {view === "announcements" && user.role === "admin" && <AnnouncementsPanel />}
+          {view === "content" && user.role === "admin" && <ContentPanel />}
+          {view === "operations" && user.role === "admin" && <OperationsPanel view="operations" />}
           {view === "team" && user.role === "admin" && <TeamPanel currentUserId={user.id} />}
           {view === "settings" && user.role === "admin" && <SettingsPanel />}
           {view === "profile" && (
