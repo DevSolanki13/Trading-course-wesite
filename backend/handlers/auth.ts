@@ -485,10 +485,14 @@ export async function authRequest(request: Request) {
         );
       await setRemember(input.remember);
       const store = await cookies();
-      store.set("mm_oauth_next", safeNext(input.next, input.admin ? "/admin" : "/dashboard"), {
-        ...cookiePolicy(),
-        maxAge: 600,
-      });
+      store.set(
+        "mm_oauth_next",
+        safeNext(input.next, input.admin ? "/admin" : "/dashboard?view=explore"),
+        {
+          ...cookiePolicy(),
+          maxAge: 600,
+        },
+      );
       store.set("mm_oauth_admin", input.admin ? "1" : "0", { ...cookiePolicy(), maxAge: 600 });
       const client = await createRequestClient();
       const { data, error } = await client.auth.signInWithOAuth({

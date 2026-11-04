@@ -1627,3 +1627,53 @@ body:has(.student-dashboard-page) .site-footer {
 :root[data-theme="light"] .collapsed-action:hover {
   background: rgba(8, 120, 79, 0.18);
 }
+
+/* ==========================================================================
+   Student Workspace Skeleton Loading State
+   ========================================================================== */
+
+.student-skeleton-page .admin-sidebar .admin-nav-group button {
+  cursor: default;
+  pointer-events: none;
+}
+
+.student-skeleton-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--surface, #111111);
+  position: relative;
+  overflow: hidden;
+}
+
+.student-skeleton-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 2s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.student-skeleton-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface, #0c0f14);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+  border-radius: 9px;
+  width: 100%;
+}

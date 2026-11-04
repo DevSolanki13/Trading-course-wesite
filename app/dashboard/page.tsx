@@ -27,13 +27,13 @@ export default async function Dashboard({
   ]);
   const viewParam = query.view || query.tab;
   const initialView =
-    viewParam === "explore"
-      ? "explore"
+    viewParam === "courses" || viewParam === "study"
+      ? "courses"
       : viewParam === "billing" || viewParam === "orders"
       ? "billing"
       : viewParam === "account" || viewParam === "profile"
       ? "account"
-      : "courses";
+      : "explore";
 
   return (
     <PurchaseDashboard

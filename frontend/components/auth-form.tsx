@@ -14,7 +14,7 @@ type AuthResponse = {
 export function AuthForm({
   mode,
   admin = false,
-  next = "/account",
+  next = "/dashboard?view=explore",
   token = "",
   initialError = "",
   notice = "",

@@ -15,7 +15,7 @@ export default async function Signup({
           ? query.redirect
           : typeof query.next === "string"
             ? query.next
-            : undefined
+            : "/dashboard?view=explore"
       }
     />
   );

@@ -7,7 +7,8 @@ import { CourseCard } from "../components/course-card";
 import { FloatingCardMarquee } from "../components/floating-card-marquee";
 import { RiskExercise } from "../components/risk-exercise";
 import { Faq } from "../components/faq";
-import { ArrowRight, ArrowUpRight, ShieldCheck } from "../components/icons";
+import { ArrowUpRight, ShieldCheck } from "../components/icons";
+import { EnrollButton } from "../components/enroll-button";
 import { courses as sampleCourses, type Course } from "../content/courses";
 import type { SiteDocument } from "../../shared/admin";
 import "../styles/landing.css";
@@ -103,6 +104,7 @@ export default function HomePage({
   content = null,
   published = false,
   unavailable = false,
+  user = false,
 }: {
   courses?: Course[];
   content?: SiteDocument | null;
@@ -110,6 +112,7 @@ export default function HomePage({
   instagramUrl?: string | null;
   published?: boolean;
   unavailable?: boolean;
+  user?: boolean;
 }) {
   return (
     <main id="main-content" className="landing-page">
@@ -152,9 +155,7 @@ export default function HomePage({
             "Structured trading courses on price action, risk management and market psychology."}
         </p>
         <div className="hero-actions">
-          <Link href="/courses" className="button button-primary">
-            Enroll now <ArrowRight size={18} />
-          </Link>
+          <EnrollButton initialLoggedIn={user} />
           <Link
             href={
               courses[0]?.previewLessonId
@@ -300,7 +301,14 @@ export default function HomePage({
           <br />
           Just a more considered place to start.
         </p>
-        <Link className="button button-primary" href="/courses">
+        <Link
+          className="button button-primary"
+          href={
+            user
+              ? "/dashboard?view=explore"
+              : `/login?next=${encodeURIComponent("/dashboard?view=explore")}`
+          }
+        >
           Find your starting point <ArrowUpRight size={19} />
         </Link>
       </section>

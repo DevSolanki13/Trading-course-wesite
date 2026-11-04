@@ -32,6 +32,7 @@ export default async function Home() {
       telegramUrl={data.telegramUrl}
       instagramUrl={data.instagramUrl}
       published={!data.failed && !!data.courses.length}
+      user={!!user}
     />
   );
 }

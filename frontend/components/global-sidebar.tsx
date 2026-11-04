@@ -34,6 +34,11 @@ export function GlobalSidebar() {
     setMobileOpen(false);
   }
 
+  // Navigation sidebar should ONLY appear after logging in
+  if (!user) {
+    return null;
+  }
+
   // Hide navigation bar on the landing page, and don't double-render on pages with their own dedicated workspace sidebar
   const isLandingPage = pathname === "/";
   const hasDedicatedSidebar =

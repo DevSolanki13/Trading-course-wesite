@@ -23,7 +23,7 @@ export default async function Login({
           ? query.redirect
           : typeof query.next === "string"
             ? query.next
-            : "/dashboard"
+            : "/dashboard?view=explore"
       }
       error={
         query.error === "oauth"

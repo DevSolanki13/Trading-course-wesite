@@ -139,8 +139,8 @@ export async function setRemember(remember: boolean) {
 }
 export function destination(state: string, next: unknown, context: Identity) {
   if (state === "limit" && !isPrivileged(context.profile.role))
-    return `/auth/devices?next=${encodeURIComponent(safeNext(next, "/dashboard"))}`;
-  return safeNext(next, isPrivileged(context.profile.role) ? "/admin" : "/dashboard");
+    return `/auth/devices?next=${encodeURIComponent(safeNext(next, "/dashboard?view=explore"))}`;
+  return safeNext(next, isPrivileged(context.profile.role) ? "/admin" : "/dashboard?view=explore");
 }
 export async function audit(context: Identity, action: string, target: string) {
   const { error } = await context.admin
