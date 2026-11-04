@@ -27,11 +27,7 @@ import {
   SpeakerSimpleSlash,
   CalendarBlank,
 } from "@phosphor-icons/react";
-import type {
-  PurchaseCourse,
-  PurchaseLessonContent,
-  PurchaseUser,
-} from "../../shared/purchase";
+import type { PurchaseCourse, PurchaseLessonContent, PurchaseUser } from "../../shared/purchase";
 import { accessExpiryLabel } from "../../shared/course-access";
 import { BullMark } from "./bull-mark";
 import { CourseArtwork } from "./course-artwork";
@@ -65,10 +61,16 @@ export function PurchasePlayer({
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [captionsOn, setCaptionsOn] = useState(false);
 
   // Student notes state with localStorage persistence
   const [notes, setNotes] = useState("");
-  const [notesSaved, setNotesSaved] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
+
+  // User-scoped storage key prevents note leaks between different accounts on shared devices
+  const userScopedKey = user?.id
+    ? `indianxtrade_notes_${user.id}_${lesson.id}`
+    : `indianxtrade_notes_guest_${lesson.id}`;
 
   // Collapsed modules state (record of module id -> boolean)
   const [collapsedModules, setCollapsedModules] = useState<Record<string, boolean>>({});
@@ -92,18 +94,33 @@ export function PurchasePlayer({
   const totalLessons = allLessons.length;
   const completedLessonsCount = allLessons.filter((l) => l.completed).length;
 
-  // Load notes from localStorage for this lesson
+  // Load notes from localStorage for this lesson (scoped to current account)
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        const saved = localStorage.getItem(`globalbulls_notes_${lesson.id}`);
+        const saved = localStorage.getItem(userScopedKey);
         setNotes(saved ?? "");
+        setSaveStatus("saved");
       } catch {
         // ignore
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [lesson.id]);
+  }, [userScopedKey]);
+
+  // Debounced auto-save notes to preserve changes without requiring manual button clicks
+  useEffect(() => {
+    if (!notes) return;
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(userScopedKey, notes);
+        setSaveStatus("saved");
+      } catch {
+        // ignore
+      }
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [notes, userScopedKey]);
 
   // Handle access expiry timer
   useEffect(() => {
@@ -281,13 +298,19 @@ export function PurchasePlayer({
   const toggleFullscreen = () => {
     if (!playerContainerRef.current) return;
     if (!document.fullscreenElement) {
-      playerContainerRef.current.requestFullscreen?.().then(() => {
-        setIsFullscreen(true);
-      }).catch(() => {});
+      playerContainerRef.current
+        .requestFullscreen?.()
+        .then(() => {
+          setIsFullscreen(true);
+        })
+        .catch(() => {});
     } else {
-      document.exitFullscreen?.().then(() => {
-        setIsFullscreen(false);
-      }).catch(() => {});
+      document
+        .exitFullscreen?.()
+        .then(() => {
+          setIsFullscreen(false);
+        })
+        .catch(() => {});
     }
   };
 
@@ -317,12 +340,39 @@ export function PurchasePlayer({
 
   const saveNotes = () => {
     try {
-      localStorage.setItem(`globalbulls_notes_${lesson.id}`, notes);
-      setNotesSaved(true);
-      toast.success("Notes saved locally for this lesson.");
-      setTimeout(() => setNotesSaved(false), 2500);
+      localStorage.setItem(userScopedKey, notes);
+      setSaveStatus("saved");
+      toast.success("Notes saved for this lesson.");
     } catch {
       toast.error("Could not save note to browser storage.");
+    }
+  };
+
+  const toggleCaptions = () => {
+    if (!videoRef.current) return;
+    const tracks = videoRef.current.textTracks;
+    if (tracks && tracks.length > 0) {
+      const next = !captionsOn;
+      tracks[0].mode = next ? "showing" : "hidden";
+      setCaptionsOn(next);
+      toast.info(next ? "Captions enabled" : "Captions disabled");
+    } else {
+      toast.info("No captions available for this preview track.");
+    }
+  };
+
+  const handleScrubberKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!videoRef.current || duration <= 0) return;
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      const next = Math.min(duration, currentTime + 5);
+      videoRef.current.currentTime = next;
+      setCurrentTime(next);
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      const prev = Math.max(0, currentTime - 5);
+      videoRef.current.currentTime = prev;
+      setCurrentTime(prev);
     }
   };
 
@@ -358,11 +408,7 @@ export function PurchasePlayer({
           <div className="vlp-course-card">
             {course.thumbnail ? (
               /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={course.thumbnail}
-                alt={course.title}
-                className="vlp-course-card-bg"
-              />
+              <img src={course.thumbnail} alt={course.title} className="vlp-course-card-bg" />
             ) : (
               <div className="vlp-course-card-artwork">
                 <CourseArtwork
@@ -389,10 +435,7 @@ export function PurchasePlayer({
               </span>
             </div>
             <div className="vlp-progress-track">
-              <div
-                className="vlp-progress-bar"
-                style={{ width: `${course.progress}%` }}
-              />
+              <div className="vlp-progress-bar" style={{ width: `${course.progress}%` }} />
             </div>
           </div>
 
@@ -437,6 +480,36 @@ export function PurchasePlayer({
                           ? Math.max(1, Math.round(item.duration / 60))
                           : 10 + (lIdx % 5) * 2;
 
+                        if (isLocked) {
+                          return (
+                            <div
+                              key={item.id}
+                              className="vlp-lesson-item is-locked"
+                              aria-disabled="true"
+                              style={{ opacity: 0.65, cursor: "not-allowed" }}
+                            >
+                              <div className="vlp-lesson-icon is-locked" aria-label="Locked lesson">
+                                <LockSimple size={13} />
+                              </div>
+                              <span className="vlp-lesson-name">
+                                {lessonNumber} {item.title}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  background: "color-mix(in srgb, var(--surface) 90%, #000)",
+                                  color: "var(--muted)",
+                                  border: "1px solid var(--border)",
+                                }}
+                              >
+                                Locked
+                              </span>
+                            </div>
+                          );
+                        }
+
                         return (
                           <Link
                             key={item.id}
@@ -459,9 +532,7 @@ export function PurchasePlayer({
                                     : "is-unwatched"
                               }`}
                             >
-                              {isLocked ? (
-                                <LockSimple size={13} />
-                              ) : isCompleted ? (
+                              {isCompleted ? (
                                 <Check size={14} weight="bold" />
                               ) : isActive ? (
                                 <Play size={11} weight="fill" />
@@ -472,9 +543,7 @@ export function PurchasePlayer({
                             <span className="vlp-lesson-name">
                               {lessonNumber} {item.title}
                             </span>
-                            <span className="vlp-lesson-duration">
-                              {itemDurationMin} min
-                            </span>
+                            <span className="vlp-lesson-duration">{itemDurationMin} min</span>
                           </Link>
                         );
                       })}
@@ -491,7 +560,7 @@ export function PurchasePlayer({
             <span>
               {course.accessExpiresAt
                 ? `Access until ${accessExpiryLabel(course.accessExpiresAt)}`
-                : "Active lifetime access"}
+                : "Standard enrolled access"}
             </span>
           </div>
         </aside>
@@ -565,10 +634,7 @@ export function PurchasePlayer({
                   allowFullScreen
                   referrerPolicy="strict-origin-when-cross-origin"
                 />
-                <Script
-                  src="https://player.vdocipher.com/v2/api.js"
-                  strategy="afterInteractive"
-                />
+                <Script src="https://player.vdocipher.com/v2/api.js" strategy="afterInteractive" />
               </>
             ) : (
               /* Custom HTML5 Video Player */
@@ -576,14 +642,12 @@ export function PurchasePlayer({
                 {/* Brand watermark */}
                 <div className="vlp-watermark">
                   <BullMark width={20} height={20} />
-                  <span>GlobalBulls{user?.email ? ` · ${user.email}` : ""}</span>
+                  <span>indianXtrade{user?.email ? ` · ${user.email}` : ""}</span>
                 </div>
 
                 {/* Local demo badge if applicable */}
                 {lesson.isDemo && (
-                  <div className="vlp-demo-badge">
-                    Interactive Demonstration Video
-                  </div>
+                  <div className="vlp-demo-badge">Interactive Demonstration Video</div>
                 )}
 
                 {/* Video element */}
@@ -593,7 +657,7 @@ export function PurchasePlayer({
                   className="vlp-video-element"
                   playsInline
                   preload="metadata"
-                  src={lesson.videoUrl || "/sample-lesson.mp4"}
+                  src={lesson.videoUrl || ""}
                   poster={course.thumbnail || undefined}
                   onClick={togglePlay}
                   onTimeUpdate={() => {
@@ -624,20 +688,84 @@ export function PurchasePlayer({
                   />
                 </video>
 
+                {/* Video Error Overlay */}
+                {videoError && (
+                  <div
+                    className="vlp-video-error-overlay"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(0, 0, 0, 0.88)",
+                      zIndex: 10,
+                      padding: "20px",
+                    }}
+                    role="alert"
+                  >
+                    <div style={{ textAlign: "center", maxWidth: "420px" }}>
+                      <p
+                        style={{
+                          color: "#fff",
+                          fontWeight: 600,
+                          fontSize: "16px",
+                          margin: "0 0 6px",
+                        }}
+                      >
+                        Video stream unavailable
+                      </p>
+                      <p style={{ color: "var(--muted)", fontSize: "13px", margin: "0 0 16px" }}>
+                        We couldn&apos;t load the video player stream for this lesson. Please check
+                        your network or retry.
+                      </p>
+                      <button
+                        type="button"
+                        className="button button-primary button-sm"
+                        onClick={() => {
+                          setVideoError(false);
+                          if (videoRef.current) {
+                            videoRef.current.load();
+                          }
+                        }}
+                      >
+                        Retry video
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Center Big Play Button (shown when paused) */}
                 {!isPlaying && !videoError && (
-                  <div className="vlp-center-play-wrap" onClick={togglePlay}>
+                  <button
+                    type="button"
+                    className="vlp-center-play-wrap"
+                    onClick={togglePlay}
+                    aria-label="Play video"
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >
                     <div className="vlp-center-play-btn" title="Play video">
                       <Play size={28} weight="fill" />
                     </div>
-                  </div>
+                  </button>
                 )}
 
                 {/* Bottom Controls Overlay Bar */}
                 {!videoError && (
                   <div className="vlp-player-controls-overlay">
                     {/* Scrubber timeline */}
-                    <div className="vlp-scrubber-track" onClick={handleSeek}>
+                    <div
+                      className="vlp-scrubber-track"
+                      onClick={handleSeek}
+                      onKeyDown={handleScrubberKeyDown}
+                      tabIndex={0}
+                      role="slider"
+                      aria-label="Video seek scrubber"
+                      aria-valuemin={0}
+                      aria-valuemax={Math.round(duration || lesson.duration || 0)}
+                      aria-valuenow={Math.round(currentTime)}
+                      aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration || lesson.duration || 0)}`}
+                    >
                       <div
                         className="vlp-scrubber-fill"
                         style={{
@@ -698,7 +826,12 @@ export function PurchasePlayer({
 
                         {/* Time display */}
                         <span className="vlp-time-readout">
-                          {formatTime(currentTime)} / {formatTime(duration || 750)}
+                          {formatTime(currentTime)} /{" "}
+                          {duration > 0
+                            ? formatTime(duration)
+                            : lesson.duration
+                              ? formatTime(lesson.duration)
+                              : "--:--"}
                         </span>
                       </div>
 
@@ -706,11 +839,13 @@ export function PurchasePlayer({
                         {/* CC Toggle */}
                         <button
                           type="button"
-                          className="vlp-ctrl-btn"
-                          title="Captions"
+                          className={`vlp-ctrl-btn ${captionsOn ? "is-active" : ""}`}
+                          onClick={toggleCaptions}
+                          title={captionsOn ? "Disable captions" : "Enable captions"}
                           aria-label="Toggle captions"
+                          aria-pressed={captionsOn}
                         >
-                          <ClosedCaptioning size={18} />
+                          <ClosedCaptioning size={18} weight={captionsOn ? "fill" : "regular"} />
                         </button>
 
                         {/* Speed dropdown */}
@@ -762,11 +897,7 @@ export function PurchasePlayer({
                           title="Fullscreen"
                           aria-label="Fullscreen"
                         >
-                          {isFullscreen ? (
-                            <CornersIn size={18} />
-                          ) : (
-                            <CornersOut size={18} />
-                          )}
+                          {isFullscreen ? <CornersIn size={18} /> : <CornersOut size={18} />}
                         </button>
                       </div>
                     </div>
@@ -792,10 +923,7 @@ export function PurchasePlayer({
                   <span>Previous lesson</span>
                 </button>
               ) : (
-                <Link
-                  href={`/learn/${course.slug}/${prevLesson.id}`}
-                  className="vlp-prev-btn"
-                >
+                <Link href={`/learn/${course.slug}/${prevLesson.id}`} className="vlp-prev-btn">
                   <ArrowLeft size={16} />
                   <span>Previous lesson</span>
                 </Link>
@@ -833,10 +961,12 @@ export function PurchasePlayer({
           {/* =================================================================
               LESSON TABS BAR
               ================================================================= */}
-          <div className="vlp-tabs-bar" role="tablist">
+          <div className="vlp-tabs-bar" role="tablist" aria-label="Lesson content sections">
             <button
               type="button"
+              id="tab-overview"
               role="tab"
+              aria-controls="panel-overview"
               aria-selected={activeTab === "overview"}
               className={`vlp-tab-btn ${activeTab === "overview" ? "is-active" : ""}`}
               onClick={() => setActiveTab("overview")}
@@ -845,7 +975,9 @@ export function PurchasePlayer({
             </button>
             <button
               type="button"
+              id="tab-notes"
               role="tab"
+              aria-controls="panel-notes"
               aria-selected={activeTab === "notes"}
               className={`vlp-tab-btn ${activeTab === "notes" ? "is-active" : ""}`}
               onClick={() => setActiveTab("notes")}
@@ -854,12 +986,17 @@ export function PurchasePlayer({
             </button>
             <button
               type="button"
+              id="tab-resources"
               role="tab"
+              aria-controls="panel-resources"
               aria-selected={activeTab === "resources"}
               className={`vlp-tab-btn ${activeTab === "resources" ? "is-active" : ""}`}
               onClick={() => setActiveTab("resources")}
             >
-              Resources (2)
+              Resources
+              {lesson.resources && lesson.resources.length > 0
+                ? ` (${lesson.resources.length})`
+                : ""}
             </button>
           </div>
 
@@ -868,50 +1005,62 @@ export function PurchasePlayer({
               ================================================================= */}
           <div className="vlp-card-panel">
             {activeTab === "overview" && (
-              <div>
+              <div id="panel-overview" role="tabpanel" aria-labelledby="tab-overview">
                 <h3 className="vlp-summary-title">Lesson summary</h3>
                 <p className="vlp-summary-text">
                   {lesson.content ||
                     "In this lesson you'll learn what drives market movement, how market structure forms through highs and lows, and why understanding structure is essential for making better trading decisions."}
                 </p>
 
-                <h3 className="vlp-learn-title">What you&apos;ll learn</h3>
-                <div className="vlp-takeaways-grid">
-                  <div className="vlp-takeaway-item">
-                    <div className="vlp-takeaway-icon">
-                      <Check size={12} weight="bold" />
+                {lesson.outcomes && lesson.outcomes.length > 0 && (
+                  <>
+                    <h3 className="vlp-learn-title">What you&apos;ll learn</h3>
+                    <div className="vlp-takeaways-grid">
+                      {lesson.outcomes.map((outcome, idx) => (
+                        <div key={idx} className="vlp-takeaway-item">
+                          <div className="vlp-takeaway-icon">
+                            <Check size={12} weight="bold" />
+                          </div>
+                          <span>{outcome}</span>
+                        </div>
+                      ))}
                     </div>
-                    <span>What market structure is and how it forms</span>
-                  </div>
-
-                  <div className="vlp-takeaway-item">
-                    <div className="vlp-takeaway-icon">
-                      <Check size={12} weight="bold" />
-                    </div>
-                    <span>How to identify higher highs and higher lows</span>
-                  </div>
-
-                  <div className="vlp-takeaway-item">
-                    <div className="vlp-takeaway-icon">
-                      <Check size={12} weight="bold" />
-                    </div>
-                    <span>Why market structure helps you trade with the trend</span>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
             )}
 
             {activeTab === "notes" && (
-              <div className="vlp-notes-panel">
+              <div
+                id="panel-notes"
+                role="tabpanel"
+                aria-labelledby="tab-notes"
+                className="vlp-notes-panel"
+              >
                 <textarea
                   className="vlp-notes-textarea"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Type your personal observations, key levels, or setup rules here... Your notes are automatically saved to your browser."
+                  onChange={(e) => {
+                    setNotes(e.target.value);
+                    setSaveStatus("saving");
+                  }}
+                  placeholder="Type your personal observations, key levels, or setup rules here... Notes are stored privately on this device for your account."
                 />
                 <div className="vlp-notes-actions">
-                  <span style={{ fontSize: "12px", color: "#9ca3af" }}>
-                    {notesSaved ? "✓ All changes saved" : `${notes.length} characters`}
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color:
+                        saveStatus === "saved" && notes.length > 0
+                          ? "var(--accent, #00df8f)"
+                          : "#9ca3af",
+                    }}
+                  >
+                    {saveStatus === "saving"
+                      ? "Saving changes…"
+                      : saveStatus === "saved" && notes.length > 0
+                        ? "✓ Saved to this device"
+                        : `${notes.length} characters`}
                   </span>
                   <button
                     type="button"
@@ -926,46 +1075,45 @@ export function PurchasePlayer({
             )}
 
             {activeTab === "resources" && (
-              <div className="vlp-resources-panel">
-                <div className="vlp-resource-item">
-                  <div className="vlp-resource-info">
-                    <FilePdf size={28} color="#00df8f" />
-                    <div>
-                      <strong>Market Structure &amp; Price Action Cheatsheet</strong>
-                      <small>PDF Document · 2.4 MB</small>
-                    </div>
-                  </div>
-                  <a
-                    href="#download"
-                    className="vlp-resource-dl-btn"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toast.info("Downloading cheatsheet...");
+              <div
+                id="panel-resources"
+                role="tabpanel"
+                aria-labelledby="tab-resources"
+                className="vlp-resources-panel"
+              >
+                {!lesson.resources || lesson.resources.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "36px 16px",
+                      textAlign: "center",
+                      color: "var(--muted)",
+                      fontSize: "14px",
                     }}
                   >
-                    <DownloadSimple size={15} /> Download
-                  </a>
-                </div>
-
-                <div className="vlp-resource-item">
-                  <div className="vlp-resource-info">
-                    <FilePdf size={28} color="#00df8f" />
-                    <div>
-                      <strong>Candlestick Patterns &amp; Trend Validation Guide</strong>
-                      <small>PDF Document · 1.8 MB</small>
-                    </div>
+                    <p style={{ margin: 0 }}>No downloadable resources for this lesson yet.</p>
                   </div>
-                  <a
-                    href="#download"
-                    className="vlp-resource-dl-btn"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toast.info("Downloading pattern guide...");
-                    }}
-                  >
-                    <DownloadSimple size={15} /> Download
-                  </a>
-                </div>
+                ) : (
+                  lesson.resources.map((res) => (
+                    <div key={res.id} className="vlp-resource-item">
+                      <div className="vlp-resource-info">
+                        <FilePdf size={28} color="#00df8f" />
+                        <div>
+                          <strong>{res.title}</strong>
+                          {res.size && <small>{res.size}</small>}
+                        </div>
+                      </div>
+                      <a
+                        href={res.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="vlp-resource-dl-btn"
+                        download
+                      >
+                        <DownloadSimple size={15} /> Download
+                      </a>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>

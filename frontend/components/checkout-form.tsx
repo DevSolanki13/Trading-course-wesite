@@ -85,7 +85,9 @@ export function CheckoutForm({
             Indian mobile number <span className="checkout-field-required">*</span>
           </label>
           <div className="checkout-phone-wrap">
-            <span className="checkout-phone-prefix" aria-hidden="true">+91</span>
+            <span className="checkout-phone-prefix" aria-hidden="true">
+              +91
+            </span>
             <input
               id="checkout-phone"
               type="tel"

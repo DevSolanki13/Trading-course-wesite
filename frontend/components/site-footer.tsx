@@ -40,12 +40,12 @@ export function SiteFooter() {
             of capital. No outcome or return is guaranteed.
           </p>
           <p>
-            Course information is under review. Instructor details, final prices and policies
-            require confirmation before launch.
+            All course content and curriculum are designed for educational trading methodology.
+            Please review our refund and usage terms before enrolling.
           </p>
         </div>
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} GlobalBulls. Provisional identity.</span>
+          <span>© {new Date().getFullYear()} indianXtrade. All rights reserved.</span>
           <span>Website in English. Lessons in Hindi.</span>
         </div>
       </div>

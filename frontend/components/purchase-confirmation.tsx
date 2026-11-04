@@ -61,7 +61,10 @@ export function PurchaseConfirmation({
           </button>
         </>
       ) : (
-        <Link className="button button-secondary" href={`/checkout/${order.slug || order.courseId}`}>
+        <Link
+          className="button button-secondary"
+          href={`/checkout/${order.slug || order.courseId}`}
+        >
           Retry checkout
         </Link>
       )}

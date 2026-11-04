@@ -38,6 +38,7 @@ export function PurchaseCheckout({
   const [error, setError] = useState("");
   const [failed, setFailed] = useState(false);
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
+  const [razorpayKeyId, setRazorpayKeyId] = useState<string | undefined>();
   const [coupon, setCoupon] = useState("");
   const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(
     null,
@@ -80,22 +81,28 @@ export function PurchaseCheckout({
     setBusy(true);
     setError("");
     try {
-      const data = await api("create", {
-        courseId: course.id,
-        terms: true,
-        ...(couponApplied ? { coupon: couponApplied.code } : {}),
-      });
-      const saved = data.order as PurchaseOrder;
-      setOrder(saved);
-      if (data.provider === "razorpay") {
+      let saved = order;
+      let activeKeyId = razorpayKeyId;
+      if (!saved || saved.status !== "pending") {
+        const data = await api("create", {
+          courseId: course.id,
+          terms: true,
+          ...(couponApplied ? { coupon: couponApplied.code } : {}),
+        });
+        saved = data.order as PurchaseOrder;
+        activeKeyId = data.keyId;
+        setOrder(saved);
+        if (data.keyId) setRazorpayKeyId(data.keyId);
+      }
+      if (provider === "razorpay") {
         const Gateway = (window as GatewayWindow).Razorpay;
         if (!Gateway) throw new Error("The payment service has not loaded. Try again shortly.");
         const gateway = new Gateway({
-          key: data.keyId,
+          key: activeKeyId || razorpayKeyId,
           order_id: saved.providerOrderId,
           amount: saved.amount,
           currency: saved.currency,
-          name: "GlobalBulls",
+          name: "indianXtrade",
           description: course.title,
           handler: (result: RazorpayResult) => void verify(saved, result),
           modal: {

@@ -17,9 +17,10 @@ export function CourseCard({ course }: { course: Course }) {
           <Image
             unoptimized
             src={course.thumbnailUrl}
-            alt=""
+            alt={`${course.title} course thumbnail`}
             width={600}
             height={400}
+            loading="lazy"
             className="course-cover-photo"
           />
         ) : (
@@ -62,7 +63,7 @@ export function CourseCard({ course }: { course: Course }) {
         <div className="course-card-bottom">
           <div>
             <span className="preview-price-label">
-              {course.provisional === false ? "Course price preview" : "Illustrative price"}
+              {course.provisional === false ? "Course price" : "Illustrative price"}
             </span>
             <strong>{formatPrice(course.price)}</strong>
           </div>
