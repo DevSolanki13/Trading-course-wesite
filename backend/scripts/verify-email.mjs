@@ -23,7 +23,7 @@ try {
     body: JSON.stringify({
       from: RESEND_FROM_EMAIL,
       to: [PROVIDER_TEST_EMAIL],
-      subject: "GlobalBulls: Phase 2 email delivery test",
+      subject: "indianXtrade | Phase 2 email delivery test",
       text: "This is your requested account email delivery test. No account was created, purchase made or password changed. No action is required.",
     }),
     signal: AbortSignal.timeout(15000),
