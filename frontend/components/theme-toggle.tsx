@@ -29,6 +29,10 @@ export function ThemeToggle({
     const next = theme === "dark" ? "light" : "dark";
     if (typeof document !== "undefined") {
       document.documentElement.dataset.theme = next;
+      const favicons = document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]');
+      favicons.forEach((fav) => {
+        fav.href = next === "light" ? "/favicon-light.png" : "/favicon-dark.png";
+      });
     }
     try {
       localStorage.setItem("market-method-theme", next);
@@ -53,4 +57,3 @@ export function ThemeToggle({
     </button>
   );
 }
-
