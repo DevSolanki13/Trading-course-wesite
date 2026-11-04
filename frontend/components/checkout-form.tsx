@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,18 +10,20 @@ export function CheckoutForm({
   refundDays,
   refundWatchLimit,
   sandbox = false,
+  initialPhone = "",
 }: {
   course: { slug: string; title: string; description: string };
   totals: { basePaise: number; taxPaise: number; totalPaise: number };
   refundDays: number;
   refundWatchLimit: number;
   sandbox?: boolean;
+  initialPhone?: string;
 }) {
   const router = useRouter();
   const [terms, setTerms] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(initialPhone);
   async function submit() {
     setBusy(true);
     setError("");
@@ -78,22 +80,33 @@ export function CheckoutForm({
         policy for conditions.
       </p>
       {sandbox && (
-        <label className="auth-field">
-          Indian mobile number
-          <input
-            type="tel"
-            inputMode="numeric"
-            autoComplete="tel-national"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
-            maxLength={10}
-            pattern="[6-9][0-9]{9}"
-            aria-describedby="checkout-phone-help"
-          />
-          <small id="checkout-phone-help">
-            Ten digits, without +91. Required by the payment provider.
+        <div className="checkout-field">
+          <label htmlFor="checkout-phone" className="checkout-field-label">
+            Indian mobile number <span className="checkout-field-required">*</span>
+          </label>
+          <div className="checkout-phone-wrap">
+            <span className="checkout-phone-prefix" aria-hidden="true">+91</span>
+            <input
+              id="checkout-phone"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              placeholder="9876543210"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
+              maxLength={10}
+              aria-describedby="checkout-phone-help"
+            />
+            {phone.length > 0 && (
+              <span className={`checkout-phone-count ${phone.length === 10 ? "valid" : ""}`}>
+                {phone.length}/10
+              </span>
+            )}
+          </div>
+          <small id="checkout-phone-help" className="checkout-field-help">
+            10-digit number (starts with 6, 7, 8, or 9). Required by Cashfree.
           </small>
-        </label>
+        </div>
       )}
       <label className="terms-check">
         <input
@@ -119,9 +132,15 @@ export function CheckoutForm({
       >
         {busy
           ? "Preparing your order…"
-          : sandbox
-            ? "Continue to sandbox payment"
-            : "Continue to demo payment"}
+          : sandbox && !phone
+            ? "Enter mobile number to continue"
+            : sandbox && !/^[6-9][0-9]{9}$/.test(phone)
+              ? `Enter 10-digit mobile (${phone.length}/10)`
+              : !terms
+                ? "Accept terms to continue"
+                : sandbox
+                  ? "Continue to sandbox payment"
+                  : "Continue to demo payment"}
       </button>
       <p className="checkout-note">
         No money will be collected. The next screen shows the saved order total before you confirm a

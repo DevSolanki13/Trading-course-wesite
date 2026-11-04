@@ -1,4 +1,4 @@
-﻿import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CheckoutForm } from "@/frontend/components/checkout-form";
 import { admitted } from "@/backend/auth/session";
 import { AuthError } from "@/backend/auth/http";
@@ -18,9 +18,11 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
     !["demo", "cashfree-sandbox"].includes(process.env.PAYMENT_MODE ?? "")
   ) {
     const { slug } = await params;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
     const user = await requirePurchaseUser(`/checkout/${slug}`);
     const course = await purchaseCourse(slug, user.id);
     if (!course) notFound();
+    if (isUuid && course.slug) redirect(`/checkout/${course.slug}`);
     if (course.owned) redirect(`/learn/${course.slug}`);
     let provider: "mock" | "razorpay" = "mock",
       available = true;
@@ -55,13 +57,16 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
       redirect(`/auth/devices?next=${next}`);
     throw error;
   }
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+  const courseQuery = context.admin
+    .from("courses")
+    .select("slug,title,description,price_paise,sale_price_paise");
+  const filteredCourse = isUuid
+    ? courseQuery.eq("id", slug)
+    : courseQuery.eq("slug", slug);
+
   const [course, settings] = await Promise.all([
-    context.admin
-      .from("courses")
-      .select("slug,title,description,price_paise,sale_price_paise")
-      .eq("slug", slug)
-      .eq("status", "published")
-      .maybeSingle(),
+    filteredCourse.eq("status", "published").maybeSingle(),
     context.admin
       .from("site_settings")
       .select("gst_enabled,gst_rate_bps,refund_window_days,refund_watch_limit_percent")
@@ -70,6 +75,9 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   ]);
   if (course.error || settings.error) throw new Error("Checkout is temporarily unavailable.");
   if (!course.data) notFound();
+  if (isUuid && course.data.slug) {
+    redirect(`/checkout/${course.data.slug}`);
+  }
   const totals = calculateTotal({
     basePaise: sandbox
       ? (course.data.sale_price_paise ?? course.data.price_paise)
@@ -85,6 +93,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
         refundDays={settings.data.refund_window_days}
         refundWatchLimit={settings.data.refund_watch_limit_percent}
         sandbox={sandbox}
+        initialPhone={context.profile.phone ?? ""}
       />
     </main>
   );

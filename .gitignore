@@ -21,3 +21,6 @@ playwright-report/
 # Local agent installations and onboarding screen recordings are not site assets.
 .agents/
 /Recording *.mp4
+certs/
+*.crt
+*.pem

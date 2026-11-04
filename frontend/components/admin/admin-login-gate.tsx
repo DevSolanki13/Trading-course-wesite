@@ -11,31 +11,32 @@ export function AdminLoginGate() {
   const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [checkingInitial, setCheckingInitial] = useState(true);
+  const [checkingInitial, setCheckingInitial] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !!sessionStorage.getItem("admin_secret_key");
+  });
 
   useEffect(() => {
     // Check if key is already in sessionStorage
     const stored = sessionStorage.getItem("admin_secret_key");
-    if (stored) {
-      // Fast verify with backend
-      fetch("/api/auth/verify-admin-key", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secretKey: stored }),
+    if (!stored) return;
+
+    // Fast verify with backend
+    fetch("/api/auth/verify-admin-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secretKey: stored }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          setSecretKey(stored);
+          setUnlocked(true);
+        } else {
+          sessionStorage.removeItem("admin_secret_key");
+        }
       })
-        .then((res) => {
-          if (res.ok) {
-            setSecretKey(stored);
-            setUnlocked(true);
-          } else {
-            sessionStorage.removeItem("admin_secret_key");
-          }
-        })
-        .catch(() => {})
-        .finally(() => setCheckingInitial(false));
-    } else {
-      setCheckingInitial(false);
-    }
+      .catch(() => {})
+      .finally(() => setCheckingInitial(false));
   }, []);
 
   const handleVerify = async (e: React.FormEvent) => {

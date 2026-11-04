@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -6,6 +6,7 @@ type Order = {
   id: string;
   status: "paid" | "failed" | "pending" | "cancelled" | "refunded";
   demo: boolean;
+  sandbox?: boolean;
   course_snapshot: { slug?: string; title?: string };
 };
 const labels: Record<Order["status"], string> = {
@@ -59,7 +60,11 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
   const slug = order?.course_snapshot.slug;
   return (
     <section className="checkout-card" aria-labelledby="order-heading">
-      {order?.demo && <div className="demo-banner">DEMO MODE — no real payment</div>}
+      {order?.sandbox ? (
+        <div className="demo-banner">CASHFREE SANDBOX — test payment only</div>
+      ) : order?.demo ? (
+        <div className="demo-banner">DEMO MODE — no real payment</div>
+      ) : null}
       <h1 id="order-heading">
         {order
           ? labels[order.status]
@@ -107,12 +112,12 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
         </Link>
       )}
       {["failed", "cancelled"].includes(order?.status ?? "") && slug && (
-        <Link className="button button-secondary" href={`/checkout/${slug}`}>
-          Return to checkout
+        <Link className="button button-primary" href={`/checkout/${slug}`}>
+          Start a new payment
         </Link>
       )}
       <p>
-        <Link className="text-link" href="/learn">
+        <Link className="text-link" href="/dashboard">
           Go to my learning space
         </Link>
       </p>

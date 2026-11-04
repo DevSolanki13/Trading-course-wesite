@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { admitted } from "@/backend/auth/session";
 import { AuthError, body, failure, json, limit, sameOrigin } from "@/backend/auth/http";
 import { demoSignature, isDemoPaymentEnabled } from "@/backend/payments/demo";
@@ -46,6 +46,12 @@ export async function POST(request: Request) {
     if (error?.code === "22023") throw new AuthError(409, "This course is not ready for checkout.");
     if (error || !data)
       throw new AuthError(503, "Checkout is temporarily unavailable. Please retry.");
+    if (sandbox && parsed.data.phone && !context.profile.phone) {
+      await context.admin
+        .from("profiles")
+        .update({ phone: parsed.data.phone })
+        .eq("id", context.user.id);
+    }
     if (sandbox) {
       const order = await commerceStore(context.admin).order(
         `cf_sbx_${String(data).replaceAll("-", "")}`,

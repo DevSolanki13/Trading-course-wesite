@@ -42,7 +42,7 @@ export function CourseAccessAction({
     );
   if (mobile)
     return demoEnabled ? (
-      <Link className="button button-primary" href={`/checkout/${courseId ?? slug}`}>
+      <Link className="button button-primary" href={`/checkout/${slug || courseId}`}>
         Buy now
       </Link>
     ) : (
@@ -53,7 +53,7 @@ export function CourseAccessAction({
   return (
     <>
       {demoEnabled ? (
-        <Link className="button button-primary" href={`/checkout/${courseId ?? slug}`}>
+        <Link className="button button-primary" href={`/checkout/${slug || courseId}`}>
           Buy now
         </Link>
       ) : (

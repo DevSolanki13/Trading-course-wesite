@@ -49,7 +49,21 @@ export function TeamPanel({ currentUserId }: TeamPanelProps) {
   };
 
   useEffect(() => {
-    loadStaff();
+    let active = true;
+    fetch("/api/admin/staff")
+      .then((res) => res.json())
+      .then((data) => {
+        if (active) setStaff(data.staff || []);
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : "Failed to load team members.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleAddMember = async (e: React.FormEvent) => {

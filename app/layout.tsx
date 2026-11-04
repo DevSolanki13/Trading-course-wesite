@@ -22,6 +22,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
       <head>
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem('market-method-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}`,
           }}

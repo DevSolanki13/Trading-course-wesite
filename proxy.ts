@@ -5,10 +5,14 @@ import { localDemoEnabled } from "./backend/purchase/mode";
 
 export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const isCashfree =
+    request.nextUrl.pathname.startsWith("/pay/cashfree/") ||
+    request.nextUrl.pathname.startsWith("/checkout/") ||
+    process.env.PAYMENT_MODE === "cashfree-sandbox";
   const policy = contentSecurityPolicy(
     nonce,
     process.env.NODE_ENV === "development",
-    request.nextUrl.pathname.startsWith("/pay/cashfree/"),
+    isCashfree,
     request.nextUrl.pathname.startsWith("/checkout/"),
     localDemoEnabled(),
   );

@@ -2,6 +2,7 @@ import { validationParser } from "../auth/validation";
 import "server-only";
 import { z } from "zod";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createAdminClient, createRequestClient } from "../database/supabase";
@@ -64,6 +65,7 @@ export async function authRequest(request: Request) {
     if (request.method !== "GET") sameOrigin(request);
     if (request.method === "GET") {
       if (action === "options") return json(await options());
+      if (action === "callback") return oauthCallback(request);
       if (action === "status") {
         try {
           const context = await admitted();
@@ -497,7 +499,10 @@ export async function authRequest(request: Request) {
           queryParams: { prompt: "select_account" },
         },
       });
-      if (error || !data.url) throw new AuthError(503, "Google sign-in could not be started.");
+      if (error || !data.url) {
+        console.error("signInWithOAuth error:", error);
+        throw new AuthError(503, "Google sign-in could not be started.");
+      }
       return json({ url: data.url });
     }
     if (action === "admit") {
@@ -654,11 +659,21 @@ export async function oauthCallback(request: Request) {
   const next = safeNext(store.get("mm_oauth_next")?.value);
   const adminLogin = store.get("mm_oauth_admin")?.value === "1";
   try {
-    const code = new URL(request.url).searchParams.get("code");
+    const url = new URL(request.url);
+    const code = url.searchParams.get("code");
+    const errorParam = url.searchParams.get("error");
+    const errorDescription = url.searchParams.get("error_description");
+    if (errorParam || errorDescription) {
+      console.error("OAuth provider returned error:", errorParam, errorDescription);
+      throw new AuthError(400, errorDescription || "Sign-in was cancelled or denied.");
+    }
     if (!code) throw new AuthError(400, "Missing callback.");
     const client = await createRequestClient();
     const { error } = await client.auth.exchangeCodeForSession(code);
-    if (error) throw new AuthError(400, "Sign-in callback could not be verified.");
+    if (error) {
+      console.error("exchangeCodeForSession error:", error);
+      throw new AuthError(400, "Sign-in callback could not be verified.");
+    }
     const context = await identity();
     if (adminLogin && !isPrivileged(context.profile.role)) {
       await client.auth.signOut({ scope: "local" });
@@ -667,9 +682,10 @@ export async function oauthCallback(request: Request) {
     const state = await admission(context, request);
     store.delete("mm_oauth_next");
     store.delete("mm_oauth_admin");
-    return Response.redirect(new URL(destination(state, next, context), appOrigin()), 303);
-  } catch {
-    return Response.redirect(new URL("/login?error=oauth", appOrigin()), 303);
+    return NextResponse.redirect(new URL(destination(state, next, context), appOrigin()), 303);
+  } catch (error) {
+    console.error("OAuth callback error:", error);
+    return NextResponse.redirect(new URL("/login?error=oauth", appOrigin()), 303);
   }
 }
 

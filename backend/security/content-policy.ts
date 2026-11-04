@@ -8,16 +8,16 @@ export function contentSecurityPolicy(
 ) {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""} https://player.vdocipher.com`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""} https://player.vdocipher.com${sandboxPayments ? " https://sdk.cashfree.com" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self'",
-    `connect-src 'self'${razorpayPayments ? " https://api.razorpay.com https://checkout.razorpay.com https://lumberjack.razorpay.com" : ""}${sandboxPayments ? " https://sandbox.cashfree.com https://sdk.cashfree.com" : ""}${development ? " ws: wss:" : ""}`,
-    `frame-src https://player.vdocipher.com${razorpayPayments ? " https://api.razorpay.com https://checkout.razorpay.com" : ""}${sandboxPayments ? " https://sandbox.cashfree.com" : ""}`,
+    `connect-src 'self'${razorpayPayments ? " https://api.razorpay.com https://checkout.razorpay.com https://lumberjack.razorpay.com" : ""}${sandboxPayments ? " https://sandbox.cashfree.com https://sdk.cashfree.com https://api.cashfree.com" : ""}${development ? " ws: wss:" : ""}`,
+    `frame-src https://player.vdocipher.com${razorpayPayments ? " https://api.razorpay.com https://checkout.razorpay.com" : ""}${sandboxPayments ? " https://sandbox.cashfree.com https://sdk.cashfree.com" : ""}`,
     `media-src 'self' blob:${localDemo ? " https://interactive-examples.mdn.mozilla.net" : ""}`,
     "object-src 'none'",
     "base-uri 'self'",
-    `form-action 'self'${sandboxPayments ? " https://sandbox.cashfree.com" : ""}`,
+    `form-action 'self'${sandboxPayments ? " https://sandbox.cashfree.com https://sdk.cashfree.com" : ""}`,
     "frame-ancestors 'none'",
   ].join("; ");
 }

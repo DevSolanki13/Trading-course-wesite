@@ -171,8 +171,9 @@ try {
       has_function_privilege('service_role',p.oid,'EXECUTE')as service_exec
       from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'and p.proname in
       ('purchase_has_access','purchase_catalog','purchase_read','purchase_create_order','purchase_claim_creation','purchase_bind_order','purchase_settle','purchase_complete','purchase_mail_claim','purchase_mail_finish','purchase_tax','purchase_payment_owner')`);
+    const uniquePurchaseFuncs = new Set(purchaseFunctions.rows.map((row) => row.proname));
     if (
-      purchaseFunctions.rows.length !== 12 ||
+      uniquePurchaseFuncs.size !== 12 ||
       purchaseFunctions.rows.some((row) => row.anon_exec || row.user_exec || !row.service_exec)
     )
       throw new Error("UNSAFE_PURCHASE_FUNCTION_GRANT");
