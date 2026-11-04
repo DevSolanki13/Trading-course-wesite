@@ -1,5 +1,9 @@
 import { localDemoEnabled } from "../purchase/mode.ts";
-import type { Announcement, CreateAnnouncementInput, UpdateAnnouncementInput } from "../../shared/announcements.ts";
+import type {
+  Announcement,
+  CreateAnnouncementInput,
+  UpdateAnnouncementInput,
+} from "../../shared/announcements.ts";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -7,8 +11,9 @@ import { randomUUID } from "node:crypto";
 const DEFAULT_ANNOUNCEMENTS: Announcement[] = [
   {
     id: "seed-welcome-announcement",
-    title: "Welcome to GlobalBulls Academy! 🎯",
-    content: "Welcome to the academy! New live trading breakdown modules and market structure lessons are released every week. Review your enrolled curriculum and complete your foundational risk management video.",
+    title: "Welcome to indianXtrade Academy! 🎯",
+    content:
+      "Welcome to the academy! New live trading breakdown modules and market structure lessons are released every week. Review your enrolled curriculum and complete your foundational risk management video.",
     category: "General",
     priority: "important",
     pinned: true,
@@ -71,7 +76,7 @@ export async function listAnnouncements(onlyActive = true): Promise<Announcement
          from public.announcements
          where ($1::boolean = false or active = true)
          order by pinned desc, created_at desc`,
-        [onlyActive]
+        [onlyActive],
       );
 
       if (res.rows.length === 0) {
@@ -92,7 +97,9 @@ export async function listAnnouncements(onlyActive = true): Promise<Announcement
   const client = createAdminClient();
   let query = client
     .from("announcements")
-    .select("id, title, content, category, priority, pinned, active, author_name, created_at, updated_at")
+    .select(
+      "id, title, content, category, priority, pinned, active, author_name, created_at, updated_at",
+    )
     .order("pinned", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -111,7 +118,7 @@ export async function listAnnouncements(onlyActive = true): Promise<Announcement
 
 export async function createAnnouncement(
   input: CreateAnnouncementInput,
-  authorName = "Admin"
+  authorName = "Admin",
 ): Promise<Announcement> {
   const item: Announcement = {
     id: randomUUID(),
@@ -144,7 +151,7 @@ export async function createAnnouncement(
           item.author_name,
           item.created_at,
           item.updated_at,
-        ]
+        ],
       );
     } catch {
       /* ignore db error, save to json fallback */
@@ -165,7 +172,9 @@ export async function createAnnouncement(
   return item;
 }
 
-export async function updateAnnouncement(input: UpdateAnnouncementInput): Promise<Announcement | null> {
+export async function updateAnnouncement(
+  input: UpdateAnnouncementInput,
+): Promise<Announcement | null> {
   const now = new Date().toISOString();
 
   if (localDemoEnabled()) {
@@ -201,7 +210,7 @@ export async function updateAnnouncement(input: UpdateAnnouncementInput): Promis
             updated.active,
             updated.updated_at,
             updated.id,
-          ]
+          ],
         );
 
         const existing = await readJsonStore();
@@ -277,4 +286,3 @@ export async function deleteAnnouncement(id: string): Promise<boolean> {
   await writeJsonStore(existing.filter((a) => a.id !== id));
   return true;
 }
-

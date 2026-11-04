@@ -8,10 +8,7 @@ export default async function Login({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [query, user] = await Promise.all([
-    searchParams,
-    purchaseUser(false).catch(() => null),
-  ]);
+  const [query, user] = await Promise.all([searchParams, purchaseUser(false).catch(() => null)]);
   if (user?.role === "admin") {
     redirect("/admin");
   }

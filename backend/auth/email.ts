@@ -34,9 +34,9 @@ export async function deliverAuthEmail(input: {
         : "Verify your email";
   const url = new URL("/auth/confirm", appOrigin());
   url.searchParams.set("token", nonce);
-  const subject = `${title} | GlobalBulls`;
+  const subject = `${title} | indianXtrade`;
   const text = `${title}\n\nOpen the link below, then press Continue to confirm the action. This link expires in 30 minutes and works once.\n\n${url.toString()}\n\nIf you did not request this email, ignore it. Never share this link.`;
-  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:40px auto;color:#203025"><p>GlobalBulls.</p><h1 style="font-size:28px">${title}</h1><p>Open this link, then press Continue to confirm. It expires in 30 minutes and works once.</p><p style="margin:30px 0"><a style="background:#345e37;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none" href="${url.toString()}">Continue securely</a></p><p>If you did not request this email, you can ignore it. Never share this link.</p></div>`;
+  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:40px auto;color:#203025"><p>indianXtrade.</p><h1 style="font-size:28px">${title}</h1><p>Open this link, then press Continue to confirm. It expires in 30 minutes and works once.</p><p style="margin:30px 0"><a style="background:#345e37;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none" href="${url.toString()}">Continue securely</a></p><p>If you did not request this email, you can ignore it. Never share this link.</p></div>`;
 
   try {
     if (process.env.RESEND_API_KEY) {
@@ -70,7 +70,7 @@ export async function deliverAuthEmail(input: {
         },
       });
       await transporter.sendMail({
-        from: `"GlobalBulls" <${requireEnv("GMAIL_USER")}>`,
+        from: `"indianXtrade" <${requireEnv("GMAIL_USER")}>`,
         to: input.email,
         subject,
         text,

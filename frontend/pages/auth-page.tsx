@@ -64,7 +64,7 @@ export default function AuthPage({
             </li>
           </ul>
           <p className="auth-preview-note">
-            Enrolment is not open in this preview. Account access does not grant a course purchase.
+            Enrolled course access requires a verified account and active subscription.
           </p>
         </div>
       )}

@@ -13,15 +13,39 @@ export async function localAdminRead(
     const query = `%${(url.searchParams.get("q") ?? "").replace(/[%_]/g, "").slice(0, 120)}%`;
     const where = `from profiles p join auth.users u on u.id=p.id where ${role === "support" ? "p.role='student' and " : ""}(p.full_name ilike $1 or u.email ilike $1 or p.id::text=$3)`;
     const search = url.searchParams.get("q") ?? "";
-    const items = await db.query(
+    const items = await db.query<Record<string, unknown>>(
       `select p.id,p.full_name,p.phone,p.role,p.blocked,p.created_at,u.email ${where} order by p.created_at desc,p.id limit 50 offset $2`,
       [query, page * 50, search],
     );
+    // Deduplicate so students never repeat
+    const seen = new Set<string>();
+    const deduped = items.rows.filter((it) => {
+      const key = String(it.email || it.id || "")
+        .toLowerCase()
+        .trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Attach active device counts
+    for (const it of deduped) {
+      try {
+        const dCount = await db.query<{ count: number }>(
+          `select count(*)::integer as count from device_sessions where user_id=$1 and admitted_at is not null and revoked_at is null and expires_at > now()`,
+          [it.id],
+        );
+        it.active_devices = dCount.rows[0]?.count ?? 0;
+      } catch {
+        it.active_devices = 0;
+      }
+    }
+
     const total = await db.query<{ total: number }>(
       `select count(*)::integer as total ${where.replace("$3", "$2")}`,
       [query, search],
     );
-    return { items: items.rows, total: total.rows[0].total };
+    return { items: deduped, total: total.rows[0]?.total ?? deduped.length };
   }
   if (action === "orders" || action === "export") {
     const values: string[] = [];

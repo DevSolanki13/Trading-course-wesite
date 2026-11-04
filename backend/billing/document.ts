@@ -92,7 +92,7 @@ export async function billingPdf(input: unknown) {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
   pdf.setTitle("Sandbox purchase document");
-  pdf.setProducer("GlobalBulls");
+  pdf.setProducer("indianXtrade");
   const [latin, devanagari] = await Promise.all([
     readFile(join(process.cwd(), "backend/assets/fonts/NotoSans-Regular.ttf")),
     readFile(join(process.cwd(), "backend/assets/fonts/NotoSansDevanagari-Regular.ttf")),

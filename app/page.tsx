@@ -18,10 +18,7 @@ export async function generateMetadata() {
 }
 
 export default async function Home() {
-  const [data, user] = await Promise.all([
-    publicCatalog(),
-    purchaseUser(false).catch(() => null),
-  ]);
+  const [data, user] = await Promise.all([publicCatalog(), purchaseUser(false).catch(() => null)]);
   if (user?.role === "admin") {
     redirect("/admin");
   }

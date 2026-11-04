@@ -21,7 +21,7 @@ test("admin announcements lifecycle: create, list, toggle, update and delete", a
       priority: "urgent",
       pinned: true,
     },
-    "Master Mentor"
+    "Master Mentor",
   );
 
   assert.ok(created.id);
@@ -61,4 +61,3 @@ test("admin announcements lifecycle: create, list, toggle, update and delete", a
   const finalAll = await listAnnouncements(false);
   assert.ok(!finalAll.some((a) => a.id === created.id));
 });
-

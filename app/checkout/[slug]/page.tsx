@@ -61,9 +61,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   const courseQuery = context.admin
     .from("courses")
     .select("slug,title,description,price_paise,sale_price_paise");
-  const filteredCourse = isUuid
-    ? courseQuery.eq("id", slug)
-    : courseQuery.eq("slug", slug);
+  const filteredCourse = isUuid ? courseQuery.eq("id", slug) : courseQuery.eq("slug", slug);
 
   const [course, settings] = await Promise.all([
     filteredCourse.eq("status", "published").maybeSingle(),

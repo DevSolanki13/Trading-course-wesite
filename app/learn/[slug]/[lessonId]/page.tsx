@@ -9,5 +9,7 @@ export default async function Lesson({
   params: Promise<{ slug: string; lessonId: string }>;
 }) {
   const { slug, lessonId } = await params;
-  redirect(`/dashboard?course=${encodeURIComponent(slug)}&lesson=${encodeURIComponent(lessonId)}`);
+  redirect(
+    `/dashboard?view=courses&course=${encodeURIComponent(slug)}&lesson=${encodeURIComponent(lessonId)}`,
+  );
 }

@@ -13,8 +13,8 @@ export default function AboutPage({ content = null }: { content?: SiteDocument |
           <span className="muted">Not for shortcuts.</span>
         </h1>
         <p>
-          GlobalBulls is a provisional trading-education brand with a simple point of view: learning
-          a process matters more than collecting tips.
+          indianXtrade is a trading-education brand with a simple point of view: learning a process
+          matters more than collecting tips.
         </p>
       </div>
       <div className="about-image">

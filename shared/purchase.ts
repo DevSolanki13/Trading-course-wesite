@@ -50,6 +50,13 @@ export type PurchaseLessonContent = PurchaseLesson & {
     otp: string;
     playbackInfo: string;
   } | null;
+  resources?: Array<{
+    id: string;
+    title: string;
+    size?: string;
+    url: string;
+  }>;
+  outcomes?: string[];
 };
 export type PurchaseUser = {
   id: string;

@@ -69,7 +69,7 @@ Files added or changed for this request, relative to the preceding verified base
 | Changed | [.gitignore](../.gitignore)                                                                                                     |
 | Changed | [.prettierignore](../.prettierignore)                                                                                           |
 | Changed | [.vscode/tasks.json](../.vscode/tasks.json)                                                                                     |
-| Changed | [IMPLEMENTATION-PLAN.md](../IMPLEMENTATION-PLAN.md)                                                                           |
+| Changed | [IMPLEMENTATION-PLAN.md](../IMPLEMENTATION-PLAN.md)                                                                             |
 | Changed | [README.md](../README.md)                                                                                                       |
 | Changed | [app/account/page.tsx](../app/account/page.tsx)                                                                                 |
 | Changed | [app/admin/page.tsx](../app/admin/page.tsx)                                                                                     |

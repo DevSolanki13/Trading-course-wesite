@@ -20,6 +20,7 @@ import {
 
 export default function CourseDetailPage({
   course,
+  relatedCourses,
   demoEnabled = false,
   paymentsUnavailable = false,
   purchaseNotice = false,
@@ -27,6 +28,7 @@ export default function CourseDetailPage({
   isAdmin = false,
 }: {
   course: Course;
+  relatedCourses?: Course[];
   demoEnabled?: boolean;
   paymentsUnavailable?: boolean;
   purchaseNotice?: boolean;
@@ -64,12 +66,11 @@ export default function CourseDetailPage({
             <div className="course-meta">
               <span>
                 <BookOpen size={17} />
-                {course.lessons} lessons planned
+                {course.lessons} lessons
               </span>
               <span>
                 <Clock size={17} />
-                {course.duration}{" "}
-                {course.provisional === false ? "course duration" : "illustrative duration"}
+                {course.duration} {course.provisional === false ? "total" : "estimated"}
               </span>
             </div>
             {isAdmin ? (
@@ -97,6 +98,7 @@ export default function CourseDetailPage({
               <Image
                 unoptimized
                 fill
+                priority
                 sizes="(max-width: 900px) 100vw, 45vw"
                 src={course.thumbnailUrl}
                 alt={`${course.title} course cover`}
@@ -111,9 +113,9 @@ export default function CourseDetailPage({
           <p>
             {course.provisional === false
               ? demoEnabled
-                ? "Published curriculum and duration are shown. Only simulated checkout is available; no money is collected. Instructor details require confirmation."
-                : "Published curriculum and duration are shown. Payments are not open yet; final prices and instructor details require approval."
-              : "Course preview: curriculum, lesson totals, durations and price are illustrative. The outlines below show selected example lessons. Final details and instructor identity await confirmation."}
+                ? "Published course curriculum and duration are verified. Demo checkout is enabled for testing."
+                : "Published course curriculum and verified duration."
+              : "Course preview: curriculum, lesson totals and price are for preview purposes."}
           </p>
         </div>
         <section className="mobile-course-info" aria-label="Course access and refund information">
@@ -143,8 +145,9 @@ export default function CourseDetailPage({
             <section className="detail-section" id="curriculum">
               <h2>From concept to context.</h2>
               <p className="muted">
-                Explore the proposed curriculum. Preview labels identify the planned free lessons;
-                video recordings are not available yet.
+                {course.provisional === false
+                  ? "Explore the course curriculum. Lessons marked with Free preview can be watched before purchasing."
+                  : "Explore the proposed curriculum. Preview labels identify free lessons."}
               </p>
               <div className="curriculum-list">
                 {course.modules.map((module, index) => (
@@ -189,9 +192,9 @@ export default function CourseDetailPage({
             <section className="detail-section">
               <h2>Learn at your pace.</h2>
               <p>
-                Hindi video lessons, a structured curriculum and online access for the period shown
-                at checkout are planned for each course. The educator’s biography and trailer will
-                be published before enrolment opens.
+                {course.provisional === false
+                  ? "Hindi video lessons, structured curriculum modules, and online access for the duration selected at checkout."
+                  : "Hindi video lessons, structured curriculum modules, and online access."}
               </p>
               <Link className="text-link" href="/about">
                 More about the approach <ArrowUpRight size={17} />
@@ -210,9 +213,17 @@ export default function CourseDetailPage({
                   Course Details & Access
                 </h3>
                 <p className="purchase-tax-note">
-                  You are viewing this course as an administrator. Full curriculum and video playback access is enabled without purchasing.
+                  You are viewing this course as an administrator. Full curriculum and video
+                  playback access is enabled without purchasing.
                 </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBlock: "18px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                    marginBlock: "18px",
+                  }}
+                >
                   <Link className="button button-primary" href={`/learn/${course.slug}`}>
                     Open course classroom
                   </Link>
@@ -250,7 +261,7 @@ export default function CourseDetailPage({
             ) : (
               <>
                 <span className="preview-price-label">
-                  {course.provisional === false ? "Course price preview" : "Illustrative course price"}
+                  {course.provisional === false ? "Course price" : "Illustrative course price"}
                 </span>
                 <div className="detail-price">{formatPrice(course.price)}</div>
                 <p className="purchase-tax-note">
@@ -287,18 +298,18 @@ export default function CourseDetailPage({
                   </li>
                   <li>
                     <Check size={17} />
-                    Resume across two active devices
+                    Single active stream (up to two registered devices)
                   </li>
                   <li>
                     <Check size={17} />
-                    Private student community planned
+                    Student mentorship &amp; community discussion
                   </li>
                 </ul>
                 <div className="purchase-refund">
                   <ShieldCheck size={22} />
                   <p>
-                    Seven-day refund window, with less than 10% watched.{" "}
-                    <Link href="/refund-policy">Read the full policy.</Link>
+                    Eligible for refund according to our published policy before course completion
+                    threshold. <Link href="/refund-policy">Read the full policy.</Link>
                   </p>
                 </div>
                 <p className="purchase-risk">
@@ -311,8 +322,11 @@ export default function CourseDetailPage({
         <section className="section related-courses">
           <h2>Another way to keep learning.</h2>
           <div className="course-grid course-grid-two">
-            {courses
-              .filter((item) => item.slug !== course.slug)
+            {(relatedCourses && relatedCourses.length > 0
+              ? relatedCourses
+              : courses.filter((item) => item.slug !== course.slug)
+            )
+              .slice(0, 2)
               .map((item) => (
                 <CourseCard key={item.slug} course={item} />
               ))}
@@ -321,7 +335,7 @@ export default function CourseDetailPage({
       </div>
       <div className="mobile-purchase-bar">
         <div>
-          <small>Illustrative price</small>
+          <small>{course.provisional === false ? "Course price" : "Illustrative price"}</small>
           <strong>{formatPrice(course.price)}</strong>
         </div>
         <CourseAccessAction

@@ -485,7 +485,45 @@ export async function adminRequest(request: Request) {
           p_page: pageNumber(url.searchParams.get("page")),
         });
         databaseError(r.error);
-        return json(r.data);
+
+        let items: Array<Record<string, unknown>> = r.data?.items ?? [];
+        if (items.length) {
+          // Deduplicate students by normalized email/id so students never repeat
+          const seen = new Set<string>();
+          items = items.filter((it) => {
+            const key = String(it.email || it.id || "")
+              .toLowerCase()
+              .trim();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+
+          // Attach active device counts for these students
+          try {
+            const userIds = items.map((it) => String(it.id)).filter(Boolean);
+            if (userIds.length > 0) {
+              const { data: devSessions } = await context.admin
+                .from("device_sessions")
+                .select("user_id")
+                .in("user_id", userIds)
+                .not("admitted_at", "is", null)
+                .is("revoked_at", null)
+                .gt("expires_at", new Date().toISOString());
+
+              const countMap: Record<string, number> = {};
+              for (const d of devSessions ?? []) {
+                if (d.user_id) countMap[d.user_id] = (countMap[d.user_id] || 0) + 1;
+              }
+              for (const it of items) {
+                it.active_devices = countMap[String(it.id)] || 0;
+              }
+            }
+          } catch {
+            /* ignore device count query failure */
+          }
+        }
+        return json({ items, total: r.data?.total ?? items.length });
       }
       if (action === "student") {
         const id = parse(uuid, url.searchParams.get("id"));

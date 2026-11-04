@@ -12,10 +12,7 @@ import "@/frontend/styles/admin-shared.css";
 
 export const dynamic = "force-dynamic";
 export default async function Catalogue() {
-  const [data, user] = await Promise.all([
-    publicCatalog(),
-    purchaseUser(false).catch(() => null),
-  ]);
+  const [data, user] = await Promise.all([publicCatalog(), purchaseUser(false).catch(() => null)]);
   if (user?.role === "admin") {
     redirect("/admin");
   }

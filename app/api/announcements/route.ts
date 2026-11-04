@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to load announcements" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -77,23 +77,40 @@ export async function POST(request: Request) {
 
       const created = await createAnnouncement(
         { title, content, category, priority, pinned },
-        admin.name || "Admin"
+        admin.name || "Admin",
       );
-      return NextResponse.json({ announcement: created, message: "Announcement published successfully!" });
+      return NextResponse.json({
+        announcement: created,
+        message: "Announcement published successfully!",
+      });
     }
 
     if (action === "update") {
       const { id, title, content, category, priority, pinned, active } =
         body as UpdateAnnouncementInput & { action: string };
       if (!id) {
-        return NextResponse.json({ error: "Announcement ID is required for update." }, { status: 400 });
+        return NextResponse.json(
+          { error: "Announcement ID is required for update." },
+          { status: 400 },
+        );
       }
 
-      const updated = await updateAnnouncement({ id, title, content, category, priority, pinned, active });
+      const updated = await updateAnnouncement({
+        id,
+        title,
+        content,
+        category,
+        priority,
+        pinned,
+        active,
+      });
       if (!updated) {
         return NextResponse.json({ error: "Announcement not found." }, { status: 404 });
       }
-      return NextResponse.json({ announcement: updated, message: "Announcement updated successfully!" });
+      return NextResponse.json({
+        announcement: updated,
+        message: "Announcement updated successfully!",
+      });
     }
 
     if (action === "delete") {
@@ -109,8 +126,7 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Operation failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

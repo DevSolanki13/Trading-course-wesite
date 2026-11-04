@@ -9,7 +9,10 @@ import "@/frontend/styles/admin.css";
 import "@/frontend/styles/student-dashboard.css";
 import "@/frontend/styles/video-learning.css";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Student Dashboard | GlobalBulls", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Student Dashboard",
+  robots: { index: false, follow: false },
+};
 export default async function Dashboard({
   searchParams,
 }: {
@@ -26,19 +29,22 @@ export default async function Dashboard({
     listAnnouncements(true),
   ]);
   const viewParam = query.view || query.tab;
+  const ownedCourses = courses.filter((c) => c.owned || c.accessExpiresAt);
   const initialView =
     viewParam === "courses" || viewParam === "study"
       ? "courses"
       : viewParam === "billing" || viewParam === "orders"
-      ? "billing"
-      : viewParam === "account" || viewParam === "profile"
-      ? "account"
-      : "explore";
+        ? "billing"
+        : viewParam === "account" || viewParam === "profile"
+          ? "account"
+          : query.course || ownedCourses.length > 0
+            ? "courses"
+            : "explore";
 
   return (
     <PurchaseDashboard
       user={user}
-      courses={courses.filter((c) => c.owned || c.accessExpiresAt)}
+      courses={ownedCourses}
       allCourses={courses}
       orders={orders}
       announcements={announcements}

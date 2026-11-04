@@ -7,7 +7,10 @@ import "@/frontend/styles/learning.css";
 import "@/frontend/styles/admin.css";
 import "@/frontend/styles/student-dashboard.css";
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Purchase history | GlobalBulls", robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Purchase history",
+  robots: { index: false, follow: false },
+};
 export default async function Orders() {
   const user = await requirePurchaseUser("/dashboard/orders");
   if (user.role === "admin") {

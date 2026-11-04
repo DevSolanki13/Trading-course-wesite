@@ -9,12 +9,35 @@ export default function ContactPage({
   telegramUrl = site.telegramUrl,
   instagramUrl = site.instagramUrl,
   content = null,
+  topic,
 }: {
   supportEmail?: string | null;
   telegramUrl?: string | null;
   instagramUrl?: string | null;
   content?: SiteDocument | null;
+  topic?: string;
 }) {
+  const topicDetails =
+    topic === "learning"
+      ? {
+          label: "Course learning & mentor desk inquiry",
+          subject: "[Learning Support] Question regarding course content",
+          note: "Include your course title and lesson name so our team can provide tailored guidance.",
+        }
+      : topic === "refund" || topic === "billing"
+        ? {
+            label: "Billing & refund support",
+            subject: "[Billing Support] Order reference inquiry",
+            note: "Include your Order ID and the email address used at checkout for rapid reconciliation.",
+          }
+        : null;
+
+  const mailtoSubject = topicDetails
+    ? `?subject=${encodeURIComponent(topicDetails.subject)}`
+    : `?subject=${encodeURIComponent(`[Support Inquiry] ${site.name}`)}`;
+
+  const mailtoHref = supportEmail ? `mailto:${supportEmail}${mailtoSubject}` : "#";
+
   return (
     <main id="main-content" className="container contact-page">
       <div className="page-intro">
@@ -28,6 +51,14 @@ export default function ContactPage({
           need.
         </p>
       </div>
+
+      {topicDetails && (
+        <div className="contact-topic-notice" role="status">
+          <strong>Topic: {topicDetails.label}</strong>
+          <p>{topicDetails.note}</p>
+        </div>
+      )}
+
       <div className="contact-grid">
         <section className="contact-details">
           <h2>Course & account support</h2>
@@ -37,7 +68,7 @@ export default function ContactPage({
                 Include the course title and, if you have purchased, your order reference. Please
                 never send passwords or payment credentials.
               </p>
-              <a className="button button-primary" href={`mailto:${supportEmail}`}>
+              <a className="button button-primary" href={mailtoHref}>
                 Email support <ArrowUpRight size={18} />
               </a>
             </>

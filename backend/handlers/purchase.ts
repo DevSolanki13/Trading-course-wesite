@@ -161,14 +161,18 @@ export async function purchaseRequest(request: Request) {
       if (error.code === "23505")
         return json({ error: "You already own this course.", code: "ALREADY_OWNED" }, 409);
       if (error.code === "42501")
-        return json({ error: error instanceof Error ? error.message : "Access denied.", code: "ACCESS_DENIED" }, 403);
+        return json(
+          {
+            error: error instanceof Error ? error.message : "Access denied.",
+            code: "ACCESS_DENIED",
+          },
+          403,
+        );
       if (error.code === "22023")
         return json(
           {
             error:
-              error instanceof Error
-                ? error.message
-                : "Course or order configuration unavailable.",
+              error instanceof Error ? error.message : "Course or order configuration unavailable.",
             code: "INVALID_REQUEST",
           },
           400,

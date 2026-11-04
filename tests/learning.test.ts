@@ -22,7 +22,10 @@ test("enrollment requires active access and a matching paid purchase", () => {
     hasCourseAccess([{ ...e, revoked_at: new Date().toISOString() }], [o], "course", "user"),
     false,
   );
-  assert.equal(hasCourseAccess([{ ...e, source: "manual", order_id: null }], [], "course", "user"), false);
+  assert.equal(
+    hasCourseAccess([{ ...e, source: "manual", order_id: null }], [], "course", "user"),
+    false,
+  );
 });
 test("refund display uses exact time/watch boundaries and refuses missing snapshots", () => {
   const policy = { window_days: 7, watch_limit_percent: 10 };
@@ -96,11 +99,10 @@ test("learning SQL enforces access, heartbeat ordering, unique watched ranges an
         [user, course],
       )
     ).rows[0].id;
-    await db.query("insert into enrollments(user_id,course_id,order_id,source)values($1,$2,$3,'purchase')", [
-      user,
-      course,
-      order,
-    ]);
+    await db.query(
+      "insert into enrollments(user_id,course_id,order_id,source)values($1,$2,$3,'purchase')",
+      [user, course, order],
+    );
     let lease = (
       await db.query<{ state: { leaseId: string } }>("select learning_start($1,$2,$3) as state", [
         user,

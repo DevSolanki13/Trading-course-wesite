@@ -120,6 +120,9 @@ export default function HomePage({
         className="ticker-strip"
         aria-label="Illustrative market values for education only, not live prices"
       >
+        <div className="ticker-label-badge" aria-hidden="true">
+          <span>Illustrative · Not live feed</span>
+        </div>
         <div className="ticker-track">
           {[...ticker, ...ticker].map((item, index) => (
             <span key={`${item}-${index}`} aria-hidden={index >= ticker.length}>
@@ -144,7 +147,7 @@ export default function HomePage({
           <AnnotatedChart />
           <TeacherNotes />
         </HeroAnnotations>
-        <div className="eyebrow">GLOBALBULLS · TRADING EDUCATION</div>
+        <div className="eyebrow">INDIANXTRADE · TRADING EDUCATION</div>
         <h1 id="landing-title" className={headlineFont.variable}>
           {content?.heroTitle || "Learn to trade with"} <em>{content?.heroAccent || "clarity"}</em>
           <br />
@@ -198,7 +201,7 @@ export default function HomePage({
         </p>
       </section>
       <section className="why-section container" id="why">
-        <div className="eyebrow">WHY GLOBALBULLS</div>
+        <div className="eyebrow">WHY INDIANXTRADE</div>
         <h2>
           Build a process
           <br />

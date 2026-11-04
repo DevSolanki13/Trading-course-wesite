@@ -1,5 +1,5 @@
 export const site = {
-  name: "GlobalBulls",
+  name: "indianXtrade",
   description:
     "A structured approach to trading education. Learn market foundations, price action and risk management through Hindi lessons.",
   supportEmail: "support@indianxtrade.com" as string | null,

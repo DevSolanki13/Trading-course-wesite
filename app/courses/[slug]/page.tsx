@@ -28,10 +28,14 @@ export default async function CourseRoute({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug } = await params;
-  const [course, user] = await Promise.all([
-    find(slug),
+  const [catalogData, user] = await Promise.all([
+    publicCatalog(),
     purchaseUser(false).catch(() => null),
   ]);
+  const course =
+    catalogData.courses.find((c) => c.slug === slug) ??
+    (catalogData.failed ? undefined : getCourse(slug));
+
   if (user?.role === "admin") {
     redirect("/admin");
   }
@@ -44,10 +48,12 @@ export default async function CourseRoute({
   } catch {
     unavailable = true;
   }
+  const relatedCourses = catalogData.courses.filter((c) => c.slug !== slug);
   const isAdmin = false; // admin users are redirected above
   return (
     <CourseDetailPage
       course={course}
+      relatedCourses={relatedCourses}
       demoEnabled={
         course.provisional === false &&
         (enabled || isDemoPaymentEnabled() || cashfreeSandboxEnabled())

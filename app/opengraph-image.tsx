@@ -1,9 +1,18 @@
 import { ImageResponse } from "next/og";
-import { BullMark } from "../frontend/components/bull-mark";
-export const alt = "GlobalBulls: Learn the process. Respect the risk.";
+import fs from "node:fs";
+import path from "node:path";
+
+export const alt = "indianXtrade: Learn the process. Respect the risk.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
 export default function OpenGraphImage() {
+  const logoBase64 = fs.readFileSync(
+    path.join(process.cwd(), "public", "brand", "indianxtrade-dark.png"),
+    "base64",
+  );
+  const logoSrc = `data:image/png;base64,${logoBase64}`;
+
   return new ImageResponse(
     <div
       style={{
@@ -17,19 +26,15 @@ export default function OpenGraphImage() {
         justifyContent: "space-between",
       }}
     >
-      <div style={{ fontSize: 32, display: "flex", alignItems: "center", gap: 18 }}>
-        <BullMark
-          width={80}
-          height={66}
-          color="#F0F3FA"
-          up="#5ab75c"
-          down="#f04b51"
-          outline="#0B0E11"
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logoSrc}
+          width={220}
+          height={72}
+          style={{ objectFit: "contain" }}
+          alt="indianXtrade"
         />
-        <span style={{ display: "flex" }}>
-          <span style={{ fontWeight: 400 }}>Global</span>
-          <span style={{ fontWeight: 700 }}>Bulls</span>
-        </span>
       </div>
       <div
         style={{
@@ -41,7 +46,7 @@ export default function OpenGraphImage() {
         }}
       >
         <span>Learn the process.</span>
-        <span style={{ color: "#90ACFF" }}>Respect the risk.</span>
+        <span style={{ color: "#35dca0" }}>Respect the risk.</span>
       </div>
       <div style={{ fontSize: 22, color: "#A1A6B2", display: "flex" }}>
         Trading education in Hindi · Preview edition

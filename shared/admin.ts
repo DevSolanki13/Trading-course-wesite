@@ -46,6 +46,7 @@ export type StudentRow = {
   role: string;
   blocked: boolean;
   created_at: string;
+  active_devices?: number;
 };
 export type StudentDetail = {
   profile: StudentRow;

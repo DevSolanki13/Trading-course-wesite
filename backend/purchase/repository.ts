@@ -112,7 +112,7 @@ export const purchaseLesson = async (id: string, userId: string | null) => {
                 annotate: JSON.stringify([
                   {
                     type: "rtext",
-                    text: "GlobalBulls Student",
+                    text: "indianXtrade Student",
                     alpha: "0.6",
                     color: "0xFFFFFF",
                     size: "15",

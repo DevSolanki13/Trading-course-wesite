@@ -75,7 +75,10 @@ export async function admitted() {
       if (isPrivileged(context.profile.role)) {
         await context.admin
           .from("device_sessions")
-          .update({ admitted_at: new Date().toISOString(), last_active_at: new Date().toISOString() })
+          .update({
+            admitted_at: new Date().toISOString(),
+            last_active_at: new Date().toISOString(),
+          })
           .eq("user_id", context.user.id)
           .eq("auth_session_id", context.sessionId);
         return context;

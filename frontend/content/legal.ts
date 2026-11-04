@@ -1,12 +1,12 @@
 export const legalPages = {
   terms: {
     title: "Terms and conditions",
-    intro: "The agreement that applies when you use GlobalBulls or purchase one of our courses.",
+    intro: "The agreement that applies when you use indianXtrade or purchase one of our courses.",
     updated: "4 November 2026",
     sections: [
       {
         title: "Agreement",
-        body: "By accessing this website, you agree to be bound by these Terms and Conditions (“Terms”), a legally binding agreement between GlobalBulls, operated by Nikhil Pandey (“we”, “us” or “our”), and you, the user (“you” or “your”). Please read these Terms carefully before using the website. If you do not agree to them, you may not use the website. We may update these Terms by posting changes on this page. Please review them from time to time; if a change is not acceptable to you, you should stop using the website.",
+        body: "By accessing this website, you agree to be bound by these Terms and Conditions (“Terms”), a legally binding agreement between indianXtrade, operated by Nikhil Pandey (“we”, “us” or “our”), and you, the user (“you” or “your”). Please read these Terms carefully before using the website. If you do not agree to them, you may not use the website. We may update these Terms by posting changes on this page. Please review them from time to time; if a change is not acceptable to you, you should stop using the website.",
       },
       {
         title: "Eligibility",
@@ -14,7 +14,7 @@ export const legalPages = {
       },
       {
         title: "Definitions",
-        body: "“Platform” or “Website” means the GlobalBulls website and any related pages where our courses are offered. “Course” means a recorded video course or related learning material offered on the Platform. “Payment Instrument” includes credit card, debit card, net banking, UPI, wallets or any other payment method made available through our payment partner. “Transaction” means an order placed by you to purchase a Course by paying the listed price (“Transaction Amount”). “User” means any person using the Platform or purchasing a Course.",
+        body: "“Platform” or “Website” means the indianXtrade website and any related pages where our courses are offered. “Course” means a recorded video course or related learning material offered on the Platform. “Payment Instrument” includes credit card, debit card, net banking, UPI, wallets or any other payment method made available through our payment partner. “Transaction” means an order placed by you to purchase a Course by paying the listed price (“Transaction Amount”). “User” means any person using the Platform or purchasing a Course.",
       },
       {
         title: "Educational purpose only",

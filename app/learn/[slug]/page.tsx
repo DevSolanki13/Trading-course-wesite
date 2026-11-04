@@ -11,6 +11,7 @@ export default async function Classroom({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
-  const lesson = typeof query.lesson === "string" ? `&lesson=${encodeURIComponent(query.lesson)}` : "";
-  redirect(`/dashboard?course=${encodeURIComponent(slug)}${lesson}`);
+  const lesson =
+    typeof query.lesson === "string" ? `&lesson=${encodeURIComponent(query.lesson)}` : "";
+  redirect(`/dashboard?view=courses&course=${encodeURIComponent(slug)}${lesson}`);
 }

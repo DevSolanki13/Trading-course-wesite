@@ -118,7 +118,7 @@ export async function localCourseLearners(courseId: string): Promise<AdminCourse
       modulePosition: number;
       lessonPosition: number;
     }>(
-      "select l.id,l.title,m.title as \"moduleTitle\",l.duration_seconds as \"durationSeconds\",m.position as \"modulePosition\",l.position as \"lessonPosition\" from modules m join lessons l on l.module_id=m.id where m.course_id=$1 and l.published order by m.position,l.position",
+      'select l.id,l.title,m.title as "moduleTitle",l.duration_seconds as "durationSeconds",m.position as "modulePosition",l.position as "lessonPosition" from modules m join lessons l on l.module_id=m.id where m.course_id=$1 and l.published order by m.position,l.position',
       [courseId],
     )
   ).rows;
@@ -133,7 +133,7 @@ export async function localCourseLearners(courseId: string): Promise<AdminCourse
       revokedAt: string | null;
       userId: string;
     }>(
-      "select e.user_id as \"userId\",p.full_name as name,u.email,e.granted_at as \"grantedAt\",e.expires_at as \"expiresAt\",e.active,e.revoked_at as \"revokedAt\" from enrollments e join orders o on o.id=e.order_id and o.status='paid' and o.user_id=e.user_id and o.course_id=e.course_id join profiles p on p.id=e.user_id join auth.users u on u.id=p.id where e.course_id=$1 and e.source='purchase' order by p.full_name,u.email",
+      'select e.user_id as "userId",p.full_name as name,u.email,e.granted_at as "grantedAt",e.expires_at as "expiresAt",e.active,e.revoked_at as "revokedAt" from enrollments e join orders o on o.id=e.order_id and o.status=\'paid\' and o.user_id=e.user_id and o.course_id=e.course_id join profiles p on p.id=e.user_id join auth.users u on u.id=p.id where e.course_id=$1 and e.source=\'purchase\' order by p.full_name,u.email',
       [courseId],
     )
   ).rows;
@@ -146,12 +146,14 @@ export async function localCourseLearners(courseId: string): Promise<AdminCourse
       completed: boolean;
       updatedAt: string;
     }>(
-      "select lp.user_id as \"userId\",lp.lesson_id as \"lessonId\",lp.position_ms/1000.0 as \"positionSeconds\",coalesce((select sum(upper(r)-lower(r))/1000.0 from unnest(lp.watched) r),0) as \"watchedSeconds\",lp.completed,lp.updated_at as \"updatedAt\" from lesson_progress lp join lessons l on l.id=lp.lesson_id join modules m on m.id=l.module_id where m.course_id=$1",
+      'select lp.user_id as "userId",lp.lesson_id as "lessonId",lp.position_ms/1000.0 as "positionSeconds",coalesce((select sum(upper(r)-lower(r))/1000.0 from unnest(lp.watched) r),0) as "watchedSeconds",lp.completed,lp.updated_at as "updatedAt" from lesson_progress lp join lessons l on l.id=lp.lesson_id join modules m on m.id=l.module_id where m.course_id=$1',
       [courseId],
     )
   ).rows;
   const learners = enrollments.map((enrollment) => {
-    const records = new Map(progress.filter((row) => row.userId === enrollment.userId).map((row) => [row.lessonId, row]));
+    const records = new Map(
+      progress.filter((row) => row.userId === enrollment.userId).map((row) => [row.lessonId, row]),
+    );
     const lessonRows = lessons.map((lesson) => {
       const row = records.get(lesson.id);
       return {
@@ -166,7 +168,8 @@ export async function localCourseLearners(courseId: string): Promise<AdminCourse
     });
     const completedLessons = lessonRows.filter((lesson) => lesson.completed).length;
     const lastActiveAt = lessonRows.reduce<string | null>(
-      (latest, lesson) => (!latest || (lesson.updatedAt && lesson.updatedAt > latest) ? lesson.updatedAt : latest),
+      (latest, lesson) =>
+        !latest || (lesson.updatedAt && lesson.updatedAt > latest) ? lesson.updatedAt : latest,
       null,
     );
     return {
