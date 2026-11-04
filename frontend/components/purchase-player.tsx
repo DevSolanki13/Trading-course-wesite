@@ -8,29 +8,19 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   ArrowRight,
-  CaretDown,
   Check,
   CheckCircle,
-  ClosedCaptioning,
-  CornersIn,
-  CornersOut,
   DownloadSimple,
   FilePdf,
-  LockSimple,
   NotePencil,
-  Pause,
-  PictureInPicture,
   Play,
-  PlayCircle,
   ShieldCheck,
-  SpeakerHigh,
-  SpeakerSimpleSlash,
-  CalendarBlank,
 } from "@phosphor-icons/react";
 import type { PurchaseCourse, PurchaseLessonContent, PurchaseUser } from "../../shared/purchase";
-import { accessExpiryLabel } from "../../shared/course-access";
 import { BullMark } from "./bull-mark";
-import { CourseArtwork } from "./course-artwork";
+import { useLessonNotes } from "./player/use-lesson-notes";
+import { PlayerControls } from "./player/player-controls";
+import { CurriculumSidebar } from "./player/curriculum-sidebar";
 
 export function PurchasePlayer({
   course,
@@ -64,16 +54,10 @@ export function PurchasePlayer({
   const [captionsOn, setCaptionsOn] = useState(false);
 
   // Student notes state with localStorage persistence
-  const [notes, setNotes] = useState("");
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
-
-  // User-scoped storage key prevents note leaks between different accounts on shared devices
-  const userScopedKey = user?.id
-    ? `indianxtrade_notes_${user.id}_${lesson.id}`
-    : `indianxtrade_notes_guest_${lesson.id}`;
-
-  // Collapsed modules state (record of module id -> boolean)
-  const [collapsedModules, setCollapsedModules] = useState<Record<string, boolean>>({});
+  const { notes, setNotes, saveStatus, setSaveStatus, saveNotes } = useLessonNotes(
+    lesson.id,
+    user?.id,
+  );
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -93,34 +77,6 @@ export function PurchasePlayer({
 
   const totalLessons = allLessons.length;
   const completedLessonsCount = allLessons.filter((l) => l.completed).length;
-
-  // Load notes from localStorage for this lesson (scoped to current account)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        const saved = localStorage.getItem(userScopedKey);
-        setNotes(saved ?? "");
-        setSaveStatus("saved");
-      } catch {
-        // ignore
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [userScopedKey]);
-
-  // Debounced auto-save notes to preserve changes without requiring manual button clicks
-  useEffect(() => {
-    if (!notes) return;
-    const timer = setTimeout(() => {
-      try {
-        localStorage.setItem(userScopedKey, notes);
-        setSaveStatus("saved");
-      } catch {
-        // ignore
-      }
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, [notes, userScopedKey]);
 
   // Handle access expiry timer
   useEffect(() => {
@@ -338,16 +294,6 @@ export function PurchasePlayer({
     return 12; // default placeholder matching design
   }, [lesson.duration]);
 
-  const saveNotes = () => {
-    try {
-      localStorage.setItem(userScopedKey, notes);
-      setSaveStatus("saved");
-      toast.success("Notes saved for this lesson.");
-    } catch {
-      toast.error("Could not save note to browser storage.");
-    }
-  };
-
   const toggleCaptions = () => {
     if (!videoRef.current) return;
     const tracks = videoRef.current.textTracks;
@@ -385,185 +331,14 @@ export function PurchasePlayer({
         {/* ===================================================================
             LEFT SIDEBAR: CURRICULUM, PROGRESS & EXPIRY
             =================================================================== */}
-        <aside className="vlp-sidebar" aria-label="Course curriculum">
-          {/* Back link */}
-          {onBack ? (
-            <button
-              type="button"
-              onClick={onBack}
-              className="vlp-back-link"
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-            >
-              <ArrowLeft size={16} />
-              <span>Back to my courses</span>
-            </button>
-          ) : (
-            <Link href="/dashboard" className="vlp-back-link">
-              <ArrowLeft size={16} />
-              <span>Back to my courses</span>
-            </Link>
-          )}
-
-          {/* Course card banner with candlestick/artwork */}
-          <div className="vlp-course-card">
-            {course.thumbnail ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={course.thumbnail} alt={course.title} className="vlp-course-card-bg" />
-            ) : (
-              <div className="vlp-course-card-artwork">
-                <CourseArtwork
-                  kind={
-                    course.slug.includes("price")
-                      ? "structure"
-                      : course.slug.includes("risk")
-                        ? "risk"
-                        : "foundations"
-                  }
-                />
-              </div>
-            )}
-            <div className="vlp-course-card-gradient" />
-            <h2 className="vlp-course-card-title">{course.title}</h2>
-          </div>
-
-          {/* Progress bar block */}
-          <div className="vlp-progress-block">
-            <div className="vlp-progress-labels">
-              <span>{course.progress}% complete</span>
-              <span>
-                {completedLessonsCount} of {totalLessons} lessons
-              </span>
-            </div>
-            <div className="vlp-progress-track">
-              <div className="vlp-progress-bar" style={{ width: `${course.progress}%` }} />
-            </div>
-          </div>
-
-          {/* Course content title */}
-          <span className="vlp-content-label">Course content</span>
-
-          {/* Modules and lessons tree */}
-          <div className="vlp-curriculum-tree">
-            {course.modules.map((module, mIdx) => {
-              const isCollapsed = !!collapsedModules[module.id];
-              return (
-                <div className="vlp-module-accordion" key={module.id}>
-                  <button
-                    type="button"
-                    className="vlp-module-header"
-                    onClick={() =>
-                      setCollapsedModules({
-                        ...collapsedModules,
-                        [module.id]: !isCollapsed,
-                      })
-                    }
-                    aria-expanded={!isCollapsed}
-                  >
-                    <div className="vlp-module-title-box">
-                      <strong>Module {mIdx + 1}</strong>
-                      <span>{module.title}</span>
-                    </div>
-                    <CaretDown
-                      size={15}
-                      className={`vlp-module-chevron ${isCollapsed ? "" : "is-open"}`}
-                    />
-                  </button>
-
-                  {!isCollapsed && (
-                    <div className="vlp-lesson-list">
-                      {module.lessons.map((item, lIdx) => {
-                        const isActive = item.id === lesson.id;
-                        const isCompleted = item.completed;
-                        const isLocked = !course.owned && !item.preview;
-                        const lessonNumber = (lIdx + 1).toString().padStart(2, "0");
-                        const itemDurationMin = item.duration
-                          ? Math.max(1, Math.round(item.duration / 60))
-                          : 10 + (lIdx % 5) * 2;
-
-                        if (isLocked) {
-                          return (
-                            <div
-                              key={item.id}
-                              className="vlp-lesson-item is-locked"
-                              aria-disabled="true"
-                              style={{ opacity: 0.65, cursor: "not-allowed" }}
-                            >
-                              <div className="vlp-lesson-icon is-locked" aria-label="Locked lesson">
-                                <LockSimple size={13} />
-                              </div>
-                              <span className="vlp-lesson-name">
-                                {lessonNumber} {item.title}
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: "11px",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  background: "color-mix(in srgb, var(--surface) 90%, #000)",
-                                  color: "var(--muted)",
-                                  border: "1px solid var(--border)",
-                                }}
-                              >
-                                Locked
-                              </span>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <Link
-                            key={item.id}
-                            href={`/learn/${course.slug}/${item.id}`}
-                            onClick={(e) => {
-                              if (onLessonChange) {
-                                e.preventDefault();
-                                onLessonChange(item.id);
-                              }
-                            }}
-                            className={`vlp-lesson-item ${isActive ? "is-active" : ""}`}
-                            aria-current={isActive ? "page" : undefined}
-                          >
-                            <div
-                              className={`vlp-lesson-icon ${
-                                isActive
-                                  ? "is-active"
-                                  : isCompleted
-                                    ? "is-completed"
-                                    : "is-unwatched"
-                              }`}
-                            >
-                              {isCompleted ? (
-                                <Check size={14} weight="bold" />
-                              ) : isActive ? (
-                                <Play size={11} weight="fill" />
-                              ) : (
-                                <PlayCircle size={15} />
-                              )}
-                            </div>
-                            <span className="vlp-lesson-name">
-                              {lessonNumber} {item.title}
-                            </span>
-                            <span className="vlp-lesson-duration">{itemDurationMin} min</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Access Validity / Calendar pin at bottom */}
-          <div className="vlp-sidebar-footer">
-            <CalendarBlank size={15} />
-            <span>
-              {course.accessExpiresAt
-                ? `Access until ${accessExpiryLabel(course.accessExpiresAt)}`
-                : "Standard enrolled access"}
-            </span>
-          </div>
-        </aside>
+        <CurriculumSidebar
+          course={course}
+          lesson={lesson}
+          onBack={onBack}
+          onLessonChange={onLessonChange}
+          completedLessonsCount={completedLessonsCount}
+          totalLessons={totalLessons}
+        />
 
         {/* ===================================================================
             RIGHT MAIN AREA: VIDEO PLAYER & DETAILS
@@ -752,156 +527,29 @@ export function PurchasePlayer({
 
                 {/* Bottom Controls Overlay Bar */}
                 {!videoError && (
-                  <div className="vlp-player-controls-overlay">
-                    {/* Scrubber timeline */}
-                    <div
-                      className="vlp-scrubber-track"
-                      onClick={handleSeek}
-                      onKeyDown={handleScrubberKeyDown}
-                      tabIndex={0}
-                      role="slider"
-                      aria-label="Video seek scrubber"
-                      aria-valuemin={0}
-                      aria-valuemax={Math.round(duration || lesson.duration || 0)}
-                      aria-valuenow={Math.round(currentTime)}
-                      aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration || lesson.duration || 0)}`}
-                    >
-                      <div
-                        className="vlp-scrubber-fill"
-                        style={{
-                          width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
-                        }}
-                      >
-                        <div className="vlp-scrubber-thumb" />
-                      </div>
-                    </div>
-
-                    {/* Bottom controls row */}
-                    <div className="vlp-controls-row">
-                      <div className="vlp-controls-left">
-                        {/* Play/Pause */}
-                        <button
-                          type="button"
-                          className="vlp-ctrl-btn"
-                          onClick={togglePlay}
-                          aria-label={isPlaying ? "Pause" : "Play"}
-                        >
-                          {isPlaying ? (
-                            <Pause size={18} weight="fill" />
-                          ) : (
-                            <Play size={18} weight="fill" />
-                          )}
-                        </button>
-
-                        {/* Mute/Volume */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <button
-                            type="button"
-                            className="vlp-ctrl-btn"
-                            onClick={toggleMute}
-                            aria-label={isMuted ? "Unmute" : "Mute"}
-                          >
-                            {isMuted || volume === 0 ? (
-                              <SpeakerSimpleSlash size={18} />
-                            ) : (
-                              <SpeakerHigh size={18} />
-                            )}
-                          </button>
-                          <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.05"
-                            value={isMuted ? 0 : volume}
-                            onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                            aria-label="Volume slider"
-                            style={{
-                              width: "55px",
-                              height: "4px",
-                              accentColor: "#00df8f",
-                              cursor: "pointer",
-                            }}
-                          />
-                        </div>
-
-                        {/* Time display */}
-                        <span className="vlp-time-readout">
-                          {formatTime(currentTime)} /{" "}
-                          {duration > 0
-                            ? formatTime(duration)
-                            : lesson.duration
-                              ? formatTime(lesson.duration)
-                              : "--:--"}
-                        </span>
-                      </div>
-
-                      <div className="vlp-controls-right">
-                        {/* CC Toggle */}
-                        <button
-                          type="button"
-                          className={`vlp-ctrl-btn ${captionsOn ? "is-active" : ""}`}
-                          onClick={toggleCaptions}
-                          title={captionsOn ? "Disable captions" : "Enable captions"}
-                          aria-label="Toggle captions"
-                          aria-pressed={captionsOn}
-                        >
-                          <ClosedCaptioning size={18} weight={captionsOn ? "fill" : "regular"} />
-                        </button>
-
-                        {/* Speed dropdown */}
-                        <div className="vlp-speed-dropdown">
-                          <button
-                            type="button"
-                            className="vlp-speed-btn"
-                            onClick={() => setSpeedMenuOpen(!speedMenuOpen)}
-                            aria-label="Playback speed"
-                          >
-                            <span>{playbackSpeed}x</span>
-                            <CaretDown size={11} />
-                          </button>
-
-                          {speedMenuOpen && (
-                            <div className="vlp-speed-menu">
-                              {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  className={`vlp-speed-option ${
-                                    playbackSpeed === s ? "is-active" : ""
-                                  }`}
-                                  onClick={() => handleSpeedChange(s)}
-                                >
-                                  {s}x
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* PiP */}
-                        <button
-                          type="button"
-                          className="vlp-ctrl-btn"
-                          onClick={togglePiP}
-                          title="Picture-in-picture"
-                          aria-label="Picture in picture"
-                        >
-                          <PictureInPicture size={18} />
-                        </button>
-
-                        {/* Fullscreen */}
-                        <button
-                          type="button"
-                          className="vlp-ctrl-btn"
-                          onClick={toggleFullscreen}
-                          title="Fullscreen"
-                          aria-label="Fullscreen"
-                        >
-                          {isFullscreen ? <CornersIn size={18} /> : <CornersOut size={18} />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                  <PlayerControls
+                    isPlaying={isPlaying}
+                    currentTime={currentTime}
+                    duration={duration}
+                    lessonDuration={lesson.duration}
+                    volume={volume}
+                    isMuted={isMuted}
+                    playbackSpeed={playbackSpeed}
+                    speedMenuOpen={speedMenuOpen}
+                    isFullscreen={isFullscreen}
+                    captionsOn={captionsOn}
+                    togglePlay={togglePlay}
+                    toggleMute={toggleMute}
+                    handleVolumeChange={handleVolumeChange}
+                    handleSeek={handleSeek}
+                    handleScrubberKeyDown={handleScrubberKeyDown}
+                    toggleCaptions={toggleCaptions}
+                    setSpeedMenuOpen={setSpeedMenuOpen}
+                    handleSpeedChange={handleSpeedChange}
+                    togglePiP={togglePiP}
+                    toggleFullscreen={toggleFullscreen}
+                    formatTime={formatTime}
+                  />
                 )}
               </>
             )}

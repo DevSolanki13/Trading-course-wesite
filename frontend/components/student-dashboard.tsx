@@ -15,15 +15,9 @@ import {
   PlayCircle,
   CheckCircle,
   Clock,
-  MagnifyingGlass,
-  Check,
   ArrowRight,
-  ShieldCheck,
   Question,
   GraduationCap,
-  MegaphoneSimple,
-  PushPin,
-  X,
 } from "@phosphor-icons/react";
 import { BullMark } from "./bull-mark";
 import { CourseArtwork } from "./course-artwork";
@@ -31,6 +25,10 @@ const PurchasePlayer = dynamic(() =>
   import("./purchase-player").then((module) => module.PurchasePlayer),
 );
 import { ThemeToggle } from "./theme-toggle";
+import { StudentExplorePanel } from "./student/student-explore-panel";
+import { StudentBillingPanel } from "./student/student-billing-panel";
+import { StudentProfilePanel } from "./student/student-profile-panel";
+import { StudentAnnouncementsPanel } from "./student/student-announcements-panel";
 import type {
   PurchaseUser,
   PurchaseCourse,
@@ -76,8 +74,6 @@ export function StudentDashboard({
 
   // Admin Announcements state
   const [announcementsList, setAnnouncementsList] = useState<Announcement[]>(announcements);
-  const [announcementsCollapsed, setAnnouncementsCollapsed] = useState(false);
-  const [activeAnnouncementIndex, setActiveAnnouncementIndex] = useState(0);
 
   useEffect(() => {
     // If not passed initially or to ensure fresh data, fetch active announcements
@@ -910,153 +906,7 @@ export function StudentDashboard({
                 {/* COMPANION RAIL: Fills the empty widescreen space */}
                 <aside className="student-companion-rail">
                   {/* Admin Announcement Broadcast */}
-                  {announcementsList.length > 0 && (
-                    <div className="student-announcements-wrapper">
-                      {(() => {
-                        const current =
-                          announcementsList[activeAnnouncementIndex] || announcementsList[0];
-                        if (!current) return null;
-
-                        if (announcementsCollapsed) {
-                          return (
-                            <div
-                              className="student-announcement-collapsed-bar"
-                              onClick={() => setAnnouncementsCollapsed(false)}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ")
-                                  setAnnouncementsCollapsed(false);
-                              }}
-                            >
-                              <div className="collapsed-left">
-                                <span className="live-pulse-dot" />
-                                <MegaphoneSimple
-                                  size={16}
-                                  weight="fill"
-                                  color="var(--accent, #00df8f)"
-                                />
-                                <strong>Admin Announcement:</strong>
-                                <span className="collapsed-title">{current.title}</span>
-                              </div>
-                              <button
-                                type="button"
-                                className="collapsed-action"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setAnnouncementsCollapsed(false);
-                                }}
-                              >
-                                View
-                              </button>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div
-                            className={`student-announcement-card priority-${current.priority}`}
-                            role="region"
-                            aria-label="Admin Announcement"
-                          >
-                            <div className="announcement-header">
-                              <div className="announcement-badge-cluster">
-                                <span className="announcement-brand-badge">
-                                  <span className="live-pulse-dot" />
-                                  <MegaphoneSimple size={14} weight="fill" />
-                                  ADMIN ANNOUNCEMENT
-                                </span>
-                                <span className="announcement-category-tag">
-                                  {current.category}
-                                </span>
-                                {current.pinned && (
-                                  <span className="announcement-pinned-tag">
-                                    <PushPin size={12} weight="fill" /> Pinned
-                                  </span>
-                                )}
-                                {current.priority === "urgent" && (
-                                  <span className="announcement-priority-tag urgent">
-                                    ⚡ Urgent
-                                  </span>
-                                )}
-                                {current.priority === "important" && (
-                                  <span className="announcement-priority-tag important">
-                                    ⭐ Important
-                                  </span>
-                                )}
-                              </div>
-
-                              <div className="announcement-header-right">
-                                {announcementsList.length > 1 && (
-                                  <div className="announcement-pagination">
-                                    <button
-                                      type="button"
-                                      disabled={activeAnnouncementIndex === 0}
-                                      onClick={() =>
-                                        setActiveAnnouncementIndex((prev) => Math.max(0, prev - 1))
-                                      }
-                                      aria-label="Previous announcement"
-                                    >
-                                      ‹
-                                    </button>
-                                    <span>
-                                      {activeAnnouncementIndex + 1} of {announcementsList.length}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      disabled={
-                                        activeAnnouncementIndex >= announcementsList.length - 1
-                                      }
-                                      onClick={() =>
-                                        setActiveAnnouncementIndex((prev) =>
-                                          Math.min(announcementsList.length - 1, prev + 1),
-                                        )
-                                      }
-                                      aria-label="Next announcement"
-                                    >
-                                      ›
-                                    </button>
-                                  </div>
-                                )}
-                                <button
-                                  type="button"
-                                  className="announcement-dismiss-btn"
-                                  onClick={() => setAnnouncementsCollapsed(true)}
-                                  aria-label="Minimize announcement"
-                                  title="Minimize announcement"
-                                >
-                                  <X size={15} />
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="announcement-body">
-                              <h3>{current.title}</h3>
-                              <p>{current.content}</p>
-                            </div>
-
-                            <div className="announcement-footer">
-                              <span className="announcement-author-info">
-                                <ShieldCheck
-                                  size={14}
-                                  weight="fill"
-                                  color="var(--accent, #00df8f)"
-                                />
-                                Broadcasted by {current.author_name || "Admin"}
-                              </span>
-                              <span className="announcement-date">
-                                {new Date(current.created_at).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
+                  <StudentAnnouncementsPanel announcementsList={announcementsList} />
 
                   {/* Learning Vitals / Metrics Tile Card */}
                   <div className="student-rail-metrics-card">
@@ -1160,393 +1010,38 @@ export function StudentDashboard({
               VIEW: EXPLORE COURSES
               ===================================================================== */}
           {view === "explore" && (
-            <div>
-              <div className="student-greeting-head">
-                <div>
-                  <h1>Explore courses</h1>
-                  <p>
-                    Discover structured trading programs, candlestick analysis, and risk management.
-                  </p>
-                </div>
-              </div>
-
-              {/* Search & Level Filter Bar */}
-              <div className="student-search-bar-row">
-                <div className="student-search-input-wrap">
-                  <MagnifyingGlass size={18} className="student-search-icon" />
-                  <input
-                    type="text"
-                    value={exploreQuery}
-                    onChange={(e) => setExploreQuery(e.target.value)}
-                    placeholder="Search courses by topic, title or keywords…"
-                    aria-label="Search courses by topic, title or keywords"
-                  />
-                </div>
-                <select
-                  value={exploreLevel}
-                  onChange={(e) => setExploreLevel(e.target.value)}
-                  aria-label="Filter courses by difficulty level"
-                >
-                  <option value="all">All levels</option>
-                  {availableLevels.map((lvl) => (
-                    <option key={lvl.toLowerCase()} value={lvl.toLowerCase()}>
-                      {lvl.charAt(0).toUpperCase() + lvl.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Courses Catalogue Grid */}
-              {filteredExploreCourses.length ? (
-                <div className="student-course-grid">
-                  {filteredExploreCourses.map((c) => {
-                    const isOwned = c.owned;
-                    const priceInRupees = Math.round(c.price / 100);
-
-                    return (
-                      <article className="student-explore-card" key={c.id}>
-                        <div className="student-explore-card-thumb">
-                          {c.thumbnail ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={c.thumbnail} alt={c.title} />
-                          ) : (
-                            <CourseArtwork
-                              kind={
-                                c.slug.includes("price")
-                                  ? "structure"
-                                  : c.slug.includes("risk")
-                                    ? "risk"
-                                    : "foundations"
-                              }
-                            />
-                          )}
-                          <span className="student-explore-price-tag">
-                            ₹{priceInRupees.toLocaleString("en-IN")}
-                          </span>
-                        </div>
-
-                        <div className="student-explore-card-body">
-                          <span className="student-explore-level-badge">{c.level}</span>
-                          <h4>{c.title}</h4>
-                          <p>{c.description}</p>
-
-                          <ul className="student-explore-features">
-                            <li>
-                              <Check size={14} color="var(--accent, #00df8f)" />
-                              <span>
-                                {c.accessPeriod} {c.accessUnit} full access
-                              </span>
-                            </li>
-                            <li>
-                              <Check size={14} color="var(--accent, #00df8f)" />
-                              <span>
-                                {c.modules.flatMap((m) => m.lessons).length} detailed lessons
-                              </span>
-                            </li>
-                            <li>
-                              <Check size={14} color="var(--accent, #00df8f)" />
-                              <span>Hindi audio instruction & notes</span>
-                            </li>
-                          </ul>
-
-                          <div className="student-explore-card-footer">
-                            {isOwned ? (
-                              <button
-                                type="button"
-                                className="button button-secondary"
-                                style={{ width: "100%", justifyContent: "center" }}
-                                onClick={() => {
-                                  handleSelectView("courses");
-                                  const firstLesson =
-                                    c.modules.flatMap((m) => m.lessons).find((l) => !l.completed) ||
-                                    c.modules[0]?.lessons[0];
-                                  handleOpenCourse(c.slug, firstLesson?.id || null);
-                                }}
-                              >
-                                <CheckCircle size={16} color="var(--accent, #00df8f)" />
-                                <span>Enrolled · Open course</span>
-                              </button>
-                            ) : (
-                              <Link
-                                className="button button-primary"
-                                style={{ width: "100%", justifyContent: "center" }}
-                                href={`/courses/${c.slug}`}
-                              >
-                                <span>View course & enroll</span>
-                                <ArrowRight size={16} />
-                              </Link>
-                            )}
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="student-empty-state">
-                  <h3>No courses match your query</h3>
-                  <p>Try searching with different terms or reset the level filter.</p>
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={() => {
-                      setExploreQuery("");
-                      setExploreLevel("all");
-                    }}
-                  >
-                    Reset filters
-                  </button>
-                </div>
-              )}
-            </div>
+            <StudentExplorePanel
+              exploreQuery={exploreQuery}
+              setExploreQuery={setExploreQuery}
+              exploreLevel={exploreLevel}
+              setExploreLevel={setExploreLevel}
+              availableLevels={availableLevels}
+              filteredExploreCourses={filteredExploreCourses}
+              onSelectCoursesView={() => handleSelectView("courses")}
+              onOpenCourse={handleOpenCourse}
+            />
           )}
 
           {/* =====================================================================
               VIEW: BILLING & RECEIPTS
               ===================================================================== */}
           {view === "billing" && (
-            <div>
-              <div className="student-greeting-head">
-                <div>
-                  <h1>Billing & receipts</h1>
-                  <p>Order history, GST payment receipts, and enrollment invoices.</p>
-                </div>
-              </div>
-
-              {orders.length ? (
-                <div className="student-orders-card">
-                  <table className="student-orders-table">
-                    <thead>
-                      <tr>
-                        <th>Order</th>
-                        <th>Course</th>
-                        <th>Date (IST)</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Receipt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map((order) => {
-                        const formattedDate = new Date(order.createdAt).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            timeZone: "Asia/Kolkata",
-                          },
-                        );
-
-                        return (
-                          <tr key={order.id}>
-                            <td>
-                              <span
-                                style={{
-                                  fontFamily: "var(--mono)",
-                                  fontSize: "12px",
-                                  color: "var(--muted)",
-                                }}
-                              >
-                                {order.id.slice(0, 8)}…
-                              </span>
-                            </td>
-                            <td>
-                              <strong>{order.courseTitle}</strong>
-                            </td>
-                            <td>
-                              <span style={{ color: "var(--muted)" }}>{formattedDate}</span>
-                            </td>
-                            <td>
-                              <strong>
-                                ₹
-                                {(order.amount / 100).toLocaleString("en-IN", {
-                                  minimumFractionDigits: 2,
-                                })}
-                              </strong>
-                            </td>
-                            <td>
-                              <span className={`student-order-status-badge ${order.status}`}>
-                                {order.status}
-                              </span>
-                            </td>
-                            <td>
-                              {["paid", "refunded"].includes(order.status) ? (
-                                <Link
-                                  href={`/dashboard/orders/${order.id}/receipt`}
-                                  className="button button-secondary button-sm"
-                                  style={{ padding: "4px 10px", fontSize: "12px" }}
-                                >
-                                  View receipt
-                                </Link>
-                              ) : order.status === "pending" ? (
-                                <Link
-                                  href={`/checkout/status/${order.id}`}
-                                  className="button button-secondary button-sm"
-                                  style={{ padding: "4px 10px", fontSize: "12px" }}
-                                >
-                                  Check status
-                                </Link>
-                              ) : (
-                                <Link
-                                  href={`/checkout/${order.slug || order.courseId}`}
-                                  className="button button-primary button-sm"
-                                  style={{ padding: "4px 10px", fontSize: "12px" }}
-                                >
-                                  Retry checkout
-                                </Link>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="student-empty-state">
-                  <h3>No purchase history found</h3>
-                  <p>
-                    When you purchase a course, your tax receipt and order invoice will appear here.
-                  </p>
-                  <button
-                    type="button"
-                    className="button button-primary"
-                    onClick={() => handleSelectView("explore")}
-                  >
-                    Browse courses
-                  </button>
-                </div>
-              )}
-            </div>
+            <StudentBillingPanel
+              orders={orders}
+              onBrowseCourses={() => handleSelectView("explore")}
+            />
           )}
 
           {/* =====================================================================
               VIEW: PROFILE & SETTINGS
               ===================================================================== */}
           {view === "account" && (
-            <div>
-              <div className="student-greeting-head">
-                <div>
-                  <h1>Profile & settings</h1>
-                  <p>Manage your student credentials, security sessions, and account details.</p>
-                </div>
-              </div>
-
-              <div className="student-profile-grid">
-                <div className="student-profile-card">
-                  <div className="student-profile-avatar-big">
-                    {(user.name || user.email).slice(0, 1).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 style={{ margin: "0 0 4px", fontSize: "18px" }}>{user.name}</h3>
-                    <span className="student-role-pill">
-                      <i />
-                      Verified student
-                    </span>
-                  </div>
-
-                  <div className="student-info-row">
-                    <span className="student-info-label">Email address</span>
-                    <span className="student-info-val">{user.email}</span>
-                  </div>
-
-                  <div className="student-info-row">
-                    <span className="student-info-label">Account type</span>
-                    <span className="student-info-val">Learner portal</span>
-                  </div>
-
-                  <div className="student-info-row">
-                    <span className="student-info-label">User ID</span>
-                    <span
-                      className="student-info-val"
-                      style={{ fontFamily: "var(--mono)", fontSize: "11px", color: "var(--muted)" }}
-                    >
-                      {user.id}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="button button-danger button-sm"
-                    disabled={loggingOut}
-                    onClick={() => void logout()}
-                    style={{ marginTop: "12px" }}
-                  >
-                    {loggingOut ? "Signing out…" : "Sign out from this device"}
-                  </button>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <div className="student-profile-card">
-                    <h3 style={{ margin: "0 0 8px", fontSize: "16px" }}>
-                      Security & Single Session
-                    </h3>
-                    <p
-                      style={{
-                        margin: "0 0 16px",
-                        fontSize: "13px",
-                        color: "var(--muted)",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      To protect course materials and comply with our terms, your account is tied to
-                      verified single-device playback. If you switch devices, your previous session
-                      is cleanly released.
-                    </p>
-                    {local ? (
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--muted)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <ShieldCheck size={16} /> Device management active in production deployment
-                      </span>
-                    ) : (
-                      <Link
-                        href="/account"
-                        className="button button-secondary button-sm"
-                        style={{ alignSelf: "flex-start" }}
-                      >
-                        <ShieldCheck size={16} />
-                        <span>Manage registered devices</span>
-                      </Link>
-                    )}
-                  </div>
-
-                  <div className="student-profile-card">
-                    <h3 style={{ margin: "0 0 8px", fontSize: "16px" }}>
-                      Refund Support & Assistance
-                    </h3>
-                    <p
-                      style={{
-                        margin: "0 0 16px",
-                        fontSize: "13px",
-                        color: "var(--muted)",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      Need help with an order, or have questions about course access? Our support
-                      team is available to assist you.
-                    </p>
-                    <Link
-                      href="/contact?topic=refund"
-                      className="button button-secondary button-sm"
-                      style={{ alignSelf: "flex-start" }}
-                    >
-                      <Question size={16} />
-                      <span>Contact support desk</span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <StudentProfilePanel
+              user={user}
+              local={local}
+              loggingOut={loggingOut}
+              onLogout={() => void logout()}
+            />
           )}
         </div>
       </div>
