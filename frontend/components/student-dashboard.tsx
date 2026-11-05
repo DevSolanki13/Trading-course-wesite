@@ -10,13 +10,10 @@ import {
   Compass,
   Receipt,
   UserCircle,
-  ArrowUUpLeft,
   CaretDown,
   PlayCircle,
   CheckCircle,
   Clock,
-  ArrowRight,
-  Question,
   GraduationCap,
 } from "@phosphor-icons/react";
 import { BullMark } from "./bull-mark";
@@ -146,7 +143,15 @@ export function StudentDashboard({
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
+  const [activeCourseOrigin, setActiveCourseOrigin] = useState<"courses" | "explore">("courses");
+  const [lastExploreSlug, setLastExploreSlug] = useState<string | null>(initialCourseSlug || null);
+
   const handleOpenCourse = (slug: string, lessonId?: string | null) => {
+    setActiveCourseOrigin(view === "explore" ? "explore" : "courses");
+    if (view === "explore") {
+      setLastExploreSlug(slug);
+    }
+    setView("courses");
     setActiveCourseSlug(slug);
     setActiveLessonId(lessonId || null);
     setActiveLessonContent(null);
@@ -161,13 +166,22 @@ export function StudentDashboard({
   };
 
   const handleCloseCourse = () => {
+    const origin = activeCourseOrigin;
     setActiveCourseSlug(null);
     setActiveLessonId(null);
     setActiveLessonContent(null);
     setLessonState("idle");
     setLessonErrorMessage(null);
-    if (typeof window !== "undefined") {
-      window.history.pushState(null, "", "/dashboard");
+    if (origin === "explore") {
+      setView("explore");
+      if (typeof window !== "undefined") {
+        window.history.pushState(null, "", "/dashboard?view=explore");
+      }
+    } else {
+      setView("courses");
+      if (typeof window !== "undefined") {
+        window.history.pushState(null, "", "/dashboard");
+      }
     }
   };
 
@@ -433,11 +447,8 @@ export function StudentDashboard({
           </button>
         </div>
 
-        {/* Sidebar Bottom: Storefront & User Menu */}
+        {/* Sidebar Bottom: User Menu */}
         <div className="admin-sidebar-bottom">
-          <Link href="/">
-            <ArrowUUpLeft size={18} /> View storefront
-          </Link>
           <button
             type="button"
             className="admin-user-menu"
@@ -509,10 +520,6 @@ export function StudentDashboard({
 
           <div className="student-top-actions">
             <ThemeToggle />
-            <span className="student-role-pill">
-              <i />
-              Learner portal
-            </span>
             {local && (
               <span
                 style={{
@@ -963,45 +970,6 @@ export function StudentDashboard({
                       </div>
                     </div>
                   </div>
-
-                  {/* Study Quick Tools Card */}
-                  <div className="student-rail-card">
-                    <div className="student-rail-card-head">
-                      <h4>Study Resources</h4>
-                      <span>Quick access</span>
-                    </div>
-                    <ul className="student-rail-links">
-                      <li>
-                        <button
-                          type="button"
-                          className="student-rail-link-btn"
-                          onClick={() => handleSelectView("explore")}
-                        >
-                          <Compass size={16} color="var(--accent, #00df8f)" />
-                          <span>Browse platform catalogue</span>
-                          <ArrowRight size={14} className="rail-arrow" />
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          type="button"
-                          className="student-rail-link-btn"
-                          onClick={() => handleSelectView("billing")}
-                        >
-                          <Receipt size={16} color="var(--accent, #00df8f)" />
-                          <span>View tax receipts & invoices</span>
-                          <ArrowRight size={14} className="rail-arrow" />
-                        </button>
-                      </li>
-                      <li>
-                        <Link href="/contact?topic=learning" className="student-rail-link-btn">
-                          <Question size={16} color="var(--accent, #00df8f)" />
-                          <span>Contact instructor / mentor desk</span>
-                          <ArrowRight size={14} className="rail-arrow" />
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
                 </aside>
               </div>
             ))}
@@ -1019,6 +987,7 @@ export function StudentDashboard({
               filteredExploreCourses={filteredExploreCourses}
               onSelectCoursesView={() => handleSelectView("courses")}
               onOpenCourse={handleOpenCourse}
+              initialSelectedCourseSlug={lastExploreSlug || initialCourseSlug}
             />
           )}
 
@@ -1041,6 +1010,7 @@ export function StudentDashboard({
               local={local}
               loggingOut={loggingOut}
               onLogout={() => void logout()}
+              onSelectCoursesView={() => handleSelectView("courses")}
             />
           )}
         </div>

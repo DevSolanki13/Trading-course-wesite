@@ -1,4 +1,4 @@
-﻿import { test } from "node:test";
+import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
@@ -22,6 +22,14 @@ test("demo payments fail closed outside explicitly selected local/staging enviro
     { PAYMENT_MODE: "cashfree", PROJECT_STAGE: "staging" },
   ])
     assert.equal(isDemoPaymentEnabled(env), false);
+  assert.equal(
+    isDemoPaymentEnabled({ ...secure, VERCEL_ENV: "production", ALLOW_MOCK_PAYMENTS: "true" }),
+    true,
+  );
+  assert.equal(
+    isDemoPaymentEnabled({ ...secure, VERCEL_ENV: "production", ALLOW_TEST_PAYMENTS: "true" }),
+    true,
+  );
 });
 
 test("demo signatures require a secret, fresh timestamp, strict event and original bytes", () => {

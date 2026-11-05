@@ -20,10 +20,10 @@ test("nonce CSP, private caching and staging indexing", async ({ request }) => {
 });
 
 test("metadata, sitemap and social image are usable", async ({ page, request }) => {
-  await page.goto("/courses/market-foundations");
+  await page.goto("/courses/basic-to-advance");
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
-    /\/courses\/market-foundations$/,
+    /\/courses\/basic-to-advance$/,
   );
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     "content",
@@ -34,7 +34,7 @@ test("metadata, sitemap and social image are usable", async ({ page, request }) 
   expect(image.headers()["content-type"]).toContain("image/png");
   expect((await image.body()).subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
   const sitemap = await (await request.get("/sitemap.xml")).text();
-  expect(sitemap).toContain("/courses/market-foundations");
+  expect(sitemap).toContain("/courses/basic-to-advance");
   expect(sitemap).not.toMatch(/<loc>[^<]*\/(?:account|admin|checkout|learn|api)(?:\/|<)/);
 });
 
@@ -56,7 +56,7 @@ test("anonymous API calls and cross-origin mutations cannot grant access", async
   });
   expect(csrf.status()).toBe(403);
   const checkout = await request.post("/api/checkout", {
-    data: { slug: "market-foundations", terms: true },
+    data: { slug: "basic-to-advance", terms: true },
   });
   expect(checkout.status()).toBe(404);
   for (const path of ["/api/payments/demo/simulate", "/api/payments/demo/webhook"]) {

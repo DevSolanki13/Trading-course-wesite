@@ -31,9 +31,8 @@ export async function seedLocal(db: PGlite) {
     });
   }
   for (const [slug, title, price, level] of [
-    ["market-foundations", "Market Foundations", 149900, "beginner"],
-    ["price-action", "Price Action & Structure", 299900, "intermediate"],
-    ["risk-psychology", "Risk & Trading Psychology", 199900, "beginner"],
+    ["basic-to-advance", "Basic to Advance", 199900, "beginner"],
+    ["advance-course-with-live-qna", "Advance course with Live QNA", 299900, "advanced"],
   ] as const) {
     if ((await db.query("select id from courses where slug=$1", [slug])).rows.length) continue;
     await db.transaction(async (tx) => {
@@ -89,7 +88,7 @@ export async function seedLocal(db: PGlite) {
     await db.query<{ id: string }>("select id from auth.users where email='demo@example.com'")
   ).rows[0];
   const demoCourse = (
-    await db.query<{ id: string }>("select id from courses where slug='risk-psychology'")
+    await db.query<{ id: string }>("select id from courses where slug='basic-to-advance'")
   ).rows[0];
   if (demoLearner && demoCourse) {
     const existingOrder = (

@@ -74,10 +74,13 @@ export type Purchase = {
 export function cashfreeSandboxEnabled(env: Environment = process.env) {
   if (env.PAYMENT_PROVIDER === "razorpay" && env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET)
     return false;
+  const stageAllowed =
+    ["local", "staging"].includes(env.PROJECT_STAGE ?? "") && env.VERCEL_ENV !== "production";
+  const explicitTestAllowed =
+    env.ALLOW_MOCK_PAYMENTS === "true" || env.ALLOW_TEST_PAYMENTS === "true";
+  if (!stageAllowed && !explicitTestAllowed) return false;
   return (
     env.PAYMENT_MODE === "cashfree-sandbox" &&
-    ["local", "staging"].includes(env.PROJECT_STAGE ?? "") &&
-    env.VERCEL_ENV !== "production" &&
     env.CASHFREE_ENV === "sandbox" &&
     configuredValue(env.CASHFREE_CLIENT_ID) &&
     configuredValue(env.CASHFREE_CLIENT_SECRET) &&

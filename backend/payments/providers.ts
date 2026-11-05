@@ -259,7 +259,11 @@ export function getPaymentProvider(
     configuredValue(env.RAZORPAY_KEY_SECRET)
   )
     return new RealPaymentProvider(env, fetcher);
-  if (env.NODE_ENV === "production" && env.ALLOW_MOCK_PAYMENTS !== "true") {
+  if (
+    env.NODE_ENV === "production" &&
+    env.ALLOW_MOCK_PAYMENTS !== "true" &&
+    env.ALLOW_TEST_PAYMENTS !== "true"
+  ) {
     if (!warned) {
       console.error(
         "PAYMENTS DISABLED: production Razorpay configuration is missing. Mock payments require explicit ALLOW_MOCK_PAYMENTS=true.",

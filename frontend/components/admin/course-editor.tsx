@@ -308,7 +308,7 @@ export function CourseEditor({
                               .replace(/^-|-$/g, "")
                           : "")
                       }
-                      placeholder="market-foundations"
+                      placeholder="basic-to-advance"
                     />
                   </label>
                   <label>

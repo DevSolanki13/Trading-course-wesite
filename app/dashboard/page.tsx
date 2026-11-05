@@ -6,6 +6,7 @@ import { PurchaseDashboard } from "@/frontend/components/purchase-dashboard";
 import { redirect } from "next/navigation";
 import "@/frontend/styles/learning.css";
 import "@/frontend/styles/admin.css";
+import "@/frontend/styles/auth.css";
 import "@/frontend/styles/student-dashboard.css";
 import "@/frontend/styles/video-learning.css";
 export const dynamic = "force-dynamic";
@@ -35,7 +36,7 @@ export default async function Dashboard({
       ? "courses"
       : viewParam === "billing" || viewParam === "orders"
         ? "billing"
-        : viewParam === "account" || viewParam === "profile"
+        : viewParam === "account" || viewParam === "profile" || viewParam === "devices"
           ? "account"
           : query.course || ownedCourses.length > 0
             ? "courses"

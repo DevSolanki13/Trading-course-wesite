@@ -15,7 +15,7 @@ export default defineConfig({
   },
   webServer: {
     command: "npm run dev:demo -- --port 3102",
-    url: "http://127.0.0.1:3102/courses/market-foundations",
+    url: "http://127.0.0.1:3102/courses/basic-to-advance",
     timeout: 180000,
     reuseExistingServer: false,
     env: { LOCAL_DATA_NAME: `purchase-e2e-${Date.now()}` },

@@ -350,7 +350,7 @@ try {
   const providerOptions = await (await googleContext.request.get("/api/auth/options")).json();
   if (providerOptions.googleEnabled) {
     const begin = await post(googleContext, "/api/auth/google", {
-      next: "/courses/market-foundations",
+      next: "/courses/basic-to-advance",
       remember: false,
     });
     status(begin, 200, "Google authorization begins");

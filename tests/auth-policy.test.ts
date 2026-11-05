@@ -5,8 +5,8 @@ import { openToken, sealToken, tokenDigest } from "../backend/auth/crypto.ts";
 
 test("return paths preserve course checkout but reject external/auth/api redirects", () => {
   assert.equal(
-    safeNext("/checkout?course=market-foundations"),
-    "/checkout?course=market-foundations",
+    safeNext("/checkout?course=basic-to-advance"),
+    "/checkout?course=basic-to-advance",
   );
   for (const value of [
     "https://evil.test",

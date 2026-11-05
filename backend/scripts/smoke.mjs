@@ -24,9 +24,8 @@ console.log(`PASS home=200, health=200, unsigned-webhook=${webhook.status}; chec
 
 for (const path of [
   "/courses",
-  "/courses/market-foundations",
-  "/courses/price-action",
-  "/courses/risk-and-psychology",
+  "/courses/basic-to-advance",
+  "/courses/advance-course-with-live-qna",
   "/about",
   "/contact",
   "/terms",

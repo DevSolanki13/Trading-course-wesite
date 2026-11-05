@@ -56,7 +56,7 @@ try {
       for (const route of [
         "/",
         "/courses",
-        "/courses/market-foundations",
+        "/courses/basic-to-advance",
         "/about",
         "/contact",
         "/refund-policy",
@@ -70,7 +70,7 @@ try {
       }
     }
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("http://127.0.0.1:3000/courses/market-foundations");
+    await page.goto("http://127.0.0.1:3000/courses/basic-to-advance");
     const audit = await new AxeBuilder({ page }).analyze();
     a11y.push(
       ...audit.violations.map((item) => ({

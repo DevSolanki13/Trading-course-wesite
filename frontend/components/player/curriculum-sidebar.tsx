@@ -45,22 +45,22 @@ export function CurriculumSidebar({
           style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
         >
           <ArrowLeft size={16} />
-          <span>Back to my courses</span>
+          <span>{!course.owned ? "Back to explore courses" : "Back to my courses"}</span>
         </button>
       ) : (
-        <Link href="/dashboard" className="vlp-back-link">
+        <Link href={!course.owned ? "/dashboard?view=explore" : "/dashboard"} className="vlp-back-link">
           <ArrowLeft size={16} />
-          <span>Back to my courses</span>
+          <span>{!course.owned ? "Back to explore courses" : "Back to my courses"}</span>
         </Link>
       )}
 
-      {/* Course card banner with candlestick/artwork */}
-      <div className="vlp-course-card">
-        {course.thumbnail ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={course.thumbnail} alt={course.title} className="vlp-course-card-bg" />
-        ) : (
-          <div className="vlp-course-card-artwork">
+      {/* Course header with thumbnail and title */}
+      <div className="vlp-course-header-row">
+        <div className="vlp-course-header-thumb">
+          {course.thumbnail ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={course.thumbnail} alt={course.title} />
+          ) : (
             <CourseArtwork
               kind={
                 course.slug.includes("price")
@@ -70,10 +70,11 @@ export function CurriculumSidebar({
                     : "foundations"
               }
             />
-          </div>
-        )}
-        <div className="vlp-course-card-gradient" />
-        <h2 className="vlp-course-card-title">{course.title}</h2>
+          )}
+        </div>
+        <div className="vlp-course-header-info">
+          <h2 className="vlp-course-header-title">{course.title}</h2>
+        </div>
       </div>
 
       {/* Progress bar block */}
@@ -144,16 +145,7 @@ export function CurriculumSidebar({
                           <span className="vlp-lesson-name">
                             {lessonNumber} {item.title}
                           </span>
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              padding: "2px 6px",
-                              borderRadius: "4px",
-                              background: "color-mix(in srgb, var(--surface) 90%, #000)",
-                              color: "var(--muted)",
-                              border: "1px solid var(--border)",
-                            }}
-                          >
+                          <span className="vlp-locked-badge">
                             Locked
                           </span>
                         </div>

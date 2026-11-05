@@ -90,6 +90,14 @@ test("sandbox adapter fails closed, preserves integer paise and uses stable API 
     { CASHFREE_CLIENT_SECRET: "replace-me" },
   ])
     assert.equal(cashfreeSandboxEnabled({ ...env, ...overrides }), false);
+  assert.equal(
+    cashfreeSandboxEnabled({ ...env, VERCEL_ENV: "production", ALLOW_MOCK_PAYMENTS: "true" }),
+    true,
+  );
+  assert.equal(
+    cashfreeSandboxEnabled({ ...env, VERCEL_ENV: "production", ALLOW_TEST_PAYMENTS: "true" }),
+    true,
+  );
   assert.equal(paise(123.45), 12345);
   assert.throws(() => paise(1.001));
   let calls = 0;

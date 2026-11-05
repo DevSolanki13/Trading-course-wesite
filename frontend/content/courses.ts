@@ -18,6 +18,7 @@ export type Course = {
   outcomes: string[];
   audience: string;
   prerequisites: string;
+  prerequisiteList?: string[];
   created_at?: string;
   updated_at?: string;
   version?: number;
@@ -31,136 +32,119 @@ export type Course = {
 /** Illustrative public catalogue only. Never use these values to create a payment. */
 export const courses: Course[] = [
   {
-    slug: "market-foundations",
-    title: "Market Foundations",
-    shortTitle: "The fundamentals. Without the noise.",
-    summary: "Understand how markets work before you put your capital to work.",
+    slug: "basic-to-advance",
+    title: "Basic to Advance",
+    shortTitle: "From market foundations to complete price action mastery.",
+    summary:
+      "Understand how markets move, read charts with confidence, and develop a rule-based trading edge in Hindi.",
     level: "Beginner",
-    duration: "3h 20m",
-    lessons: 20,
-    price: 1499,
+    duration: "6h 30m",
+    lessons: 8,
+    price: 1999,
     artwork: "foundations",
     color: "mint",
     outcomes: [
-      "Understand market structure and participants",
-      "Read a candlestick in its context",
-      "Recognise common order types",
-      "Build a simple pre-trade checklist",
+      "Master stock market foundations and chart reading context",
+      "Identify market trends, swing highs/lows, and key support & resistance",
+      "Learn high-probability entry & exit price action setups",
+      "Develop strict risk management, position sizing, and pre-trade rules",
     ],
     audience:
-      "For new learners who want a structured introduction before exploring trading strategies.",
+      "For new and intermediate learners wanting a structured, end-to-end curriculum without confusing jargon.",
     prerequisites:
-      "No prior trading experience. A willingness to learn the basics and consider the risks.",
+      "No prior trading experience required. An open mind and dedication to practice.",
+    prerequisiteList: [
+      "No prior stock market or financial trading experience required — starts from ground zero",
+      "A smartphone, tablet, or laptop with internet access to study charts and streaming lessons",
+      "Free TradingView account (or your broker's charting terminal) to practice identifying price action",
+      "Commitment to follow disciplined risk management, capital protection, and pre-trade rules",
+    ],
     modules: [
       {
-        title: "A clearer view of the market",
+        title: "Market Foundations & Candlestick Anatomy",
         lessons: [
-          { title: "What happens when you place an order?", duration: "12:00", preview: true },
-          { title: "Exchanges, participants and liquidity", duration: "14:00" },
-          { title: "Different ways to participate", duration: "10:00" },
+          { title: "Market Mechanics & Market Participants", duration: "12:00", preview: true },
+          { title: "Reading Candlesticks & Price Action Context", duration: "15:00" },
         ],
       },
       {
-        title: "Reading the price",
+        title: "Market Structure, Support & Resistance",
         lessons: [
-          { title: "The anatomy of a candlestick", duration: "11:00" },
-          { title: "Timeframes and context", duration: "13:00" },
-          { title: "An introduction to market structure", duration: "15:00" },
+          { title: "Trend Identification & Swing Analysis", duration: "14:00" },
+          { title: "Drawing Key Support & Resistance Levels", duration: "16:00" },
         ],
       },
       {
-        title: "Before your first trade",
+        title: "High-Probability Setups & Breakouts",
         lessons: [
-          { title: "Order types and execution", duration: "14:00" },
-          { title: "Risk, costs and a trading checklist", duration: "16:00" },
+          { title: "True Breakouts vs False Traps", duration: "18:00" },
+          { title: "Entry Timing, Stop-Loss & Target Rules", duration: "19:00" },
+        ],
+      },
+      {
+        title: "Risk Management & Trading Checklist",
+        lessons: [
+          { title: "Capital Protection & Position Sizing", duration: "15:00" },
+          { title: "Creating Your Daily Pre-Trade Checklist", duration: "14:00" },
         ],
       },
     ],
   },
   {
-    slug: "price-action",
-    title: "Price Action & Structure",
-    shortTitle: "Read the chart. Understand the context.",
-    summary: "Study structure, levels and price behaviour through worked examples.",
-    level: "Intermediate",
-    duration: "4h 10m",
-    lessons: 24,
+    slug: "advance-course-with-live-qna",
+    title: "Advance course with Live QNA",
+    shortTitle: "Institutional order flow, liquidity dynamics, and interactive live mentoring.",
+    summary:
+      "Deep-dive into smart money concepts, multi-timeframe confluence, and live Q&A trade review sessions in Hindi.",
+    level: "Advanced",
+    duration: "8h 45m",
+    lessons: 8,
     price: 2999,
     artwork: "structure",
     color: "sand",
     outcomes: [
-      "Distinguish trend from a trading range",
-      "Identify levels within their wider context",
-      "Study breakouts and failed moves",
-      "Document a repeatable analysis process",
+      "Decode institutional order flow and liquidity sweep concepts",
+      "Spot supply-demand imbalances and premium/discount valuation",
+      "Execute multi-timeframe top-down trading strategies",
+      "Interactive Live Q&A sessions to review live trades and clarify doubts",
     ],
     audience:
-      "For learners familiar with basic charts who want to develop a more systematic way of reading price.",
-    prerequisites: "Basic candlestick knowledge and familiarity with trading terminology.",
+      "For active traders looking to elevate their edge with institutional strategies and live mentorship.",
+    prerequisites:
+      "Basic candlestick knowledge and familiarity with support & resistance.",
+    prerequisiteList: [
+      "Familiarity with basic candlestick anatomy (bullish/bearish bodies, wicks, pinbars)",
+      "Understanding of market trends, swing highs/lows, and basic support & resistance levels",
+      "Experience executing basic market orders and setting protective stop-loss limits",
+      "Readiness to transition from retail indicator noise to institutional order flow & liquidity logic",
+    ],
     modules: [
       {
-        title: "Context before a setup",
+        title: "Institutional Market Dynamics & Liquidity",
         lessons: [
-          { title: "Reading structure across timeframes", duration: "14:00", preview: true },
-          { title: "Trends, ranges and transitions", duration: "17:00" },
+          { title: "Liquidity Sweeps, Stop Hunts & Trapped Traders", duration: "14:00", preview: true },
+          { title: "Order Blocks & Fair Value Gaps", duration: "17:00" },
         ],
       },
       {
-        title: "Levels and reactions",
+        title: "Multi-Timeframe Institutional Analysis",
         lessons: [
-          { title: "Support and resistance in context", duration: "18:00" },
-          { title: "Breakouts and failed moves", duration: "16:00" },
+          { title: "Multi-Timeframe Alignment & Daily Directional Bias", duration: "19:00" },
+          { title: "Wyckoff Accumulation & Distribution In Practice", duration: "20:00" },
         ],
       },
       {
-        title: "A repeatable process",
+        title: "Precision Execution & Trade Management",
         lessons: [
-          { title: "From observation to a trade hypothesis", duration: "19:00" },
-          { title: "Reviewing a worked example", duration: "21:00" },
-        ],
-      },
-    ],
-  },
-  {
-    slug: "risk-and-psychology",
-    title: "Risk & Trading Psychology",
-    shortTitle: "A better process starts with risk.",
-    summary: "Explore position sizing, decision habits and the value of a trading journal.",
-    level: "All levels",
-    duration: "2h 40m",
-    lessons: 16,
-    price: 1999,
-    artwork: "risk",
-    color: "lilac",
-    outcomes: [
-      "Understand risk per trade and position size",
-      "Account for costs and losing sequences",
-      "Recognise emotional decision patterns",
-      "Create a useful trade-review routine",
-    ],
-    audience:
-      "For learners at any stage who want to place risk and decision quality at the centre of their process.",
-    prerequisites: "A basic understanding of what a trade is. No specific strategy is required.",
-    modules: [
-      {
-        title: "Define the downside",
-        lessons: [
-          { title: "Risk is an input, not an afterthought", duration: "12:00", preview: true },
-          { title: "An illustrative position-sizing exercise", duration: "15:00" },
+          { title: "Precision Entries at Premium & Discount Zones", duration: "18:00" },
+          { title: "Advanced Trailing Stops & Scaling Out", duration: "16:00" },
         ],
       },
       {
-        title: "The decisions around the trade",
+        title: "Live Mentorship & Q&A Sessions",
         lessons: [
-          { title: "Recognising emotional patterns", duration: "14:00" },
-          { title: "Working with losing sequences", duration: "18:00" },
-        ],
-      },
-      {
-        title: "Learn from your process",
-        lessons: [
-          { title: "What belongs in a trading journal?", duration: "13:00" },
-          { title: "A practical review routine", duration: "16:00" },
+          { title: "Live Q&A 1: Chart Analysis & Real Market Breakdown", duration: "30:00" },
+          { title: "Live Q&A 2: Doubt Clearing & Trader Psychology", duration: "30:00" },
         ],
       },
     ],

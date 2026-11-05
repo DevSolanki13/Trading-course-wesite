@@ -9,7 +9,7 @@ async function login(page: import("@playwright/test").Page) {
 test("zero-env demo: login return, mock purchase, receipt, lesson completion and persisted dashboard", async ({
   page,
 }) => {
-  await page.goto("/courses/market-foundations");
+  await page.goto("/courses/basic-to-advance");
   await page.getByRole("link", { name: "Buy now", exact: true }).click();
   await expect(page).toHaveURL(/\/login\?redirect=/);
   await page.getByRole("button", { name: "Fill demo credentials" }).click();
@@ -48,32 +48,32 @@ test("failure and cancellation never enroll; unpublished ownership and CSRF stay
   browser,
 }) => {
   await login(page);
-  await page.goto("/courses/price-action");
+  await page.goto("/courses/advance-course-with-live-qna");
   await page.getByRole("link", { name: "Buy now", exact: true }).click();
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Simulate failure", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Your payment was not completed" })).toBeVisible();
   const dashboard = await (await page.request.get("/api/purchase/dashboard")).json();
-  expect(dashboard.courses.some((c: { slug: string }) => c.slug === "price-action")).toBe(false);
+  expect(dashboard.courses.some((c: { slug: string }) => c.slug === "advance-course-with-live-qna")).toBe(false);
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await expect(page).toHaveURL(/\/courses\/price-action$/);
+  await expect(page).toHaveURL(/\/courses\/advance-course-with-live-qna$/);
   const denied = await page.request.post("/api/purchase/create", {
     headers: { Origin: "https://untrusted.invalid" },
-    data: { courseId: "price-action", terms: true },
+    data: { courseId: "advance-course-with-live-qna", terms: true },
   });
   expect(denied.status()).toBe(403);
   const tampered = await page.request.post("/api/purchase/create", {
     headers: { Origin: "http://127.0.0.1:3102" },
-    data: { courseId: "price-action", terms: true, amount: 1 },
+    data: { courseId: "advance-course-with-live-qna", terms: true, amount: 1 },
   });
   expect(tampered.status()).toBe(400);
   const other = await browser.newContext();
   const outsider = await other.newPage();
   const course = await (
-    await outsider.request.get("http://127.0.0.1:3102/api/purchase/course?id=price-action")
+    await outsider.request.get("http://127.0.0.1:3102/api/purchase/course?id=advance-course-with-live-qna")
   ).json();
   await outsider.goto(
-    `http://127.0.0.1:3102/learn/price-action/${course.course.modules[0].lessons[1].id}`,
+    `http://127.0.0.1:3102/learn/advance-course-with-live-qna/${course.course.modules[0].lessons[1].id}`,
   );
   await expect(
     outsider.getByText("Purchase to unlock this lesson.", { exact: false }),
@@ -115,7 +115,7 @@ test("new checkout, dashboard and player fit mobile/desktop and both themes", as
     }, theme);
     for (const width of [1280, 390]) {
       await page.setViewportSize({ width, height: 900 });
-      for (const path of ["/checkout/price-action", "/dashboard", "/learn/market-foundations"]) {
+      for (const path of ["/checkout/advance-course-with-live-qna", "/dashboard", "/learn/basic-to-advance"]) {
         await page.goto(path);
         await expect(page.locator("main")).toBeVisible();
         expect(

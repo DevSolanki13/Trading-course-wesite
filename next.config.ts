@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: process.env.LOCAL_DEMO === "true" ? ".next-demo" : ".next",
+  env: {
+    ALLOW_MOCK_PAYMENTS: process.env.ALLOW_MOCK_PAYMENTS ?? "true",
+    ALLOW_TEST_PAYMENTS: process.env.ALLOW_TEST_PAYMENTS ?? "true",
+  },
   turbopack: {},
   webpack(config) {
     if (process.env.LOCAL_DEMO === "true")

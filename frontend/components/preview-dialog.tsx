@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Play, X, ArrowRight } from "@phosphor-icons/react";
 
 export function PreviewDialog({
-  courseSlug = "market-foundations",
+  courseSlug = "basic-to-advance",
   label = "Inside the lessons",
   large = false,
 }: {

@@ -17,7 +17,7 @@ import {
   ShieldCheck,
 } from "@phosphor-icons/react";
 import type { PurchaseCourse, PurchaseLessonContent, PurchaseUser } from "../../shared/purchase";
-import { BullMark } from "./bull-mark";
+import { BrandMark } from "./bull-mark";
 import { useLessonNotes } from "./player/use-lesson-notes";
 import { PlayerControls } from "./player/player-controls";
 import { CurriculumSidebar } from "./player/curriculum-sidebar";
@@ -416,7 +416,7 @@ export function PurchasePlayer({
               <>
                 {/* Brand watermark */}
                 <div className="vlp-watermark">
-                  <BullMark width={20} height={20} />
+                  <BrandMark width={22} height={22} />
                   <span>indianXtrade{user?.email ? ` · ${user.email}` : ""}</span>
                 </div>
 
@@ -490,7 +490,7 @@ export function PurchasePlayer({
                       >
                         Video stream unavailable
                       </p>
-                      <p style={{ color: "var(--muted)", fontSize: "13px", margin: "0 0 16px" }}>
+                      <p style={{ color: "#d1d5db", fontSize: "13px", margin: "0 0 16px" }}>
                         We couldn&apos;t load the video player stream for this lesson. Please check
                         your network or retry.
                       </p>

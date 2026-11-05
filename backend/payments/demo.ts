@@ -1,4 +1,4 @@
-﻿import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type { PaymentEvent, PaymentOrder, LegacyDemoPaymentProvider } from "./types";
 
@@ -14,10 +14,13 @@ const eventSchema = z
 export function isDemoPaymentEnabled(env: Record<string, string | undefined> = process.env) {
   if (env.PAYMENT_PROVIDER === "razorpay" && env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET)
     return false;
+  const stageAllowed =
+    ["local", "staging"].includes(env.PROJECT_STAGE ?? "") && env.VERCEL_ENV !== "production";
+  const explicitTestAllowed =
+    env.ALLOW_MOCK_PAYMENTS === "true" || env.ALLOW_TEST_PAYMENTS === "true";
+  if (!stageAllowed && !explicitTestAllowed) return false;
   return (
     env.PAYMENT_MODE === "demo" &&
-    ["local", "staging"].includes(env.PROJECT_STAGE ?? "") &&
-    env.VERCEL_ENV !== "production" &&
     validSecret(env.DEMO_PAYMENT_SECRET)
   );
 }

@@ -15,14 +15,14 @@ describe("CataloguePage", () => {
     const user = userEvent.setup();
     render(<CataloguePage />);
 
-    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(screen.getAllByRole("article")).toHaveLength(2);
 
     await user.type(screen.getByLabelText("Search courses"), "nonexistent course");
     expect(screen.getByRole("heading", { name: "No courses match that search." })).toBeVisible();
     expect(screen.queryAllByRole("article")).toHaveLength(0);
 
     await user.click(screen.getByRole("button", { name: "Show all courses" }));
-    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(screen.getAllByRole("article")).toHaveLength(2);
   });
 
   it("filters courses by starting level", async () => {

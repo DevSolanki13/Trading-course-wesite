@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("public catalogue and both course actions share one authentication request", async ({
   page,
 }) => {
-  for (const path of ["/courses", "/courses/market-foundations"]) {
+  for (const path of ["/courses", "/courses/basic-to-advance"]) {
     let requests = 0;
     const count = (request: import("@playwright/test").Request) => {
       if (new URL(request.url()).pathname === "/api/auth/me") requests++;
@@ -46,9 +46,9 @@ test("admin catalogue views and the deferred learner panel retain their controls
     }),
   );
   await page.goto("/courses");
-  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(3);
+  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(2);
   await page.getByRole("button", { name: "Grid", exact: true }).click();
-  await expect(page.locator(".course-grid .course-card")).toHaveCount(3);
+  await expect(page.locator(".course-grid .course-card")).toHaveCount(2);
   await page.getByRole("button", { name: "Horizontal", exact: true }).click();
   const learners = page.getByRole("button", { name: "Learners", exact: true }).first();
   await learners.focus();

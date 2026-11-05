@@ -15,7 +15,7 @@ test("public journey, legal links, responsive layout and accessibility", async (
   for (const path of [
     "/",
     "/courses",
-    "/courses/market-foundations",
+    "/courses/basic-to-advance",
     "/login",
     "/signup",
     "/forgot-password",
@@ -36,7 +36,7 @@ test("public journey, legal links, responsive layout and accessibility", async (
       path,
     ).toBe(true);
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-    if (["/", "/courses/market-foundations", "/login", "/signup"].includes(path)) {
+    if (["/", "/courses/basic-to-advance", "/login", "/signup"].includes(path)) {
       const audit = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
         .analyze();
@@ -55,10 +55,10 @@ test("catalogue search, filter and disabled purchase", async ({ page }) => {
   await page.getByLabel("Search courses", { exact: true }).fill("no-such-course");
   await expect(page.getByRole("heading", { name: "No courses match that search." })).toBeVisible();
   await page.getByRole("button", { name: "Show all courses" }).click();
-  await expect(page.locator(".course-card")).toHaveCount(3);
+  await expect(page.locator(".course-card")).toHaveCount(2);
   await page.getByLabel("Your starting point").selectOption("Beginner");
   await expect(page.locator(".course-card")).toHaveCount(1);
-  await page.goto("/courses/market-foundations");
+  await page.goto("/courses/basic-to-advance");
   await expect(page.getByRole("link", { name: /refund/i }).first()).toHaveAttribute(
     "href",
     "/refund-policy",
@@ -73,7 +73,7 @@ test("catalogue search, filter and disabled purchase", async ({ page }) => {
 });
 
 test("keyboard dialog closes and restores focus; theme persists", async ({ page }) => {
-  await page.goto("/courses/market-foundations");
+  await page.goto("/courses/basic-to-advance");
   const trigger = page.getByRole("button", { name: "Preview the lesson format", exact: true });
   await trigger.focus();
   await page.keyboard.press("Enter");

@@ -45,6 +45,10 @@ test("provider factory has a zero-env mock and refuses implicit production mock"
     getPaymentProvider({ NODE_ENV: "production", ALLOW_MOCK_PAYMENTS: "true" }) instanceof
       MockPaymentProvider,
   );
+  assert.ok(
+    getPaymentProvider({ NODE_ENV: "production", ALLOW_TEST_PAYMENTS: "true" }) instanceof
+      MockPaymentProvider,
+  );
   const env = {
     NODE_ENV: "production",
     PAYMENT_PROVIDER: "razorpay",

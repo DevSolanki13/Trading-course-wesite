@@ -269,6 +269,70 @@ body:has(.video-learning-page) .site-header-spacer {
   color: #ffffff;
 }
 
+/* Course header with thumbnail and title */
+.vlp-course-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  margin-bottom: 2px;
+}
+
+.vlp-course-header-thumb {
+  width: 58px;
+  height: 42px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #0d1117;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vlp-course-header-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vlp-course-header-thumb svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vlp-course-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.vlp-course-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--foreground, #ffffff);
+  line-height: 1.25;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vlp-course-header-slug {
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  color: #e59a58;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Course banner card */
 .vlp-course-card {
   position: relative;
@@ -435,6 +499,22 @@ body:has(.video-learning-page) .site-header-spacer {
   background: rgba(0, 223, 143, 0.08);
   border-color: rgba(0, 223, 143, 0.25);
   color: #ffffff;
+}
+
+.vlp-lesson-item.is-locked {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.vlp-locked-badge {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #9ca3af;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .vlp-lesson-icon {
@@ -1173,20 +1253,126 @@ body:has(.video-learning-page) .site-header-spacer {
   color: var(--foreground, #131b19);
 }
 
-:root[data-theme="light"] .student-dashboard-page .vlp-sidebar {
+:root[data-theme="light"] .vlp-top-nav {
+  background-color: #ffffff;
+  border-bottom-color: var(--line, rgba(0, 0, 0, 0.1));
+}
+
+:root[data-theme="light"] .vlp-brand-text {
+  color: #131b19;
+}
+
+:root[data-theme="light"] .vlp-nav-item {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-nav-item:hover,
+:root[data-theme="light"] .vlp-nav-item.is-active {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-sidebar {
   background-color: #ffffff;
   border-color: var(--line, rgba(0, 0, 0, 0.1));
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-:root[data-theme="light"] .vlp-module-header {
-  background: var(--raised, #f0f4f2);
-  border-color: var(--line, rgba(0, 0, 0, 0.1));
+:root[data-theme="light"] .vlp-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+:root[data-theme="light"] .vlp-back-link {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-back-link:hover {
   color: var(--foreground, #131b19);
 }
 
-:root[data-theme="light"] .vlp-lesson-item {
+:root[data-theme="light"] .vlp-course-header-row {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="light"] .vlp-course-header-thumb {
+  background: #f1f3f5;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .vlp-course-header-title {
+  color: #131b19;
+}
+
+:root[data-theme="light"] .vlp-course-header-slug {
+  color: #b45309;
+}
+
+:root[data-theme="light"] .vlp-course-card {
+  background: #f0fdf4;
+  border-color: var(--line, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+:root[data-theme="light"] .vlp-course-card-artwork {
+  opacity: 0.25;
+}
+
+:root[data-theme="light"] .vlp-course-card-bg {
+  opacity: 0.35;
+}
+
+:root[data-theme="light"] .vlp-course-card-gradient {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.92) 100%);
+}
+
+:root[data-theme="light"] .vlp-course-card-title {
+  color: #131b19;
+  text-shadow: none;
+}
+
+:root[data-theme="light"] .vlp-progress-labels {
   color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-progress-track {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme="light"] .vlp-content-label {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-module-accordion {
+  background: #ffffff;
+  border: 1px solid var(--line, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+:root[data-theme="light"] .vlp-module-header {
+  background: #f7faf9;
+  border-bottom: 1px solid var(--line, rgba(0, 0, 0, 0.06));
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-module-header:hover {
+  background: #edf4f0;
+}
+
+:root[data-theme="light"] .vlp-module-title-box strong {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-module-title-box span {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-module-chevron {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-lesson-item {
+  color: #374151;
 }
 
 :root[data-theme="light"] .vlp-lesson-item:hover {
@@ -1195,12 +1381,75 @@ body:has(.video-learning-page) .site-header-spacer {
 }
 
 :root[data-theme="light"] .vlp-lesson-item.is-active {
-  background: rgba(8, 120, 79, 0.1);
-  color: var(--accent, #08784f);
+  background: rgba(8, 120, 79, 0.08);
+  border-color: rgba(8, 120, 79, 0.25);
+  color: #065f46;
+}
+
+:root[data-theme="light"] .vlp-lesson-item.is-active .vlp-lesson-name {
+  color: #065f46;
+  font-weight: 600;
+}
+
+:root[data-theme="light"] .vlp-lesson-item.is-active .vlp-lesson-icon {
+  background: #08784f;
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .vlp-lesson-icon.is-completed {
+  color: #08784f;
+}
+
+:root[data-theme="light"] .vlp-lesson-icon.is-unwatched {
+  color: #9ca3af;
+}
+
+:root[data-theme="light"] .vlp-lesson-item.is-locked {
+  color: #6b7280;
+}
+
+:root[data-theme="light"] .vlp-lesson-icon.is-locked {
+  color: #9ca3af;
+}
+
+:root[data-theme="light"] .vlp-lesson-duration {
+  color: #6b7280;
+}
+
+:root[data-theme="light"] .vlp-lesson-item.is-active .vlp-lesson-duration {
+  color: #08784f;
+}
+
+:root[data-theme="light"] .vlp-locked-badge {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .vlp-sidebar-footer {
+  border-top-color: var(--line, rgba(0, 0, 0, 0.08));
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-breadcrumbs {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-breadcrumbs a {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-breadcrumbs a:hover,
+:root[data-theme="light"] .vlp-breadcrumbs span {
+  color: var(--foreground, #131b19);
 }
 
 :root[data-theme="light"] .vlp-lesson-header h1 {
   color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-lesson-meta {
+  color: var(--muted, #52615a);
 }
 
 :root[data-theme="light"] .vlp-tab-content {
@@ -1221,6 +1470,16 @@ body:has(.video-learning-page) .site-header-spacer {
 }
 
 :root[data-theme="light"] .vlp-resource-info strong {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-resource-info small {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-resource-dl-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--line, rgba(0, 0, 0, 0.1));
   color: var(--foreground, #131b19);
 }
 
@@ -1261,4 +1520,50 @@ body:has(.video-learning-page) .site-header-spacer {
 :root[data-theme="light"] .vlp-tab-btn:hover,
 :root[data-theme="light"] .vlp-tab-btn.is-active {
   color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-speed-menu {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .vlp-speed-option {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-speed-option:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-speed-option.is-active {
+  color: #08784f;
+  font-weight: 700;
+}
+
+:root[data-theme="light"] .vlp-user-dropdown {
+  background: #ffffff;
+  border-color: var(--line, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="light"] .vlp-dropdown-user-info {
+  border-bottom-color: var(--line, rgba(0, 0, 0, 0.08));
+}
+
+:root[data-theme="light"] .vlp-dropdown-user-info strong {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-dropdown-user-info small {
+  color: var(--muted, #52615a);
+}
+
+:root[data-theme="light"] .vlp-dropdown-item {
+  color: var(--foreground, #131b19);
+}
+
+:root[data-theme="light"] .vlp-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
 }

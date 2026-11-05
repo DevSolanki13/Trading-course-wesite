@@ -109,10 +109,6 @@ export default function Loading() {
 
           <div className="student-top-actions">
             <ThemeToggle />
-            <span className="student-role-pill">
-              <i />
-              Learner portal
-            </span>
           </div>
         </header>
 
@@ -133,7 +129,7 @@ export default function Loading() {
               <MagnifyingGlass size={18} className="student-search-icon" />
               <input
                 type="text"
-                placeholder="Search courses by topic, title or keywords…"
+                placeholder="Search courses"
                 disabled
               />
             </div>
