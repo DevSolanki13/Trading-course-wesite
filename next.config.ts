@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   distDir: process.env.LOCAL_DEMO === "true" ? ".next-demo" : ".next",
   env: {
+    PAYMENT_MODE: process.env.PAYMENT_MODE || "cashfree-sandbox",
+    CASHFREE_ENV: process.env.CASHFREE_ENV || "sandbox",
+    CASHFREE_API_VERSION: process.env.CASHFREE_API_VERSION || "2026-01-01",
     ALLOW_MOCK_PAYMENTS: process.env.ALLOW_MOCK_PAYMENTS ?? "true",
     ALLOW_TEST_PAYMENTS: process.env.ALLOW_TEST_PAYMENTS ?? "true",
   },

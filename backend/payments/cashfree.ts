@@ -79,8 +79,9 @@ export function cashfreeSandboxEnabled(env: Environment = process.env) {
   const explicitTestAllowed =
     env.ALLOW_MOCK_PAYMENTS === "true" || env.ALLOW_TEST_PAYMENTS === "true";
   if (!stageAllowed && !explicitTestAllowed) return false;
+  const isCashfreeMode = env.PAYMENT_MODE === "cashfree-sandbox" || !env.PAYMENT_MODE;
   return (
-    env.PAYMENT_MODE === "cashfree-sandbox" &&
+    isCashfreeMode &&
     env.CASHFREE_ENV === "sandbox" &&
     configuredValue(env.CASHFREE_CLIENT_ID) &&
     configuredValue(env.CASHFREE_CLIENT_SECRET) &&
