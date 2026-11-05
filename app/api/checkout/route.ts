@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       const client = new CashfreeClient();
       // Stable local order UUID is the API idempotency key. The browser receives
       // only our internal checkout URL; a timeout can safely retry this same order.
-      await client.createOrder(order, appOrigin());
+      await client.createOrder(order, appOrigin(request));
     }
     return json({ checkoutUrl: `/pay/${sandbox ? "cashfree" : "demo"}/${data}`, orderId: data });
   } catch (error) {
