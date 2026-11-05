@@ -163,7 +163,7 @@ export default function HomePage({
             href={
               courses[0]?.previewLessonId
                 ? `/learn/${courses[0].slug}?lesson=${courses[0].previewLessonId}`
-                : "/courses"
+                : "/dashboard?view=explore"
             }
             className="button button-secondary"
           >

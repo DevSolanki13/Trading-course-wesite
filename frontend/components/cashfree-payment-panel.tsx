@@ -70,6 +70,11 @@ export function CashfreePaymentPanel({
       <button className="button button-primary" onClick={pay} disabled={!ready || busy}>
         {busy ? "Opening payment…" : "Open sandbox payment"}
       </button>
+      <p style={{ marginTop: "12px" }}>
+        <Link className="text-link" href="/dashboard?view=explore">
+          ← Cancel and return to explore courses
+        </Link>
+      </p>
       <p>
         <Link className="text-link" href={`/checkout/status/${orderId}`}>
           Check saved order status

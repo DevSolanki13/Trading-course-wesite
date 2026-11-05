@@ -123,9 +123,14 @@ export function CheckoutForm({
         </span>
       </label>
       {error && (
-        <p className="auth-error" role="alert">
-          {error}
-        </p>
+        <div style={{ textAlign: "center", marginTop: "8px" }}>
+          <p className="auth-error" role="alert">
+            {error}
+          </p>
+          <Link className="text-link" href="/dashboard?view=explore" style={{ display: "inline-block", marginTop: "6px" }}>
+            Return to explore courses
+          </Link>
+        </div>
       )}
       <button
         className="button button-primary checkout-submit"
@@ -144,6 +149,11 @@ export function CheckoutForm({
                   ? "Continue to sandbox payment"
                   : "Continue to demo payment"}
       </button>
+      <div style={{ marginTop: "14px", textAlign: "center" }}>
+        <Link className="text-link" href="/dashboard?view=explore">
+          ← Cancel and back to explore courses
+        </Link>
+      </div>
       <p className="checkout-note">
         No money will be collected. The next screen shows the saved order total before you confirm a
         {sandbox ? "sandbox outcome." : "simulated outcome."}

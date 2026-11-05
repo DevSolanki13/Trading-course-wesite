@@ -18,7 +18,7 @@ export function SiteFooter() {
           <div className="footer-links">
             <div>
               <h2>Explore</h2>
-              <Link href="/courses">Courses</Link>
+              <Link href="/dashboard?view=explore">Explore courses</Link>
               <Link href="/about">Our approach</Link>
               <Link href="/contact">
                 Contact <ArrowUpRight size={13} />

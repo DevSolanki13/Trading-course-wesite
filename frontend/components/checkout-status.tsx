@@ -112,13 +112,18 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
         </Link>
       )}
       {["failed", "cancelled"].includes(order?.status ?? "") && slug && (
-        <Link className="button button-primary" href={`/checkout/${slug}`}>
-          Start a new payment
-        </Link>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center", margin: "14px 0" }}>
+          <Link className="button button-primary" href={`/checkout/${slug}`}>
+            Start a new payment
+          </Link>
+          <Link className="button button-secondary" href="/dashboard?view=explore">
+            Back to explore courses
+          </Link>
+        </div>
       )}
       <p>
-        <Link className="text-link" href="/dashboard">
-          Go to my learning space
+        <Link className="text-link" href="/dashboard?view=explore">
+          Back to explore courses
         </Link>
       </p>
       <p className="checkout-note">Order reference: {orderId}</p>

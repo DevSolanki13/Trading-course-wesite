@@ -53,7 +53,7 @@ export default function AboutPage({ content = null }: { content?: SiteDocument |
               substitute invented credentials, ratings or learner results.
             </p>
           )}
-          <Link href="/courses" className="button button-primary">
+          <Link href="/dashboard?view=explore" className="button button-primary">
             Explore the learning path <ArrowUpRight size={19} />
           </Link>
         </div>

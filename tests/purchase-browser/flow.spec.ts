@@ -56,7 +56,7 @@ test("failure and cancellation never enroll; unpublished ownership and CSRF stay
   const dashboard = await (await page.request.get("/api/purchase/dashboard")).json();
   expect(dashboard.courses.some((c: { slug: string }) => c.slug === "advance-course-with-live-qna")).toBe(false);
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await expect(page).toHaveURL(/\/courses\/advance-course-with-live-qna$/);
+  await expect(page).toHaveURL(/\/dashboard\?view=explore/);
   const denied = await page.request.post("/api/purchase/create", {
     headers: { Origin: "https://untrusted.invalid" },
     data: { courseId: "advance-course-with-live-qna", terms: true },

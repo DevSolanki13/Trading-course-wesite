@@ -49,9 +49,9 @@ export default function CourseDetailPage({
             previous purchase from your dashboard.
           </p>
         )}
-        <Link className="back-link" href="/courses">
+        <Link className="back-link" href="/dashboard?view=explore">
           <ArrowLeft size={16} />
-          All courses
+          Explore courses
         </Link>
         <section className="course-detail-hero">
           <div>

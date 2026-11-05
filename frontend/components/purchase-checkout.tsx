@@ -126,7 +126,7 @@ export function PurchaseCheckout({
       const result = await api("mock", { orderId: saved.id, outcome });
       if (outcome === "cancelled") {
         toast.info("Test payment cancelled.");
-        router.push(`/courses/${course.slug}`);
+        router.push("/dashboard?view=explore");
         return;
       }
       if (result.order.status === "paid") {
@@ -299,7 +299,7 @@ export function PurchaseCheckout({
               className="button button-secondary"
               disabled={busy}
               onClick={() =>
-                terms ? void pay("cancelled") : router.push(`/courses/${course.slug}`)
+                terms ? void pay("cancelled") : router.push("/dashboard?view=explore")
               }
             >
               Cancel
@@ -307,6 +307,13 @@ export function PurchaseCheckout({
           </>
         )}
       </div>
+      {failed && (
+        <p style={{ marginTop: "12px", textAlign: "center" }}>
+          <Link className="text-link" href="/dashboard?view=explore">
+            ← Return to explore courses
+          </Link>
+        </p>
+      )}
       {order && (
         <p className="checkout-note">
           Order reference: {order.id} ·{" "}

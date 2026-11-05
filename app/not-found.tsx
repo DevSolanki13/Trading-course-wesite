@@ -6,7 +6,7 @@ export default function NotFound() {
         <span className="not-found-code">404</span>
         <h1>A little off course.</h1>
         <p>That page could not be found. Let’s get you back to the learning path.</p>
-        <Link className="button button-primary" href="/courses">
+        <Link className="button button-primary" href="/dashboard?view=explore">
           Explore courses
         </Link>
       </div>

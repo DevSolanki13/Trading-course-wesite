@@ -18,7 +18,7 @@ import {
 import { BullMark } from "./bull-mark";
 import { useAuth } from "./auth-provider";
 
-const baseLinks = [{ href: "/courses", label: "Courses" }];
+const baseLinks = [{ href: "/dashboard?view=explore", label: "Courses" }];
 
 import { ThemeToggle } from "./theme-toggle";
 export { ThemeToggle };
@@ -122,7 +122,7 @@ export function SiteHeader() {
       ? [{ href: "/admin", label: "Admin workspace" }]
       : signedIn
         ? [
-            { href: "/courses", label: "Courses" },
+            { href: "/dashboard?view=explore", label: "Courses" },
             { href: "/dashboard", label: "My classroom" },
           ]
         : baseLinks;
@@ -231,7 +231,7 @@ export function SiteHeader() {
                                 <Receipt size={17} /> Purchase history
                               </Link>
                               <Link
-                                href="/courses"
+                                href="/dashboard?view=explore"
                                 className="profile-dropdown-item"
                                 onClick={() => setProfileOpen(false)}
                               >
