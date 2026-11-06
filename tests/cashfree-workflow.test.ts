@@ -9,6 +9,7 @@ import {
 } from "../backend/payments/cashfree.ts";
 import {
   reconcilePayment,
+  reconcilePaymentState,
   reconcileRefund,
   type CommerceStore,
   type PaymentConfirmation,
@@ -199,6 +200,76 @@ test("canonical reconciliation accepts failed-then-success attempts and rejects 
   assert.equal(await reconcilePayment(expired, failed.store, order.provider_order_id), "closed");
   assert.deepEqual(failed.states, ["failed"]);
 });
+test("active Cashfree orders report failed attempts without closing retryable orders", async () => {
+  for (const [attempts, expected] of [
+    [["FAILED"], "failed"],
+    [["VOID"], "failed"],
+    [["USER_DROPPED"], "cancelled"],
+    [["CANCELLED"], "cancelled"],
+    [["FAILED", "PENDING"], "pending"],
+    [["FAILED", "NOT_ATTEMPTED"], "pending"],
+    [[], "pending"],
+  ] as const) {
+    const fixture = storeFixture();
+    fixture.store.order = async () => ({ ...order, status: "pending" });
+    const client = new CashfreeClient(env, async (input) =>
+      json(
+        String(input).endsWith("/payments")
+          ? attempts.map((status, index) => ({
+              ...payment(status),
+              cf_payment_id: `attempt-${index}`,
+            }))
+          : { ...remote(), order_status: "ACTIVE" },
+      ),
+    );
+    const result = await reconcilePaymentState(client, fixture.store, order.provider_order_id);
+    assert.deepEqual(result, {
+      state: "pending",
+      paymentStatus: expected,
+      canRetry: expected !== "pending",
+    });
+    assert.deepEqual(fixture.states, [], "A failed attempt must not close an active order");
+  }
+});
+
+test("an unsuccessful attempt can be followed by successful payment on the same active order", async () => {
+  const fixture = storeFixture();
+  fixture.store.order = async () => ({ ...order, status: "pending" });
+  let success = false;
+  const client = new CashfreeClient(env, async (input) =>
+    json(
+      String(input).endsWith("/payments")
+        ? [
+            payment("FAILED"),
+            ...(success ? [{ ...payment(), cf_payment_id: "later-success" }] : []),
+          ]
+        : { ...remote(), order_status: success ? "PAID" : "ACTIVE" },
+    ),
+  );
+  assert.equal(
+    (await reconcilePaymentState(client, fixture.store, order.provider_order_id)).paymentStatus,
+    "failed",
+  );
+  success = true;
+  assert.deepEqual(await reconcilePaymentState(client, fixture.store, order.provider_order_id), {
+    state: "paid",
+    paymentStatus: "paid",
+    canRetry: false,
+  });
+  assert.deepEqual(fixture.states, []);
+});
+
+test("provider lookup errors never classify an unconfirmed payment as failed", async () => {
+  const fixture = storeFixture();
+  const client = new CashfreeClient(env, async () => json({}, 503));
+  await assert.rejects(
+    reconcilePaymentState(client, fixture.store, order.provider_order_id),
+    /CASHFREE_HTTP_503/,
+  );
+  assert.deepEqual(fixture.states, []);
+  assert.deepEqual(fixture.payments, []);
+});
+
 test("ambiguous refund timeout preserves reference and checks provider before retry; mismatched refunds cannot revoke access", async () => {
   const reference = "refund_33333333333343338333333333333333";
   const f = storeFixture();

@@ -25,7 +25,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { StudentExplorePanel } from "./student/student-explore-panel";
 import { StudentBillingPanel } from "./student/student-billing-panel";
 import { StudentProfilePanel } from "./student/student-profile-panel";
-import { StudentAnnouncementsPanel } from "./student/student-announcements-panel";
+import { StudentAnnouncementTicker } from "./student/student-announcement-ticker";
 import type {
   PurchaseUser,
   PurchaseCourse,
@@ -34,6 +34,7 @@ import type {
 } from "../../shared/purchase";
 import type { Announcement } from "../../shared/announcements";
 import { accessExpiryLabel } from "../../shared/course-access";
+import { useBillingOrders } from "../lib/use-billing-orders";
 
 interface StudentDashboardProps {
   user: PurchaseUser;
@@ -52,7 +53,7 @@ export function StudentDashboard({
   user,
   courses,
   allCourses = [],
-  orders,
+  orders: initialOrders,
   announcements = [],
   initialView = "courses",
   ordersOnly = false,
@@ -65,6 +66,12 @@ export function StudentDashboard({
     ordersOnly ? "billing" : initialView,
   );
   const [courseFilter, setCourseFilter] = useState<"all" | "in_progress" | "completed">("all");
+  const {
+    orders,
+    syncing: billingSyncing,
+    error: billingError,
+    refresh: refreshBilling,
+  } = useBillingOrders(initialOrders, view === "billing");
   const [exploreQuery, setExploreQuery] = useState("");
   const [exploreLevel, setExploreLevel] = useState("all");
   const [loggingOut, setLoggingOut] = useState(false);
@@ -520,22 +527,11 @@ export function StudentDashboard({
 
           <div className="student-top-actions">
             <ThemeToggle />
-            {local && (
-              <span
-                style={{
-                  fontSize: "11px",
-                  color: "#f59e0b",
-                  background: "rgba(245, 158, 11, 0.12)",
-                  padding: "4px 10px",
-                  borderRadius: "6px",
-                  border: "1px solid rgba(245, 158, 11, 0.24)",
-                }}
-              >
-                Local demo
-              </span>
-            )}
+            {local && <span className="student-demo-badge">Local demo</span>}
           </div>
         </header>
+
+        <StudentAnnouncementTicker announcements={announcementsList} />
 
         {/* Inner Content Area */}
         <div className="student-main-content">
@@ -912,9 +908,6 @@ export function StudentDashboard({
 
                 {/* COMPANION RAIL: Fills the empty widescreen space */}
                 <aside className="student-companion-rail">
-                  {/* Admin Announcement Broadcast */}
-                  <StudentAnnouncementsPanel announcementsList={announcementsList} />
-
                   {/* Learning Vitals / Metrics Tile Card */}
                   <div className="student-rail-metrics-card">
                     <div className="student-rail-card-head">
@@ -997,6 +990,9 @@ export function StudentDashboard({
           {view === "billing" && (
             <StudentBillingPanel
               orders={orders}
+              syncing={billingSyncing}
+              error={billingError}
+              onRefresh={refreshBilling}
               onBrowseCourses={() => handleSelectView("explore")}
             />
           )}

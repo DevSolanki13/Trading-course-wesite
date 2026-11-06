@@ -1,4 +1,6 @@
 import type { Environment } from "../config/environment.ts";
+import { emailLogoAttachment } from "../email/logo.ts";
+import { buildNotificationEmailHtml } from "./email-template.ts";
 export type Notification = {
   id: string;
   dedupe_key: string;
@@ -21,6 +23,7 @@ export async function sendNotification(
     return false;
   if (Date.parse(row.claimed_until) <= Date.now() || !env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL)
     return false;
+  const logo = await emailLogoAttachment();
   const response = await fetcher("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -33,6 +36,8 @@ export async function sendNotification(
       to: [email],
       subject: row.subject,
       text: row.body,
+      html: buildNotificationEmailHtml(row, env.NEXT_PUBLIC_APP_URL),
+      attachments: [logo],
     }),
     signal: AbortSignal.timeout(15000),
     redirect: "error",

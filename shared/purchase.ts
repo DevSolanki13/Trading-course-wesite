@@ -33,7 +33,8 @@ export type PurchaseOrder = {
   base: number;
   currency: "INR";
   status: string;
-  provider: "mock" | "razorpay";
+  paymentStatus?: "pending" | "failed" | "cancelled";
+  provider: "mock" | "razorpay" | "cashfree" | "demo";
   providerOrderId: string | null;
   createdAt: string;
   paidAt: string | null;
@@ -41,6 +42,11 @@ export type PurchaseOrder = {
   accessUnit: "days" | "months";
   accessExpiresAt: string | null;
 };
+export function purchaseReceiptHref(order: Pick<PurchaseOrder, "id" | "provider">) {
+  return order.provider === "cashfree" || order.provider === "demo"
+    ? `/api/orders/${order.id}/document`
+    : `/dashboard/orders/${order.id}/receipt`;
+}
 export type PurchaseLessonContent = PurchaseLesson & {
   content: string;
   videoUrl: string | null;

@@ -21,7 +21,10 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   serverExternalPackages: ["@electric-sql/pglite"],
-  outputFileTracingIncludes: { "/api/orders/*/document": ["./backend/assets/fonts/*.ttf"] },
+  outputFileTracingIncludes: {
+    "/*": ["./public/brand/indianxtrade-logo-light.jpg"],
+    "/api/orders/*/document": ["./backend/assets/fonts/*.ttf"],
+  },
   outputFileTracingExcludes: { "/*": ["./.local-data/**/*", "./.next-demo/**/*"] },
   async headers() {
     return [

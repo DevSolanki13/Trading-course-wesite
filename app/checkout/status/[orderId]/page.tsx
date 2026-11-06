@@ -8,7 +8,7 @@ export default async function StatusPage({ params }: { params: Promise<{ orderId
   const { orderId } = await params;
   if (!z.string().uuid().safeParse(orderId).success) notFound();
   return (
-    <main className="checkout-page container">
+    <main id="main-content" className="checkout-page container">
       <CheckoutStatus orderId={orderId} />
     </main>
   );

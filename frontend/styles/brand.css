@@ -23,8 +23,8 @@
   --surface: #ffffff;
   --raised: #f0f4f2;
   --foreground: #131b19;
-  --muted: #52615a;
-  --subtle: #617168;
+  --muted: #43534b;
+  --subtle: #52615a;
   --brand: #16c784;
   --brand-hover: #1bd18d;
   --accent: #08784f;
@@ -36,11 +36,30 @@
 }
 
 body {
+  font-weight: 400;
   background-image:
     linear-gradient(var(--page-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--page-grid) 1px, transparent 1px);
   background-size: 72px 72px;
   accent-color: var(--accent);
+}
+
+/* Light surfaces need a little more stroke weight without flattening the type hierarchy. */
+:root[data-theme="light"] body {
+  font-weight: 500;
+}
+
+:where(:root[data-theme="light"]) :is(h1, h2, h3, label, summary, button) {
+  font-weight: 600;
+}
+
+:root[data-theme="light"] :is(.desktop-nav a, .site-footer h3, .faq-list summary) {
+  font-weight: 600;
+}
+
+:root[data-theme="light"] :is(input, select, textarea)::placeholder {
+  color: var(--muted);
+  opacity: 1;
 }
 .brand-mark-wrap,
 .brand-logo-wrap,
@@ -375,6 +394,83 @@ body .admin-page .button {
   body .purchase-summary dd {
     overflow-wrap: anywhere;
     text-align: right;
+  }
+}
+
+/* Support stays in reading order on smaller screens: contact, answers, then details. */
+@media (max-width: 800px) {
+  body .contact-page .page-intro {
+    padding-block: 40px 28px;
+  }
+
+  body .contact-page .page-intro h1 {
+    font-size: clamp(32px, 8.5vw, 44px);
+    line-height: 1.16;
+    letter-spacing: -0.03em;
+  }
+
+  body .contact-page .page-intro > p {
+    font-size: 16px;
+    line-height: 1.7;
+    margin-top: 20px;
+  }
+
+  .contact-page .contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "support" "faq" "business" "community";
+    gap: 32px;
+    padding-block: 8px 40px;
+  }
+
+  .contact-page .contact-grid h2 {
+    margin-bottom: 16px;
+    font-size: 24px;
+    line-height: 1.3;
+  }
+
+  .contact-page .contact-details > p {
+    max-width: 65ch;
+    font-size: 15px;
+    line-height: 1.75;
+    margin-bottom: 20px;
+  }
+
+  .contact-page .contact-support > .button {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .contact-page :is(.contact-business, .contact-community) {
+    border-top: 1px solid var(--line);
+    padding-top: 28px;
+  }
+
+  .contact-page .faq-list summary {
+    align-items: flex-start;
+    gap: 16px;
+    min-height: 60px;
+    padding-block: 18px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .contact-page .faq-list summary svg {
+    margin-top: 2px;
+  }
+
+  .contact-page .faq-answer {
+    padding: 0 24px 20px 0;
+  }
+
+  .contact-page .faq-answer p {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  .contact-page .contact-socials :is(a, p) {
+    min-height: 48px;
+    font-size: 14px;
+    gap: 12px;
   }
 }
 

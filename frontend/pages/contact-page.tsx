@@ -60,8 +60,11 @@ export default function ContactPage({
       )}
 
       <div className="contact-grid">
-        <section className="contact-details">
-          <h2>Course & account support</h2>
+        <section
+          className="contact-details contact-support"
+          aria-labelledby="contact-support-title"
+        >
+          <h2 id="contact-support-title">Course & account support</h2>
           {supportEmail ? (
             <>
               <p>
@@ -81,7 +84,16 @@ export default function ContactPage({
               <span className="contact-pending">Support address awaiting confirmation</span>
             </>
           )}
-          <h2>Business details</h2>
+        </section>
+        <section className="contact-faq" aria-labelledby="contact-faq-title">
+          <h2 id="contact-faq-title">Often, the answer is here.</h2>
+          <Faq items={content?.faqs?.length ? content.faqs : undefined} />
+        </section>
+        <section
+          className="contact-details contact-business"
+          aria-labelledby="contact-business-title"
+        >
+          <h2 id="contact-business-title">Business details</h2>
           <p>
             {site.name} is operated by {site.business.operator}.
             <br />
@@ -96,6 +108,8 @@ export default function ContactPage({
               </>
             ) : null}
           </p>
+        </section>
+        <section className="contact-community" aria-labelledby="community">
           <h2 id="community">Find the community</h2>
           <div className="contact-socials">
             {telegramUrl ? (
@@ -121,10 +135,6 @@ export default function ContactPage({
               </p>
             )}
           </div>
-        </section>
-        <section>
-          <h2>Often, the answer is here.</h2>
-          <Faq items={content?.faqs?.length ? content.faqs : undefined} />
         </section>
       </div>
       <div className="contact-policy-links">

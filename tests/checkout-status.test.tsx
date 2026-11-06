@@ -4,7 +4,7 @@ import { CheckoutStatus } from "../frontend/components/checkout-status";
 
 const orderId = "11111111-1111-4111-8111-111111111111";
 const fetchOrder = vi.fn();
-function response(status: string) {
+function response(status: string, fields: Record<string, unknown> = {}) {
   return {
     ok: true,
     json: async () => ({
@@ -13,6 +13,7 @@ function response(status: string) {
         status,
         demo: true,
         course_snapshot: { slug: "test-course", title: "Test course" },
+        ...fields,
       },
     }),
   };
@@ -84,6 +85,49 @@ describe("payment confirmation recovery", () => {
     );
   });
 
+  it("shows verified Cashfree failure immediately and retries the same saved checkout", async () => {
+    fetchOrder.mockResolvedValue(
+      response("pending", { sandbox: true, paymentStatus: "failed", canRetry: true }),
+    );
+    await mount();
+    expect(screen.getByRole("heading", { name: "Payment failed" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Try payment again" })).toHaveAttribute(
+      "href",
+      `/pay/cashfree/${orderId}`,
+    );
+    expect(screen.getByRole("link", { name: "View billing & receipts" })).toBeVisible();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120000);
+    });
+    expect(fetchOrder).toHaveBeenCalledTimes(1);
+    fetchOrder.mockResolvedValue(response("paid", { sandbox: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Check again" }));
+    await act(async () => {});
+    expect(screen.getByRole("heading", { name: "Payment confirmed" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Start learning" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Try payment again" })).not.toBeInTheDocument();
+  });
+  it("shows a cancelled attempt without presenting it as processing indefinitely", async () => {
+    fetchOrder.mockResolvedValue(
+      response("pending", { sandbox: true, paymentStatus: "cancelled", canRetry: true }),
+    );
+    await mount();
+    expect(screen.getByRole("heading", { name: "Checkout cancelled" })).toBeVisible();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(120000);
+    });
+    expect(fetchOrder).toHaveBeenCalledTimes(1);
+  });
+  it("keeps provider errors unconfirmed and offers a status check instead of a second payment", async () => {
+    fetchOrder.mockResolvedValue(
+      response("pending", { sandbox: true, confirmationUnavailable: true }),
+    );
+    await mount();
+    expect(screen.getByText(/couldn’t verify the latest payment status/)).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Payment failed" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Try payment again" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Check again" })).toBeVisible();
+  });
   it("aborts the active request and cancels polling on unmount", async () => {
     fetchOrder.mockResolvedValue(response("pending"));
     const view = await mount();

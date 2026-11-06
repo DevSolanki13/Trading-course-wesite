@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { requirePurchaseUser } from "@/backend/purchase/pages";
 import { purchaseOrder } from "@/backend/purchase/repository";
 import { PrintReceipt } from "@/frontend/components/print-receipt";
+import { purchaseReceiptHref } from "@/shared/purchase";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Purchase receipt", robots: { index: false, follow: false } };
 export default async function Receipt({ params }: { params: Promise<{ orderId: string }> }) {
@@ -10,6 +11,8 @@ export default async function Receipt({ params }: { params: Promise<{ orderId: s
   const user = await requirePurchaseUser(`/dashboard/orders/${orderId}/receipt`);
   const order = await purchaseOrder(orderId, user.id);
   if (!order || !["paid", "refunded"].includes(order.status)) notFound();
+  if (order.provider === "cashfree" || order.provider === "demo")
+    redirect(purchaseReceiptHref(order));
   const money = (n: number) =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency: order.currency }).format(n / 100);
   return (

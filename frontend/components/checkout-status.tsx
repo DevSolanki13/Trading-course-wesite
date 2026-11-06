@@ -1,17 +1,21 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CheckCircle, Clock, XCircle, ArrowCounterClockwise } from "@phosphor-icons/react";
 
 type Order = {
   id: string;
   status: "paid" | "failed" | "pending" | "cancelled" | "refunded";
   demo: boolean;
   sandbox?: boolean;
+  paymentStatus?: "paid" | "pending" | "failed" | "cancelled";
+  canRetry?: boolean;
+  confirmationUnavailable?: boolean;
   course_snapshot: { slug?: string; title?: string };
 };
 const labels: Record<Order["status"], string> = {
   paid: "Payment confirmed",
-  failed: "Payment was not completed",
+  failed: "Payment failed",
   pending: "Waiting for confirmation",
   cancelled: "Checkout cancelled",
   refunded: "Payment refunded",
@@ -36,7 +40,10 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
         if (!active) return;
         if (!response.ok) throw new Error(data.error || "Order status is unavailable.");
         setOrder(data.order);
-        if (data.order.status === "pending") {
+        if (
+          data.order.status === "pending" &&
+          !["failed", "cancelled"].includes(data.order.paymentStatus)
+        ) {
           if (++checks < 40) timer = setTimeout(load, 3000);
           else setExpired(true);
         }
@@ -58,16 +65,40 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
     setAttempt((n) => n + 1);
   }
   const slug = order?.course_snapshot.slug;
+  const attemptEnded =
+    order?.status === "pending" && ["failed", "cancelled"].includes(order.paymentStatus ?? "");
+  const status = attemptEnded ? (order?.paymentStatus as "failed" | "cancelled") : order?.status;
+  const retryUrl =
+    attemptEnded && order?.canRetry && order.sandbox
+      ? `/pay/cashfree/${orderId}`
+      : order && ["failed", "cancelled"].includes(order.status) && slug
+        ? `/checkout/${slug}`
+        : null;
   return (
-    <section className="checkout-card" aria-labelledby="order-heading">
+    <section
+      className="checkout-card checkout-status-card"
+      data-status={status ?? "checking"}
+      aria-labelledby="order-heading"
+    >
       {order?.sandbox ? (
         <div className="demo-banner">CASHFREE SANDBOX — test payment only</div>
       ) : order?.demo ? (
         <div className="demo-banner">DEMO MODE — no real payment</div>
       ) : null}
+      <div className="checkout-state-icon" aria-hidden="true">
+        {status === "failed" || status === "cancelled" ? (
+          <XCircle size={36} />
+        ) : status === "paid" ? (
+          <CheckCircle size={36} />
+        ) : (
+          <Clock size={36} />
+        )}
+      </div>
       <h1 id="order-heading">
-        {order
-          ? labels[order.status]
+        {status
+          ? expired && status === "pending"
+            ? "Confirmation delayed"
+            : labels[status]
           : error
             ? "We couldn’t check your order"
             : "Checking your payment…"}
@@ -79,49 +110,59 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
       )}
       <div role="status" aria-live="polite">
         {!order && !error && <p>Checking confirmation securely. Please keep this page open.</p>}
-        {order?.status === "pending" && (
+        {status === "pending" && (
           <p>
-            {expired
-              ? "Confirmation is taking longer than expected. Your order is saved. Check again or return to your learning space; avoid paying twice."
-              : "Your payment is still being confirmed. Your course unlocks only after confirmation."}
+            {order?.confirmationUnavailable
+              ? "We couldn’t verify the latest payment status. Check again before making another payment. Your saved order is unchanged."
+              : expired
+                ? "Confirmation is taking longer than expected. Your order is saved. Check again or return to your learning space; avoid paying twice."
+                : "Your payment is still being confirmed. Your course unlocks only after confirmation."}
           </p>
         )}
-        {order?.status === "paid" && (
+        {status === "paid" && order && (
           <p>
             {order.course_snapshot.title ?? "Your course"} has been added to your learning space.
           </p>
         )}
-        {order?.status === "failed" && (
-          <p>Payment was not confirmed. Check your payment history before trying again.</p>
+        {status === "failed" && (
+          <p>
+            This payment could not be completed. Your course has not been unlocked. Check your
+            billing history before trying again.
+          </p>
         )}
-        {order?.status === "cancelled" && (
-          <p>You can return to the course whenever you are ready.</p>
+        {status === "cancelled" && (
+          <p>
+            This payment was cancelled or left incomplete. You can return to your saved checkout
+            when you are ready.
+          </p>
         )}
         {order?.status === "refunded" && (
           <p>This order was refunded. Access from this purchase has ended.</p>
         )}
       </div>
-      {(error || expired) && (
-        <button className="button button-secondary" onClick={retry}>
-          Check again
-        </button>
-      )}
-      {order?.status === "paid" && slug && (
-        <Link className="button button-primary" href={`/learn/${slug}`}>
-          Start learning
-        </Link>
-      )}
-      {["failed", "cancelled"].includes(order?.status ?? "") && slug && (
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center", margin: "14px 0" }}>
-          <Link className="button button-primary" href={`/checkout/${slug}`}>
-            Start a new payment
+      <div className="checkout-status-actions">
+        {retryUrl && (
+          <Link className="button button-primary" href={retryUrl}>
+            <ArrowCounterClockwise size={18} aria-hidden="true" /> Try payment again
           </Link>
-          <Link className="button button-secondary" href="/dashboard?view=explore">
-            Back to explore courses
+        )}
+        {(error || expired || attemptEnded || order?.confirmationUnavailable) && (
+          <button className="button button-secondary" onClick={retry}>
+            Check again
+          </button>
+        )}
+        {status === "paid" && slug && (
+          <Link className="button button-primary" href={`/learn/${slug}`}>
+            Start learning
           </Link>
-        </div>
-      )}
-      <p>
+        )}
+        {["paid", "failed", "cancelled"].includes(status ?? "") && (
+          <Link className="button button-secondary" href="/dashboard?view=billing">
+            View billing & receipts
+          </Link>
+        )}
+      </div>
+      <p className="checkout-status-back">
         <Link className="text-link" href="/dashboard?view=explore">
           Back to explore courses
         </Link>

@@ -3,7 +3,7 @@ import { admitted } from "@/backend/auth/session";
 import { AuthError, failure, json, limit } from "@/backend/auth/http";
 import { CashfreeClient, cashfreeSandboxEnabled } from "@/backend/payments/cashfree";
 import { commerceStore } from "@/backend/payments/data";
-import { reconcilePayment } from "@/backend/payments/workflow";
+import { reconcilePaymentState } from "@/backend/payments/workflow";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +26,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
     if (error) throw new AuthError(503, "Order status is temporarily unavailable.");
     if (!initialData) throw new AuthError(404, "Order not found.");
     let data = initialData;
+    let paymentStatus: "paid" | "failed" | "cancelled" | "pending" | undefined;
+    let canRetry = false;
+    let confirmationUnavailable = false;
 
     // Phase 4A: Reconcile with Cashfree API on user return if payment is still marked pending
     if (
@@ -34,7 +37,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
       cashfreeSandboxEnabled()
     ) {
       try {
-        await reconcilePayment(
+        const confirmation = await reconcilePaymentState(
           new CashfreeClient(),
           commerceStore(context.admin),
           data.provider_order_id,
@@ -47,11 +50,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
           .eq("id", orderId)
           .eq("user_id", context.user.id)
           .maybeSingle();
-        if (refreshed.data) {
-          data = refreshed.data;
-        }
+        if (refreshed.error || !refreshed.data) throw new Error("ORDER_REFRESH_FAILED");
+        data = refreshed.data;
+        paymentStatus = confirmation.paymentStatus;
+        canRetry = confirmation.canRetry;
       } catch {
         // Reconcile is non-fatal: return current database state
+        confirmationUnavailable = true;
       }
     }
 
@@ -61,6 +66,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ orde
         ...order,
         demo: providerId?.startsWith("demo_") === true,
         sandbox: providerId?.startsWith("cf_sbx_") === true,
+        ...(data.status === "pending" ? { paymentStatus, canRetry, confirmationUnavailable } : {}),
       },
     });
   } catch (error) {

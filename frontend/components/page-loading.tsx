@@ -10,16 +10,19 @@ import {
 } from "@phosphor-icons/react";
 import { BullMark } from "./bull-mark";
 import { ThemeToggle } from "./theme-toggle";
-import "@/frontend/styles/admin.css";
-import "@/frontend/styles/student-dashboard.css";
+import { StudentBillingSkeleton } from "./student/student-billing-skeleton";
+import "../styles/admin.css";
+import "../styles/student-dashboard.css";
 
-export default function Loading() {
+export default function Loading({ view = "explore" }: { view?: "explore" | "billing" }) {
+  const billing = view === "billing";
+  const title = billing ? "Billing & receipts" : "Explore courses";
   return (
     <main
       id="main-content"
       className="admin-page student-dashboard-page student-skeleton-page"
       aria-busy="true"
-      aria-label="Loading workspace"
+      aria-label={`Loading ${title.toLowerCase()}`}
     >
       {/* =========================================================================
           LEFT SIDEBAR SKELETON
@@ -53,7 +56,7 @@ export default function Loading() {
         {/* Navigation Group: DISCOVER */}
         <div className="admin-nav-group">
           <span className="admin-nav-label">Discover</span>
-          <button type="button" className="is-active" disabled>
+          <button type="button" className={billing ? undefined : "is-active"} disabled>
             <Compass size={18} weight="fill" />
             <span>Explore courses</span>
           </button>
@@ -62,7 +65,7 @@ export default function Loading() {
         {/* Navigation Group: ACCOUNT */}
         <div className="admin-nav-group">
           <span className="admin-nav-label">Account</span>
-          <button type="button" disabled>
+          <button type="button" className={billing ? "is-active" : undefined} disabled>
             <Receipt size={18} />
             <span>Billing & receipts</span>
           </button>
@@ -104,7 +107,7 @@ export default function Loading() {
           <div className="student-breadcrumb">
             <span className="student-breadcrumb-link">Student</span>
             <span style={{ color: "rgba(255, 255, 255, 0.2)" }}>/</span>
-            <span className="student-breadcrumb-current">Explore courses</span>
+            <span className="student-breadcrumb-current">{title}</span>
           </div>
 
           <div className="student-top-actions">
@@ -116,84 +119,88 @@ export default function Loading() {
         <div className="student-main-content">
           <div className="student-greeting-head">
             <div>
-              <h1>Explore courses</h1>
+              <h1>{title}</h1>
               <p>
-                Discover structured trading programs, candlestick analysis, and risk management.
+                {billing
+                  ? "Order history, GST payment receipts, and enrollment invoices."
+                  : "Discover structured trading programs, candlestick analysis, and risk management."}
               </p>
             </div>
           </div>
 
-          {/* Search & Level Filter Bar */}
-          <div className="student-search-bar-row">
-            <div className="student-search-input-wrap">
-              <MagnifyingGlass size={18} className="student-search-icon" />
-              <input
-                type="text"
-                placeholder="Search courses"
-                disabled
-              />
-            </div>
-            <select disabled>
-              <option>All levels</option>
-            </select>
-          </div>
-
-          {/* Course Cards Grid */}
-          <div className="student-course-grid">
-            {[0, 1, 2].map((i) => (
-              <article key={i} className="student-explore-card">
-                <div className="student-skeleton-thumb" />
-                <div className="student-explore-card-body">
-                  <div
-                    className="skeleton"
-                    style={{ width: 70, height: 18, borderRadius: 4, marginBottom: 8 }}
-                  />
-                  <div
-                    className="skeleton"
-                    style={{ width: "85%", height: 22, borderRadius: 4, marginBottom: 8 }}
-                  />
-                  <div
-                    className="skeleton"
-                    style={{ width: "95%", height: 14, borderRadius: 4, marginBottom: 4 }}
-                  />
-                  <div
-                    className="skeleton"
-                    style={{ width: "65%", height: 14, borderRadius: 4, marginBottom: 16 }}
-                  />
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 8,
-                      marginBottom: 20,
-                    }}
-                  >
-                    <div
-                      className="skeleton"
-                      style={{ width: "50%", height: 12, borderRadius: 3 }}
-                    />
-                    <div
-                      className="skeleton"
-                      style={{ width: "45%", height: 12, borderRadius: 3 }}
-                    />
-                    <div
-                      className="skeleton"
-                      style={{ width: "58%", height: 12, borderRadius: 3 }}
-                    />
-                  </div>
-                  <div
-                    className="skeleton"
-                    style={{
-                      width: "100%",
-                      height: 44,
-                      borderRadius: 8,
-                      marginTop: "auto",
-                    }}
-                  />
+          {billing ? (
+            <StudentBillingSkeleton />
+          ) : (
+            <>
+              {/* Search & Level Filter Bar */}
+              <div className="student-search-bar-row">
+                <div className="student-search-input-wrap">
+                  <MagnifyingGlass size={18} className="student-search-icon" />
+                  <input type="text" placeholder="Search courses" disabled />
                 </div>
-              </article>
-            ))}
-          </div>
+                <select disabled>
+                  <option>All levels</option>
+                </select>
+              </div>
+
+              {/* Course Cards Grid */}
+              <div className="student-course-grid">
+                {[0, 1, 2].map((i) => (
+                  <article key={i} className="student-explore-card">
+                    <div className="student-skeleton-thumb" />
+                    <div className="student-explore-card-body">
+                      <div
+                        className="skeleton"
+                        style={{ width: 70, height: 18, borderRadius: 4, marginBottom: 8 }}
+                      />
+                      <div
+                        className="skeleton"
+                        style={{ width: "85%", height: 22, borderRadius: 4, marginBottom: 8 }}
+                      />
+                      <div
+                        className="skeleton"
+                        style={{ width: "95%", height: 14, borderRadius: 4, marginBottom: 4 }}
+                      />
+                      <div
+                        className="skeleton"
+                        style={{ width: "65%", height: 14, borderRadius: 4, marginBottom: 16 }}
+                      />
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                          marginBottom: 20,
+                        }}
+                      >
+                        <div
+                          className="skeleton"
+                          style={{ width: "50%", height: 12, borderRadius: 3 }}
+                        />
+                        <div
+                          className="skeleton"
+                          style={{ width: "45%", height: 12, borderRadius: 3 }}
+                        />
+                        <div
+                          className="skeleton"
+                          style={{ width: "58%", height: 12, borderRadius: 3 }}
+                        />
+                      </div>
+                      <div
+                        className="skeleton"
+                        style={{
+                          width: "100%",
+                          height: 44,
+                          borderRadius: 8,
+                          marginTop: "auto",
+                        }}
+                      />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 

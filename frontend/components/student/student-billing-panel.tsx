@@ -2,13 +2,34 @@
 
 import Link from "next/link";
 import type { PurchaseOrder } from "../../../shared/purchase";
+import { purchaseReceiptHref } from "../../../shared/purchase";
+import { StudentBillingSkeleton } from "./student-billing-skeleton";
+
+const billingDateFormatter = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: true,
+  timeZone: "Asia/Kolkata",
+});
 
 export interface StudentBillingPanelProps {
   orders: PurchaseOrder[];
   onBrowseCourses: () => void;
+  syncing?: boolean;
+  error?: string;
+  onRefresh?: () => void;
 }
 
-export function StudentBillingPanel({ orders, onBrowseCourses }: StudentBillingPanelProps) {
+export function StudentBillingPanel({
+  orders,
+  onBrowseCourses,
+  syncing = false,
+  error = "",
+  onRefresh,
+}: StudentBillingPanelProps) {
   return (
     <div>
       <div className="student-greeting-head">
@@ -16,35 +37,70 @@ export function StudentBillingPanel({ orders, onBrowseCourses }: StudentBillingP
           <h1>Billing & receipts</h1>
           <p>Order history, GST payment receipts, and enrollment invoices.</p>
         </div>
+        {onRefresh && (
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={onRefresh}
+            disabled={syncing}
+          >
+            {syncing ? "Checking payments…" : "Refresh payments"}
+          </button>
+        )}
       </div>
+      {syncing && orders.length > 0 && <p role="status">Syncing your latest transactions…</p>}
+      {error && (
+        <p className="auth-error" role="alert">
+          {error}
+        </p>
+      )}
 
-      {orders.length ? (
+      {syncing && !orders.length ? (
+        <StudentBillingSkeleton />
+      ) : orders.length ? (
         <div className="student-orders-card">
-          <table className="student-orders-table">
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Course</th>
-                <th>Date (IST)</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Receipt</th>
+          <table className="student-orders-table" role="table" aria-label="Billing & receipts">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">
+                  Order
+                </th>
+                <th scope="col" role="columnheader">
+                  Course
+                </th>
+                <th scope="col" role="columnheader">
+                  Date (IST)
+                </th>
+                <th scope="col" role="columnheader">
+                  Amount
+                </th>
+                <th scope="col" role="columnheader">
+                  Status
+                </th>
+                <th scope="col" role="columnheader">
+                  Receipt
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {orders.map((order) => {
-                const formattedDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: "Asia/Kolkata",
-                });
+                const displayedStatus =
+                  order.status === "pending" ? (order.paymentStatus ?? order.status) : order.status;
+                const paidTimestamp =
+                  ["paid", "refunded"].includes(order.status) &&
+                  order.paidAt &&
+                  Number.isFinite(Date.parse(order.paidAt))
+                    ? order.paidAt
+                    : null;
+                const timestamp = paidTimestamp ?? order.createdAt;
+                const date = new Date(timestamp);
+                const formattedDate = Number.isFinite(date.getTime())
+                  ? billingDateFormatter.format(date)
+                  : null;
 
                 return (
-                  <tr key={order.id}>
-                    <td>
+                  <tr key={order.id} role="row">
+                    <td role="cell" data-label="Order">
                       <span
                         style={{
                           fontFamily: "var(--mono)",
@@ -55,13 +111,23 @@ export function StudentBillingPanel({ orders, onBrowseCourses }: StudentBillingP
                         {order.id.slice(0, 8)}…
                       </span>
                     </td>
-                    <td>
+                    <td role="cell" data-label="Course" className="student-order-course">
                       <strong>{order.courseTitle}</strong>
                     </td>
-                    <td>
-                      <span style={{ color: "var(--muted)" }}>{formattedDate}</span>
+                    <td role="cell" data-label="Date (IST)">
+                      {formattedDate ? (
+                        <time
+                          dateTime={timestamp}
+                          title={`${paidTimestamp ? "Payment confirmed" : "Order placed"} (IST, UTC+05:30)`}
+                          style={{ color: "var(--muted)" }}
+                        >
+                          {formattedDate}
+                        </time>
+                      ) : (
+                        <span style={{ color: "var(--muted)" }}>Date unavailable</span>
+                      )}
                     </td>
-                    <td>
+                    <td role="cell" data-label="Amount">
                       <strong>
                         ₹
                         {(order.amount / 100).toLocaleString("en-IN", {
@@ -69,17 +135,16 @@ export function StudentBillingPanel({ orders, onBrowseCourses }: StudentBillingP
                         })}
                       </strong>
                     </td>
-                    <td>
-                      <span className={`student-order-status-badge ${order.status}`}>
-                        {order.status}
+                    <td role="cell" data-label="Status">
+                      <span className={`student-order-status-badge ${displayedStatus}`}>
+                        {displayedStatus}
                       </span>
                     </td>
-                    <td>
+                    <td role="cell" data-label="Receipt" className="student-order-action">
                       {["paid", "refunded"].includes(order.status) ? (
                         <Link
-                          href={`/dashboard/orders/${order.id}/receipt`}
+                          href={purchaseReceiptHref(order)}
                           className="button button-secondary button-sm"
-                          style={{ padding: "4px 10px", fontSize: "12px" }}
                         >
                           View receipt
                         </Link>
@@ -87,7 +152,6 @@ export function StudentBillingPanel({ orders, onBrowseCourses }: StudentBillingP
                         <Link
                           href={`/checkout/status/${order.id}`}
                           className="button button-secondary button-sm"
-                          style={{ padding: "4px 10px", fontSize: "12px" }}
                         >
                           Check status
                         </Link>
@@ -95,7 +159,6 @@ export function StudentBillingPanel({ orders, onBrowseCourses }: StudentBillingP
                         <Link
                           href={`/checkout/${order.slug || order.courseId}`}
                           className="button button-primary button-sm"
-                          style={{ padding: "4px 10px", fontSize: "12px" }}
                         >
                           Retry checkout
                         </Link>

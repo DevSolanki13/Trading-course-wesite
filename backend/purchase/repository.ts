@@ -52,12 +52,16 @@ export const purchaseQuoteCoupon = (course: string, code: string, userId: string
     p_course: course,
     p_code: code,
   });
-export const purchaseOrder = (id: string, userId: string) =>
-  purchaseRpc<PurchaseOrder | null>("purchase_read", {
+export async function purchaseOrder(id: string, userId: string) {
+  const order = await purchaseRpc<PurchaseOrder | null>("purchase_read", {
     p_action: "order",
     p_user: userId,
     p_ref: id,
   });
+  if (order || localDemoEnabled()) return order;
+  const { commerceOrders } = await import("./billing");
+  return (await commerceOrders(userId, id))[0] ?? null;
+}
 export async function purchaseConfirmation(id: string, userId: string) {
   const order = await purchaseOrder(id, userId);
   return {
@@ -65,12 +69,18 @@ export async function purchaseConfirmation(id: string, userId: string) {
     expired: !!order?.accessExpiresAt && Date.parse(order.accessExpiresAt) <= Date.now(),
   };
 }
-export const purchaseOrders = (userId: string) =>
-  purchaseRpc<PurchaseOrder[]>("purchase_read", {
+export async function purchaseOrders(userId: string) {
+  const orders = await purchaseRpc<PurchaseOrder[]>("purchase_read", {
     p_action: "orders",
     p_user: userId,
     p_ref: null,
   });
+  if (localDemoEnabled()) return orders;
+  const { commerceOrders } = await import("./billing");
+  return [...orders, ...(await commerceOrders(userId))].sort(
+    (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+  );
+}
 export const purchaseLesson = async (id: string, userId: string | null) => {
   const content = await purchaseRpc<PurchaseLessonContent>("purchase_read", {
     p_action: "lesson",

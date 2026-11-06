@@ -44,6 +44,10 @@ export async function purchaseRequest(request: Request) {
         return json({ lesson });
       }
       const user = (await purchaseUser())!;
+      if (action === "orders") {
+        if (!localDemoEnabled()) await limit(request, "billing-history", user.id, 30, 60);
+        return json({ orders: await purchaseOrders(user.id) });
+      }
       if (action === "dashboard") {
         const [courses, orders] = await Promise.all([
           purchaseCatalog(user.id),

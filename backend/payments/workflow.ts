@@ -31,6 +31,19 @@ export async function reconcilePayment(
   store: CommerceStore,
   providerOrderId: string,
 ) {
+  return (await reconcilePaymentState(client, store, providerOrderId)).state;
+}
+
+/** A failed attempt can leave the order ACTIVE and eligible for a later successful retry. */
+export async function reconcilePaymentState(
+  client: CashfreeClient,
+  store: CommerceStore,
+  providerOrderId: string,
+): Promise<{
+  state: "paid" | "closed" | "pending";
+  paymentStatus: "paid" | "failed" | "cancelled" | "pending";
+  canRetry: boolean;
+}> {
   const local = await store.order(providerOrderId);
   const remote = await client.getOrder(providerOrderId);
   client.assertOrder(remote, local);
@@ -57,15 +70,30 @@ export async function reconcilePayment(
   }
   if (remote.order_status === "PAID" && successes === 0)
     throw new Error("CASHFREE_PAYMENT_NOT_FOUND");
-  if (successes) return "paid";
+  if (successes) return { state: "paid", paymentStatus: "paid", canRetry: false };
   if (["EXPIRED", "TERMINATED"].includes(remote.order_status)) {
     await store.terminal(
       providerOrderId,
       remote.order_status === "EXPIRED" ? "failed" : "cancelled",
     );
-    return "closed";
+    return {
+      state: "closed",
+      paymentStatus: remote.order_status === "EXPIRED" ? "failed" : "cancelled",
+      canRetry: false,
+    };
   }
-  return "pending";
+  const terminalAttempts =
+    payments.length > 0 &&
+    payments.every((payment) =>
+      ["FAILED", "USER_DROPPED", "VOID", "CANCELLED"].includes(payment.payment_status),
+    );
+  const paymentStatus =
+    remote.order_status === "ACTIVE" && terminalAttempts
+      ? payments.some((payment) => ["FAILED", "VOID"].includes(payment.payment_status))
+        ? "failed"
+        : "cancelled"
+      : "pending";
+  return { state: "pending", paymentStatus, canRetry: paymentStatus !== "pending" };
 }
 
 export async function reconcileRefund(

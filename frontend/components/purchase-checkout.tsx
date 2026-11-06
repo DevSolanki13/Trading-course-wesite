@@ -6,8 +6,8 @@ import Link from "next/link";
 import Script from "next/script";
 import { toast } from "sonner";
 import type { PurchaseCourse, PurchaseOrder } from "../../shared/purchase";
-const money = (value: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value / 100);
+import { LockSimple } from "@phosphor-icons/react";
+import { CheckoutLayout, checkoutMoney } from "./checkout-layout";
 type RazorpayResult = {
   razorpay_order_id: string;
   razorpay_payment_id: string;
@@ -124,6 +124,7 @@ export function PurchaseCheckout({
       }
       await new Promise((resolve) => setTimeout(resolve, 1500));
       const result = await api("mock", { orderId: saved.id, outcome });
+      setOrder(result.order);
       if (outcome === "cancelled") {
         toast.info("Test payment cancelled.");
         router.push("/dashboard?view=explore");
@@ -147,12 +148,77 @@ export function PurchaseCheckout({
     }
   }
   return (
-    <section className="checkout-card" aria-labelledby="purchase-title">
-      {provider === "mock" && (
-        <div className="demo-banner" role="note">
-          TEST MODE: no real money is charged
+    <CheckoutLayout
+      course={course}
+      title={failed ? "Your payment was not completed" : undefined}
+      basePaise={course.price}
+      taxPaise={tax}
+      discountPaise={couponApplied?.discount}
+      totalPaise={course.price - (couponApplied?.discount ?? 0) + tax}
+      notice={provider === "mock" ? "TEST MODE: no real money is charged" : undefined}
+      details={
+        <>
+          Course access: {course.accessPeriod}{" "}
+          {course.accessPeriod === 1 ? course.accessUnit.slice(0, -1) : course.accessUnit} from
+          successful payment. Access ends automatically; this is a one-time payment.
+        </>
+      }
+      coupon={
+        <div className="checkout-coupon">
+          <p>Have a coupon?</p>
+          <div className="checkout-coupon-row">
+            <input
+              value={coupon}
+              maxLength={32}
+              onChange={(event) => {
+                setCoupon(event.target.value.toUpperCase());
+                setCouponApplied(null);
+              }}
+              placeholder="Enter coupon code"
+              aria-label="Coupon code"
+              disabled={busy || couponBusy}
+            />
+            <button
+              className="button button-secondary"
+              type="button"
+              disabled={!coupon.trim() || busy || couponBusy}
+              onClick={async () => {
+                setCouponBusy(true);
+                setError("");
+                try {
+                  const quote = await api("quote", { courseId: course.id, coupon: coupon.trim() });
+                  setCouponApplied({ code: coupon.trim(), discount: quote.discount });
+                } catch (reason) {
+                  setCouponApplied(null);
+                  setError(
+                    reason instanceof Error ? reason.message : "Coupon could not be applied.",
+                  );
+                } finally {
+                  setCouponBusy(false);
+                }
+              }}
+            >
+              {couponBusy ? "Checking…" : "Apply"}
+            </button>
+          </div>
+          {couponApplied ? (
+            <p className="checkout-note">Coupon {couponApplied.code} applied.</p>
+          ) : (
+            <button
+              className="text-link"
+              type="button"
+              disabled={busy || couponBusy}
+              onClick={() => {
+                setCoupon("");
+                setCouponApplied(null);
+              }}
+            >
+              I don’t have a coupon
+            </button>
+          )}
         </div>
-      )}
+      }
+    >
       {provider === "razorpay" && (
         <Script
           src="https://checkout.razorpay.com/v1/checkout.js"
@@ -164,86 +230,20 @@ export function PurchaseCheckout({
           }}
         />
       )}
-      <h1 id="purchase-title">
-        {failed ? "Your payment was not completed" : "Review your course"}
-      </h1>
-      <h2>{course.title}</h2>
-      <p>{course.description}</p>
-      <p>
-        Course access: {course.accessPeriod}{" "}
-        {course.accessPeriod === 1 ? course.accessUnit.slice(0, -1) : course.accessUnit} from
-        successful payment. Access ends automatically; this is a one-time payment.
+      <h2 id="checkout-payment-title">Payment details</h2>
+      <p className="checkout-section-description">
+        Review the total and accept the policies to continue.
       </p>
-      <dl className="purchase-summary">
+      <div className="checkout-provider">
+        <LockSimple size={22} aria-hidden="true" />
         <div>
-          <dt>Course price</dt>
-          <dd>{money(course.price)}</dd>
+          <strong>{provider === "mock" ? "Demo payment" : "Pay with Razorpay"}</strong>
+          <p>
+            {provider === "mock"
+              ? "Try the checkout with a simulated payment."
+              : "Choose your payment method in the payment window."}
+          </p>
         </div>
-        {couponApplied && (
-          <div>
-            <dt>Coupon discount</dt>
-            <dd>-{money(couponApplied.discount)}</dd>
-          </div>
-        )}
-        <div>
-          <dt>Taxes</dt>
-          <dd>{money(tax)}</dd>
-        </div>
-        <div>
-          <dt>Total</dt>
-          <dd>{money(course.price - (couponApplied?.discount ?? 0) + tax)}</dd>
-        </div>
-      </dl>
-      <div className="checkout-coupon">
-        <p>Have a coupon?</p>
-        <div className="checkout-coupon-row">
-          <input
-            value={coupon}
-            maxLength={32}
-            onChange={(event) => {
-              setCoupon(event.target.value.toUpperCase());
-              setCouponApplied(null);
-            }}
-            placeholder="Enter coupon code"
-            aria-label="Coupon code"
-            disabled={busy || couponBusy}
-          />
-          <button
-            className="button button-secondary"
-            type="button"
-            disabled={!coupon.trim() || busy || couponBusy}
-            onClick={async () => {
-              setCouponBusy(true);
-              setError("");
-              try {
-                const quote = await api("quote", { courseId: course.id, coupon: coupon.trim() });
-                setCouponApplied({ code: coupon.trim(), discount: quote.discount });
-              } catch (reason) {
-                setCouponApplied(null);
-                setError(reason instanceof Error ? reason.message : "Coupon could not be applied.");
-              } finally {
-                setCouponBusy(false);
-              }
-            }}
-          >
-            {couponBusy ? "Checking…" : "Apply"}
-          </button>
-        </div>
-        {couponApplied ? (
-          <p className="checkout-note">Coupon {couponApplied.code} applied.</p>
-        ) : (
-          <button
-            className="text-link"
-            type="button"
-            disabled={busy || couponBusy}
-            onClick={() => {
-              setCoupon("");
-              setCouponApplied(null);
-            }}
-          >
-            I don’t have a coupon
-          </button>
-        )}
       </div>
       <label className="terms-check">
         <input
@@ -272,9 +272,9 @@ export function PurchaseCheckout({
           Processing your payment…
         </p>
       )}
-      <div className="gateway-actions">
+      <div className="checkout-payment-actions">
         <button
-          className="button button-primary"
+          className="button button-primary checkout-submit"
           onClick={() => void pay("paid")}
           disabled={!terms || busy || !available || (provider === "razorpay" && !ready)}
         >
@@ -307,8 +307,12 @@ export function PurchaseCheckout({
           </>
         )}
       </div>
+      <p className="checkout-payment-total">
+        Total to pay{" "}
+        <strong>{checkoutMoney(course.price - (couponApplied?.discount ?? 0) + tax)}</strong>
+      </p>
       {failed && (
-        <p style={{ marginTop: "12px", textAlign: "center" }}>
+        <p className="checkout-cancel">
           <Link className="text-link" href="/dashboard?view=explore">
             ← Return to explore courses
           </Link>
@@ -320,6 +324,6 @@ export function PurchaseCheckout({
           <Link href={`/checkout/success?orderId=${order.id}`}>Check order status</Link>
         </p>
       )}
-    </section>
+    </CheckoutLayout>
   );
 }

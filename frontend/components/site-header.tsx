@@ -26,13 +26,15 @@ export { ThemeToggle };
 export function Brand({
   footer = false,
   isLanding = false,
+  compact = false,
 }: {
   footer?: boolean;
   isLanding?: boolean;
+  compact?: boolean;
 }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const height = footer ? 38 : isLanding ? 34 : 46;
+  const height = footer ? 38 : isLanding || compact ? 34 : 46;
   return (
     <Link
       href={isAdmin ? "/admin" : "/"}
@@ -48,6 +50,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const isLanding = pathname === "/";
+  const isCheckout = pathname === "/checkout" || pathname.startsWith("/checkout/");
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -144,11 +147,11 @@ export function SiteHeader() {
         Skip to content
       </a>
       <header
-        className={`site-header ${isLanding ? "site-header-landing" : ""} ${scrolled ? "is-scrolled" : ""}`}
+        className={`site-header ${isLanding ? "site-header-landing" : ""} ${isCheckout ? "site-header-checkout" : ""} ${scrolled ? "is-scrolled" : ""}`}
       >
         <div className="container header-inner">
-          <Brand isLanding={isLanding} />
-          {!isLanding && (
+          <Brand isLanding={isLanding} compact={isCheckout} />
+          {!isLanding && !isCheckout && (
             <nav className="desktop-nav" aria-label="Main navigation">
               {navLinks.map((link) => (
                 <Link
@@ -255,58 +258,63 @@ export function SiteHeader() {
                     Log in <ArrowUpRight size={15} />
                   </Link>
                 )}
-                <Dialog.Root open={open} onOpenChange={setOpen}>
-                  <Dialog.Trigger asChild>
-                    <button className="icon-button mobile-menu-button" aria-label="Open navigation">
-                      <List size={23} />
-                    </button>
-                  </Dialog.Trigger>
-                  <Dialog.Portal>
-                    <Dialog.Overlay className="dialog-overlay" />
-                    <Dialog.Content className="mobile-menu">
-                      <div className="menu-heading">
-                        <Dialog.Title>Explore indianXtrade</Dialog.Title>
-                        <Dialog.Close className="icon-button" aria-label="Close navigation">
-                          <X size={22} />
-                        </Dialog.Close>
-                      </div>
-                      <Dialog.Description className="sr-only">
-                        Choose a page to visit.
-                      </Dialog.Description>
-                      <nav aria-label="Mobile navigation">
-                        {(signedIn && role === "admin"
-                          ? [{ href: "/admin", label: "Admin workspace" }]
-                          : [
-                              ...navLinks,
-                              ...(signedIn
-                                ? [
-                                    {
-                                      href: "/dashboard",
-                                      label: "My courses",
-                                    },
-                                  ]
-                                : [{ href: "/login", label: "Log in" }]),
-                            ]
-                        ).map((link) => (
-                          <Dialog.Close key={link.href} asChild>
-                            <Link
-                              href={link.href}
-                              aria-current={pathname === link.href ? "page" : undefined}
-                            >
-                              {link.label}
-                              <ArrowUpRight size={21} />
-                            </Link>
+                {!isCheckout && (
+                  <Dialog.Root open={open} onOpenChange={setOpen}>
+                    <Dialog.Trigger asChild>
+                      <button
+                        className="icon-button mobile-menu-button"
+                        aria-label="Open navigation"
+                      >
+                        <List size={23} />
+                      </button>
+                    </Dialog.Trigger>
+                    <Dialog.Portal>
+                      <Dialog.Overlay className="dialog-overlay" />
+                      <Dialog.Content className="mobile-menu">
+                        <div className="menu-heading">
+                          <Dialog.Title>Explore indianXtrade</Dialog.Title>
+                          <Dialog.Close className="icon-button" aria-label="Close navigation">
+                            <X size={22} />
                           </Dialog.Close>
-                        ))}
-                      </nav>
-                      <p>
-                        Learn the process.
-                        <br />
-                        Respect the risk.
-                      </p>
-                    </Dialog.Content>
-                  </Dialog.Portal>
-                </Dialog.Root>
+                        </div>
+                        <Dialog.Description className="sr-only">
+                          Choose a page to visit.
+                        </Dialog.Description>
+                        <nav aria-label="Mobile navigation">
+                          {(signedIn && role === "admin"
+                            ? [{ href: "/admin", label: "Admin workspace" }]
+                            : [
+                                ...navLinks,
+                                ...(signedIn
+                                  ? [
+                                      {
+                                        href: "/dashboard",
+                                        label: "My courses",
+                                      },
+                                    ]
+                                  : [{ href: "/login", label: "Log in" }]),
+                              ]
+                          ).map((link) => (
+                            <Dialog.Close key={link.href} asChild>
+                              <Link
+                                href={link.href}
+                                aria-current={pathname === link.href ? "page" : undefined}
+                              >
+                                {link.label}
+                                <ArrowUpRight size={21} />
+                              </Link>
+                            </Dialog.Close>
+                          ))}
+                        </nav>
+                        <p>
+                          Learn the process.
+                          <br />
+                          Respect the risk.
+                        </p>
+                      </Dialog.Content>
+                    </Dialog.Portal>
+                  </Dialog.Root>
+                )}
               </>
             )}
           </div>

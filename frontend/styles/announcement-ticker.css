@@ -1,0 +1,156 @@
+/* Compact announcement strip shared by every student dashboard view. */
+.announcement-ticker {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 44px;
+  background: #111111;
+  color: #f3f5f7;
+  border-bottom: 1px solid #35443b;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.announcement-ticker-label {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-inline: 16px;
+  border-right: 1px solid #35443b;
+  font-size: 11px;
+  font-weight: 700;
+  color: #35dca0;
+}
+
+.announcement-ticker-viewport {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.announcement-ticker-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.announcement-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: student-announcement-scroll var(--ticker-duration, 30s) linear infinite;
+}
+
+.announcement-ticker-group {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: var(--ticker-width, 100vw);
+  gap: 28px;
+  padding-inline: 20px;
+  white-space: nowrap;
+}
+
+.announcement-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.announcement-ticker-item strong {
+  font-weight: 700;
+}
+
+.announcement-ticker-item > svg,
+.announcement-ticker-separator {
+  color: #35dca0;
+}
+
+.announcement-ticker-message {
+  color: #d5dfd8;
+}
+
+.announcement-ticker-separator {
+  margin-inline: 10px;
+}
+
+.announcement-ticker-priority {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #f0ce8b;
+}
+
+.announcement-ticker-priority.urgent {
+  color: #ffb4b4;
+}
+
+.announcement-ticker-control {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid #35443b;
+  background: #111111;
+  color: #f3f5f7;
+  cursor: pointer;
+}
+
+.announcement-ticker-control:hover {
+  background: #26332b;
+}
+
+.announcement-ticker-control:focus-visible,
+.announcement-ticker-viewport:focus-visible {
+  outline: 2px solid #35dca0;
+  outline-offset: -3px;
+}
+
+.announcement-ticker[data-paused="true"] .announcement-ticker-track,
+.announcement-ticker-viewport:focus .announcement-ticker-track {
+  animation-play-state: paused;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .announcement-ticker:hover .announcement-ticker-track {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes student-announcement-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 600px) {
+  .announcement-ticker-label {
+    padding-inline: 12px;
+  }
+
+  .announcement-ticker-label > span {
+    display: none;
+  }
+
+  .announcement-ticker-group {
+    padding-inline: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-ticker-track {
+    animation: none;
+    transform: none;
+  }
+
+  .announcement-ticker-group.is-copy,
+  .announcement-ticker-control {
+    display: none;
+  }
+}
