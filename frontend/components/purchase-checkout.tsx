@@ -97,6 +97,7 @@ export function PurchaseCheckout({
         if (data.keyId) setRazorpayKeyId(data.keyId);
       }
       if (provider === "upi") {
+        if (saved.status === "paid") router.push(`/checkout/success?orderId=${saved.id}`);
         setBusy(false);
         return;
       }

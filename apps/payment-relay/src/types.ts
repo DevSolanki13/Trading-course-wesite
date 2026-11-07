@@ -3,6 +3,7 @@ export interface RelayTarget {
   serverUrl: string;
   secret: string;
   markers: string[];
+  sharedGateway?: boolean;
 }
 export interface RelayConfig {
   targets: RelayTarget[];

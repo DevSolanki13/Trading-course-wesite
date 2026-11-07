@@ -24,7 +24,8 @@ object SmsForwarder {
       val list = targets.getJSONObject(i).getJSONArray("markers")
       (0 until list.length()).map { list.getString(it) }
     }
-    val matches = RelayRouting.matchingTargets(markers, body)
+    val shared = targets.length() == 1 && targets.getJSONObject(0).optBoolean("sharedGateway", false)
+    val matches = if (shared) listOf(0) else RelayRouting.matchingTargets(markers, body)
     if (matches.size != 1) return@synchronized true to "Not forwarded: ${matches.size} matching accounts; review the original message"
     val target = targets.getJSONObject(matches.single())
     val id = MessageDigest.getInstance("SHA-256").digest("${target.getString("serverUrl")}|$sender|$body|$receivedAt".toByteArray()).joinToString("") { "%02x".format(it) }

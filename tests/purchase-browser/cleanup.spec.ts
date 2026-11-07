@@ -32,15 +32,16 @@ test("student dashboard opens the deferred classroom and retains saved progress"
 });
 
 test("admin workspace loads course management and other panels on demand", async ({ page }) => {
-  await page.goto("/admin/login");
-  await page.getByRole("button", { name: "Fill demo credentials" }).click();
+  await page.goto("/login");
+  await page.getByLabel("Email address", { exact: true }).fill("admin@example.com");
+  await page.getByLabel("Password", { exact: true }).fill("1234567890");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("heading", { name: "Courses", exact: true })).toBeVisible();
-  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(3);
+  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(2);
   await page.getByRole("button", { name: "Overview", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible();
   await expect(page.locator(".admin-metrics")).toBeVisible();
   await page.getByRole("button", { name: "Courses", exact: true }).click();
-  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(3);
+  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(2);
 });

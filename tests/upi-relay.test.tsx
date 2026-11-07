@@ -78,3 +78,18 @@ it("never grants access from a debit or a message without a usable reference", a
     expect((await upiRelay(request({ ...payload, body }))).status).toBe(202);
   expect(rpc).not.toHaveBeenCalled();
 });
+
+it("confirms a pilot bank message while public checkout remains closed", async () => {
+  vi.stubEnv("UPI_PAYMENTS_ENABLED", "off");
+  vi.stubEnv("UPI_RELAY_ENABLED", "on");
+  rpc.mockResolvedValue("pilot-order");
+  const response = await upiRelay(request());
+  expect(response.status).toBe(202);
+  expect(await response.json()).toEqual({ accepted: true, matched: true });
+});
+it("keeps bank messages retryable if both checkout and relay are disabled", async () => {
+  vi.stubEnv("UPI_PAYMENTS_ENABLED", "off");
+  vi.stubEnv("UPI_RELAY_ENABLED", "off");
+  expect((await upiRelay(request())).status).toBe(503);
+  expect(rpc).not.toHaveBeenCalled();
+});

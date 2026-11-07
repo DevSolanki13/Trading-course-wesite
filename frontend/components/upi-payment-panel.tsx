@@ -15,8 +15,10 @@ export function UpiPaymentPanel({ order }: { order: PurchaseOrder }) {
     () => !!order.upi && Date.parse(order.upi.expiresAt) <= Date.now(),
   );
   const intent = order.upi;
+  const pollInterval = intent?.gateway === "indianxtrade" ? 15000 : 4000;
   const link = intent
-    ? `upi://pay?${new URLSearchParams({ pa: intent.vpa, pn: intent.payeeName, am: (intent.amount / 100).toFixed(2), cu: "INR", tn: `Academy ${order.id}` })}`
+    ? (intent.uri ??
+      `upi://pay?${new URLSearchParams({ pa: intent.vpa, pn: intent.payeeName, am: (intent.amount / 100).toFixed(2), cu: "INR", tn: `Academy ${order.id}` })}`)
     : "";
   useEffect(() => {
     let active = true;
@@ -42,7 +44,7 @@ export function UpiPaymentPanel({ order }: { order: PurchaseOrder }) {
     );
     async function poll() {
       if (document.hidden) {
-        timer = setTimeout(() => void poll(), 4000);
+        timer = setTimeout(() => void poll(), pollInterval);
         return;
       }
       try {
@@ -71,7 +73,7 @@ export function UpiPaymentPanel({ order }: { order: PurchaseOrder }) {
           setError(reason instanceof Error ? reason.message : "Payment check unavailable.");
       }
       if (active && Date.parse(intent!.expiresAt) > Date.now())
-        timer = setTimeout(() => void poll(), 4000);
+        timer = setTimeout(() => void poll(), pollInterval);
     }
     void poll();
     return () => {
@@ -80,7 +82,7 @@ export function UpiPaymentPanel({ order }: { order: PurchaseOrder }) {
       clearTimeout(expiryTimer);
       controller.abort();
     };
-  }, [intent, order.id, router]);
+  }, [intent, order.id, router, pollInterval]);
   if (!intent)
     return <p role="alert">Payment setup is pending. Check your saved order before paying.</p>;
   return (

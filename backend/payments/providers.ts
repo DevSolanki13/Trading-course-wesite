@@ -1,5 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { upiConfig } from "./upi-config.ts";
+import { upiConfig, upiCheckoutAllowed } from "./upi-config.ts";
 import { z } from "zod";
 import { configuredValue, type Environment } from "../config/environment.ts";
 
@@ -299,7 +299,10 @@ export function mockPaymentsAllowed(env: Environment = process.env) {
 }
 
 /** New Academy purchases support UPI only. Legacy adapters remain for saved payments. */
-export function getCheckoutProvider(env: Environment = process.env): PaymentProvider {
-  if (!upiConfig(env).enabled) throw new PaymentsUnavailableError();
-  return getPaymentProvider(env);
+export function getCheckoutProvider(
+  env: Environment = process.env,
+  userId?: string,
+): PaymentProvider {
+  if (!upiCheckoutAllowed(env, userId)) throw new PaymentsUnavailableError();
+  return getPaymentProvider({ ...env, UPI_PAYMENTS_ENABLED: "on" });
 }

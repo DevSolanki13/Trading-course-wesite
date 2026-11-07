@@ -36,7 +36,14 @@ export type PurchaseOrder = {
   paymentStatus?: "pending" | "failed" | "cancelled";
   provider: "mock" | "razorpay" | "cashfree" | "demo" | "upi";
   providerOrderId: string | null;
-  upi?: { vpa: string; payeeName: string; amount: number; expiresAt: string };
+  upi?: {
+    vpa: string;
+    payeeName: string;
+    amount: number;
+    expiresAt: string;
+    gateway?: "indianxtrade" | "bank-relay";
+    uri?: string | null;
+  };
   createdAt: string;
   paidAt: string | null;
   accessPeriod: number;

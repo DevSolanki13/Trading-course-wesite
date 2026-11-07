@@ -15,7 +15,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   if (course.owned) redirect(`/learn/${course.slug}`);
   let available = true;
   try {
-    getCheckoutProvider();
+    getCheckoutProvider(process.env, user.id);
   } catch {
     available = false;
   }

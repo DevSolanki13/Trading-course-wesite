@@ -2346,3 +2346,12 @@ body:has(.student-dashboard-page) .site-footer {
   background: #ffffff;
   border-color: var(--line, rgba(0, 0, 0, 0.08));
 }
+
+:root[data-theme="light"]
+  .student-dashboard-page
+  .admin-sidebar
+  .admin-nav-group
+  button[aria-current="page"]
+  .student-nav-badge {
+  color: #065f46;
+}

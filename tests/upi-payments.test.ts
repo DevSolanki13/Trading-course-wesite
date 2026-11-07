@@ -197,6 +197,79 @@ test("UPI reservations and bank confirmation are atomic, unique, immutable, owne
       ).rows[0].amount_paise,
       9998,
     );
+    const sharedCourse = (
+      await db.query<{ id: string }>(
+        "insert into courses(slug,title,price_paise,status)values('shared-upi-fixture','Shared UPI fixture',199900,'published')returning id",
+      )
+    ).rows[0].id;
+    const sharedOrder = (
+      await db.query<{ id: string }>(
+        "select purchase_create_order($1,$2,'upi','https://academy.example')as id",
+        [users[1], sharedCourse],
+      )
+    ).rows[0].id;
+    const sharedClaim = "33333333-3333-4333-8333-333333333333";
+    await db.query("select purchase_claim_creation($1,$2,$3)", [
+      users[1],
+      sharedOrder,
+      sharedClaim,
+    ]);
+    const sharedToken = "s".repeat(32);
+    const bind = (amount: number) =>
+      db.query(
+        "select purchase_upi_gateway_bind($1,$2,$3,$4,$5,'shared@bank','IndianXtrade',clock_timestamp()+interval '50 minutes')",
+        [users[1], sharedOrder, sharedClaim, sharedToken, amount],
+      );
+    await assert.rejects(bind(200000), /Shared payment setup conflict/);
+    await bind(199050);
+    const sharedInfo = (
+      await db.query<{ info: { token: string; amount: number } }>(
+        "select purchase_upi_gateway_info($1,$2)as info",
+        [users[1], sharedOrder],
+      )
+    ).rows[0].info;
+    assert.deepEqual(sharedInfo, { token: sharedToken, amount: 199050 });
+    assert.equal(
+      (
+        await db.query<{ info: unknown }>("select purchase_upi_gateway_info($1,$2)as info", [
+          users[0],
+          sharedOrder,
+        ])
+      ).rows[0].info,
+      null,
+    );
+    const clientOrder = (
+      await db.query<{ result: { upi: { gateway: string } } }>(
+        "select purchase_read('order',$1,$2)as result",
+        [users[1], sharedOrder],
+      )
+    ).rows[0].result;
+    assert.equal(clientOrder.upi.gateway, "indianxtrade");
+    assert.equal(JSON.stringify(clientOrder).includes(sharedToken), false);
+    assert.equal(
+      (await credit("123456789014", 199050)).rows[0].id,
+      null,
+      "Shared gateway purchase cannot be settled by Academy SMS",
+    );
+    await db.query("select purchase_settle($1)", [
+      JSON.stringify({
+        provider: "upi",
+        providerOrderId: `upi_${sharedOrder}`,
+        providerPaymentId: `upi_indianxtrade_${sharedToken}`,
+        amount: 199050,
+        currency: "INR",
+        status: "paid",
+      }),
+    ]);
+    assert.equal(
+      (
+        await db.query<{ allowed: boolean }>("select purchase_has_access($1,$2)as allowed", [
+          users[1],
+          sharedCourse,
+        ])
+      ).rows[0].allowed,
+      true,
+    );
     await db.exec("set role authenticated");
     await assert.rejects(
       db.exec("select purchase_upi_credit('123456789099',9998,now(),'x','x')"),
@@ -206,4 +279,29 @@ test("UPI reservations and bank confirmation are atomic, unique, immutable, owne
   } finally {
     await db.close();
   }
+});
+
+test("pilot checkout is session-scoped and relay ingestion stays available while public checkout is closed", () => {
+  const pilot = "11111111-1111-4111-8111-111111111111";
+  const other = "22222222-2222-4222-8222-222222222222";
+  const testing = {
+    ...env,
+    UPI_PAYMENTS_ENABLED: "off",
+    UPI_RELAY_ENABLED: "on",
+    UPI_PILOT_USER_IDS: pilot,
+  };
+  assert.equal(upiConfig(testing).enabled, false);
+  assert.equal(upiConfig(testing).relayEnabled, true);
+  assert.equal(getCheckoutProvider(testing, pilot).name, "upi");
+  for (const id of [undefined, other])
+    assert.throws(() => getCheckoutProvider(testing, id), PaymentsUnavailableError);
+  assert.throws(
+    () => getCheckoutProvider({ ...testing, UPI_RELAY_ENABLED: "off" }, pilot),
+    PaymentsUnavailableError,
+  );
+  assert.throws(
+    () => getCheckoutProvider({ ...testing, UPI_COLLECTION_VPA: "" }, pilot),
+    PaymentsUnavailableError,
+  );
+  assert.equal(upiConfig({ ...env, UPI_RELAY_ENABLED: "off" }).relayEnabled, true);
 });

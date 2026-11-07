@@ -4,59 +4,46 @@ async function login(page: import("@playwright/test").Page) {
   await page.goto("/login");
   await page.getByRole("button", { name: "Fill demo credentials" }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
 }
-test("zero-env demo: login return, mock purchase, receipt, lesson completion and persisted dashboard", async ({
+test("Academy offers only UPI and refuses fallback payments without a configured bank relay", async ({
   page,
 }) => {
-  await page.goto("/courses/basic-to-advance");
+  await page.goto("/courses/advance-course-with-live-qna");
   await page.getByRole("link", { name: "Buy now", exact: true }).click();
   await expect(page).toHaveURL(/\/login\?redirect=/);
   await page.getByRole("button", { name: "Fill demo credentials" }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/checkout\//);
-  await expect(
-    page.getByText("TEST MODE: no real money is charged", { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText("Pay with UPI", { exact: true })).toBeVisible();
   await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Pay successfully", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Payment confirmed" })).toBeVisible();
-  const orderId = new URL(page.url()).searchParams.get("orderId")!;
-  const duplicate = await page.request.post("/api/purchase/mock", {
-    headers: { Origin: "http://127.0.0.1:3102" },
-    data: { orderId, outcome: "paid" },
-  });
-  expect(duplicate.status()).toBe(200);
-  await page.getByRole("link", { name: "View printable receipt" }).click();
-  await expect(page.getByRole("heading", { name: "Purchase receipt" })).toBeVisible();
-  await expect(page.getByText(`Order ${orderId}`, { exact: true })).toBeVisible();
-  await page.goto(`/checkout/success?orderId=${orderId}`);
-  await page.getByRole("link", { name: "Start learning", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Mark as complete", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Mark as complete", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Mark as incomplete", exact: true })).toBeVisible();
-  await page.goto("/dashboard");
+  await expect(page.getByRole("button", { name: "Generate UPI QR", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Pay successfully" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Simulate failure" })).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "Market Foundations", exact: true }),
-  ).toBeVisible();
-  await expect(page.getByText("25% complete", { exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Purchase history", exact: true }).click();
-  await expect(page.getByRole("link", { name: "Print receipt", exact: true })).toHaveCount(1);
+    page.locator('script[src*="checkout.razorpay.com"], script[src*="sdk.cashfree.com"]'),
+  ).toHaveCount(0);
+  const create = await page.request.post("/api/purchase/create", {
+    headers: { Origin: "http://127.0.0.1:3102" },
+    data: { courseId: "advance-course-with-live-qna", terms: true },
+  });
+  expect(create.status()).toBe(503);
+  const mock = await page.request.post("/api/purchase/mock", { data: { outcome: "paid" } });
+  expect(mock.status()).toBe(404);
+  const legacy = await page.request.post("/api/checkout", {
+    data: { slug: "advance-course-with-live-qna", terms: true },
+  });
+  expect(legacy.status()).toBe(410);
 });
-test("failure and cancellation never enroll; unpublished ownership and CSRF stay protected", async ({
+test("unconfirmed checkout never enrolls, rejects forged money and preserves ownership and CSRF checks", async ({
   page,
   browser,
 }) => {
   await login(page);
-  await page.goto("/courses/advance-course-with-live-qna");
-  await page.getByRole("link", { name: "Buy now", exact: true }).click();
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Simulate failure", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Your payment was not completed" })).toBeVisible();
   const dashboard = await (await page.request.get("/api/purchase/dashboard")).json();
-  expect(dashboard.courses.some((c: { slug: string }) => c.slug === "advance-course-with-live-qna")).toBe(false);
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard\?view=explore/);
+  expect(
+    dashboard.courses.some((c: { slug: string }) => c.slug === "advance-course-with-live-qna"),
+  ).toBe(false);
   const denied = await page.request.post("/api/purchase/create", {
     headers: { Origin: "https://untrusted.invalid" },
     data: { courseId: "advance-course-with-live-qna", terms: true },
@@ -70,15 +57,37 @@ test("failure and cancellation never enroll; unpublished ownership and CSRF stay
   const other = await browser.newContext();
   const outsider = await other.newPage();
   const course = await (
-    await outsider.request.get("http://127.0.0.1:3102/api/purchase/course?id=advance-course-with-live-qna")
+    await outsider.request.get(
+      "http://127.0.0.1:3102/api/purchase/course?id=advance-course-with-live-qna",
+    )
   ).json();
-  await outsider.goto(
-    `http://127.0.0.1:3102/learn/advance-course-with-live-qna/${course.course.modules[0].lessons[1].id}`,
+  const locked = await outsider.request.get(
+    `http://127.0.0.1:3102/api/purchase/lesson?id=${course.course.modules[0].lessons[1].id}`,
   );
-  await expect(
-    outsider.getByText("Purchase to unlock this lesson.", { exact: false }),
-  ).toBeVisible();
+  expect(locked.status()).toBe(403);
+  const existing = (await (await page.request.get("/api/purchase/orders")).json()).orders[0];
+  expect(
+    (
+      await outsider.request.get(`http://127.0.0.1:3102/api/purchase/order?id=${existing.id}`)
+    ).status(),
+  ).toBe(401);
   await other.close();
+});
+test("previously confirmed purchases retain private receipts and course access", async ({
+  page,
+}) => {
+  await login(page);
+  const orders = (await (await page.request.get("/api/purchase/orders")).json()).orders;
+  const paid = orders.find((order: { status: string }) => order.status === "paid");
+  expect(paid).toBeTruthy();
+  await page.goto(`/checkout/success?orderId=${paid.id}`);
+  await expect(page.getByRole("heading", { name: "Payment confirmed" })).toBeVisible();
+  await page.getByRole("link", { name: "View printable receipt" }).click();
+  await expect(page.getByRole("heading", { name: "Purchase receipt" })).toBeVisible();
+  await expect(page.getByText(`Order ${paid.id}`, { exact: true })).toBeVisible();
+  await page.goto(`/checkout/success?orderId=${paid.id}`);
+  await page.getByRole("link", { name: "Start learning", exact: true }).click();
+  await expect(page.locator(".video-learning-page")).toBeVisible();
 });
 test("local signup starts with no purchases and refuses a client supplied role", async ({
   page,
@@ -100,8 +109,10 @@ test("local signup starts with no purchases and refuses a client supplied role",
     .fill(`learner-${Date.now()}@example.invalid`);
   await page.getByLabel("Password", { exact: true }).fill("TestPassword123");
   await page.getByRole("button", { name: "Create account", exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole("heading", { name: "No courses purchased yet." })).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
+  const saved = await (await page.request.get("/api/purchase/dashboard")).json();
+  expect(saved.courses).toEqual([]);
+  expect(saved.orders).toEqual([]);
 });
 test("new checkout, dashboard and player fit mobile/desktop and both themes", async ({
   page,
@@ -115,7 +126,11 @@ test("new checkout, dashboard and player fit mobile/desktop and both themes", as
     }, theme);
     for (const width of [1280, 390]) {
       await page.setViewportSize({ width, height: 900 });
-      for (const path of ["/checkout/advance-course-with-live-qna", "/dashboard", "/learn/basic-to-advance"]) {
+      for (const path of [
+        "/checkout/advance-course-with-live-qna",
+        "/dashboard",
+        "/learn/basic-to-advance",
+      ]) {
         await page.goto(path);
         await expect(page.locator("main")).toBeVisible();
         expect(

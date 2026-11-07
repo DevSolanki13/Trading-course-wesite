@@ -123,7 +123,7 @@ export default function Home() {
       // with an empty Bearer token and get a 401 each time — fail loudly here
       // instead, where the operator can see it in the send log.
       if (
-        targets.length !== 2 ||
+        targets.length === 0 ||
         targets.some((target) => {
           try {
             const url = new URL(target.serverUrl);
@@ -134,16 +134,16 @@ export default function Home() {
               !!url.search ||
               url.pathname !== "/" ||
               target.secret.trim().length < 32 ||
-              target.markers.every((marker) => !marker.trim())
+              (target.sharedGateway
+                ? url.origin !== "https://indianxtrade.com"
+                : target.markers.every((marker) => !marker.trim()))
             );
           } catch {
             return true;
           }
         })
       )
-        throw new Error(
-          "Set both HTTPS website addresses, relay secrets (32+ characters), and distinct account markers before starting.",
-        );
+        throw new Error("Set the IndianXtrade HTTPS address and relay secret before starting.");
 
       if (!(await requestPermission())) return;
 
@@ -177,8 +177,8 @@ export default function Home() {
       <View style={styles.card}>
         <Text style={styles.cardLabel}>Payment destinations</Text>
         <Text style={styles.meta}>
-          Use separate bank accounts. Each message must identify exactly one account. Unclear
-          messages are not credited automatically.
+          Both websites use IndianXtrade’s existing UPI gateway and collection account. This app
+          forwards payment alerts to that gateway; Academy checks its confirmed payment status.
         </Text>
         {targets.map((target, index) => (
           <View key={target.name} style={{ gap: 8, marginTop: 16 }}>
@@ -210,27 +210,29 @@ export default function Home() {
                 setTargets((all) => all.map((t, i) => (i === index ? { ...t, secret: value } : t)))
               }
             />
-            <TextInput
-              accessibilityLabel={`${target.name} account markers`}
-              editable={!listening}
-              value={target.markers.join(",")}
-              placeholder="Exact account text in bank SMS, e.g. XX1234"
-              placeholderTextColor="#93a2b4"
-              autoCapitalize="none"
-              style={{ color: "white", borderColor: "#34445a", borderWidth: 1, padding: 10 }}
-              onChangeText={(value) =>
-                setTargets((all) =>
-                  all.map((t, i) =>
-                    i === index
-                      ? {
-                          ...t,
-                          markers: value.split(",").map((m) => m.trim()),
-                        }
-                      : t,
-                  ),
-                )
-              }
-            />
+            {!target.sharedGateway && (
+              <TextInput
+                accessibilityLabel={`${target.name} account markers`}
+                editable={!listening}
+                value={target.markers.join(",")}
+                placeholder="Exact account text in bank SMS, e.g. XX1234"
+                placeholderTextColor="#93a2b4"
+                autoCapitalize="none"
+                style={{ color: "white", borderColor: "#34445a", borderWidth: 1, padding: 10 }}
+                onChangeText={(value) =>
+                  setTargets((all) =>
+                    all.map((t, i) =>
+                      i === index
+                        ? {
+                            ...t,
+                            markers: value.split(",").map((m) => m.trim()),
+                          }
+                        : t,
+                    ),
+                  )
+                }
+              />
+            )}
           </View>
         ))}
       </View>

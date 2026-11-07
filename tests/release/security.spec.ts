@@ -58,7 +58,7 @@ test("anonymous API calls and cross-origin mutations cannot grant access", async
   const checkout = await request.post("/api/checkout", {
     data: { slug: "basic-to-advance", terms: true },
   });
-  expect(checkout.status()).toBe(404);
+  expect(checkout.status()).toBe(410);
   for (const path of ["/api/payments/demo/simulate", "/api/payments/demo/webhook"]) {
     expect((await request.post(path, { data: {} })).status()).toBe(404);
   }

@@ -16,7 +16,7 @@ const relayPayload = z.object({
 
 export async function upiRelay(request: Request) {
   const config = upiConfig();
-  if (!config.enabled) return json({ error: "Bank feed is unavailable." }, 503);
+  if (!config.relayEnabled) return json({ error: "Bank feed is unavailable." }, 503);
   const supplied = Buffer.from(request.headers.get("authorization") ?? "");
   const expected = Buffer.from(`Bearer ${config.secret}`);
   if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected))

@@ -1,3 +1,6 @@
+import { sendPurchaseReceipt } from "@/backend/purchase/mail";
+import { sharedUpiGateway } from "@/backend/payments/indianxtrade";
+import { reconcileGatewayPurchase } from "@/backend/purchase/upi-gateway";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { requirePurchaseUser } from "@/backend/purchase/pages";
@@ -13,8 +16,15 @@ export default async function Success({
   const q = await searchParams;
   if (!z.string().uuid().safeParse(q.orderId).success) notFound();
   const user = await requirePurchaseUser(`/checkout/success?orderId=${q.orderId}`);
-  const { order, expired } = await purchaseConfirmation(String(q.orderId), user.id);
+  let { order, expired } = await purchaseConfirmation(String(q.orderId), user.id);
   if (!order) notFound();
+  if (sharedUpiGateway()) {
+    await reconcileGatewayPurchase(order, user.id);
+    ({ order, expired } = await purchaseConfirmation(String(q.orderId), user.id));
+    if (!order) notFound();
+  }
+  if (order.status === "paid" && order.provider === "upi")
+    await sendPurchaseReceipt(order.id, user);
   return (
     <main id="main-content" className="container checkout-page">
       <PurchaseConfirmation order={order} expired={expired} />

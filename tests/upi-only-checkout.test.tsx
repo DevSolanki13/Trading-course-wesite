@@ -25,6 +25,7 @@ it("shows only UPI when checkout is configured", async () => {
   render(await CheckoutPage({ params: Promise.resolve({ slug: "test-course" }) }));
   expect(screen.getByText("Pay with upi")).toBeVisible();
   expect(screen.getByRole("button")).toBeEnabled();
+  expect(checkout).toHaveBeenCalledWith(process.env, "student");
 });
 it("keeps UPI unavailable instead of offering another payment method when configuration is missing", async () => {
   checkout.mockImplementation(() => {

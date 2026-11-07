@@ -1,42 +1,53 @@
-# IndianXtrade Academy UPI payments
+# Academy UPI checkout through IndianXtrade
 
-Academy now supports the same bank-message-confirmed UPI flow used by IndianXtrade: reserve an exact amount, show a QR/deep link, and grant course access only after the operator's Android phone forwards a matching credit. The existing course price, coupon, access expiry, receipt and purchase outbox remain authoritative. Historical Cashfree orders and webhooks remain available. New Academy purchases offer UPI only, regardless of old Cashfree, Razorpay or test-payment flags. Provider-specific payment pages and the legacy checkout creation endpoint are retired; unsupported configuration displays an unavailable UPI checkout instead of falling back to another payment method. IndianXtrade’s existing gateway and repository are unchanged.
+Academy uses the **same UPI ID, collection bank account and existing payment gateway as IndianXtrade**. IndianXtrade's gateway code, bank-feed endpoint, amount allocator and live settings are unchanged. Only UPI is offered for new Academy purchases; historical orders remain readable.
+
+## Shared-account design
+
+Academy creates a deposit using IndianXtrade's existing authenticated `/api/deposits` API. That gateway reserves an exact amount across **both** websites. The Academy order stores the returned checkout reference and validates the gateway's UPI link against the saved total and receiving account. The existing Android SMS/PhonePe relay confirms the payment in IndianXtrade as usual. Academy polls the owner-authenticated deposit status and grants course access only when it is `COMPLETED`.
+
+Do not run independent amount allocators on the same UPI account or forward the same bank credit into two independent settlement systems. In shared mode, Academy's direct bank-feed consumer stays disabled, including during pilot testing. The Android app sends alerts to IndianXtrade only. There is no need to change IndianXtrade's gateway or create a separate bank account.
+
+A dedicated technical collector user holds Academy payment deposits in IndianXtrade. It has ordinary user permissions, no live trading access, and an exception allowing its server API calls through the network guard. Its funds are internal collection accounting and must not be traded or withdrawn through automation. Credentials and the existing relay secret are held in ignored private rollout files; none are bundled into the APK or committed to Git. Sessions refresh through the existing login API when required.
 
 ## Deployment
 
-1. Apply `backend/database/migrations/202611080022_upi_payments.sql` after the existing migrations using the normal reviewed database migration process. It adds service-only intent/credit tables and expands purchase-provider constraints. No shared database is changed by building or pushing this code.
-2. Configure Academy's environment:
+1. Apply Academy migrations `202611080022_upi_payments.sql`, `202611080023_shared_upi_gateway.sql`, and `202611080024_gateway_upi_uri.sql` in order. These change only Academy's schema. Migration 023 adds a private gateway-reference binding and prevents the old Academy SMS consumer from settling shared-gateway intents.
+2. Configure the following Production variables in Academy's Vercel project:
 
    ```dotenv
    PAYMENT_PROVIDER=upi
    PAYMENT_MODE=upi
    ALLOW_MOCK_PAYMENTS=false
    ALLOW_TEST_PAYMENTS=false
-   UPI_PAYMENTS_ENABLED=on
-   UPI_COLLECTION_VPA=<Academy's UPI address>
-   UPI_PAYEE_NAME=IndianXtrade Academy
-   UPI_ACCOUNT_MARKERS=<distinct account text present in Academy's credit SMS>
-   UPI_RELAY_SENDERS=<bank sender fragments, comma-separated>
-   SMS_RELAY_SECRET=<unique random secret of at least 32 characters>
+   UPI_GATEWAY=indianxtrade
+   UPI_PAYMENTS_ENABLED=off
+   UPI_RELAY_ENABLED=off
+   UPI_PILOT_USER_IDS=<authenticated pilot student UUID>
+   UPI_COLLECTION_VPA=<same real UPI ID as IndianXtrade>
+   UPI_PAYEE_NAME=<same payee name as IndianXtrade>
+   INDIANXTRADE_COLLECTOR_EMAIL=<technical collector account>
+   INDIANXTRADE_COLLECTOR_PASSWORD=<private collector credential>
+   INDIANXTRADE_SESSION_TOKEN=<initial private session; refreshed by login when needed>
    ```
 
-3. Install the Android app from `apps/payment-relay`. Enter both HTTPS site origins, each site's `SMS_RELAY_SECRET`, and its account markers. Start the relay, allow SMS/inbox/notification permissions, and exempt it from battery optimization. Disable the old relay app once the replacement has been verified; both apps may otherwise forward duplicates (server reference deduplication still applies).
-4. Test an actual small payment on each site and verify the correct order/deposit, bank reference, receipt and course access. Only then open checkout for customers. `UPI_PAYMENTS_ENABLED=off` closes Academy's new checkouts and ingestion; drain deliveries before turning it off.
+3. Save and redeploy Production. Existing database, email, video and login variables stay in place. `/api/health` reports public checkout readiness without exposing credentials or pilot IDs.
+4. Install the Android APK on the operator phone and enter the **existing IndianXtrade** origin and relay secret. Grant SMS/inbox/notification permissions and exempt it from battery optimization. Verify the new app before disabling the old relay; gateway UTR deduplication protects against duplicate delivery while both are installed.
+5. With public checkout still off, pay the exact QR amount as the allowlisted pilot student. Confirm the real bank reference, gateway deposit, Academy paid order, enrollment, printable receipt, and receipt email delivery. Automated local tests and an emulator install do not prove real payment delivery.
+6. Set `UPI_PAYMENTS_ENABLED=on`, clear the pilot allowlist and redeploy. Verify the live health endpoint and a regular authenticated student's UPI-only checkout.
 
-**This implementation requires separate collection accounts with distinguishable text in their bank messages.** Account markers are literal case-insensitive substrings, not regular expressions; use the exact masked account identifier or full VPA, never common words like `credited`, `UPI` or a payee name. Match the server's `UPI_ACCOUNT_MARKERS` to the app's Academy markers. A message identifying zero or multiple destinations is not forwarded and is recorded in phone activity. Do not use two VPAs feeding one indistinguishable account. A shared collection account requires a common amount reservation service and changes to IndianXtrade's deposit allocator before enabling either site's shared-account routing; independent databases cannot safely reserve the same amount.
+Private, ready-to-save owner handoff files live under ignored `artifacts/upi-rollout/`: `vercel-settings.md`, `academy-shared-upi.env`, and `android-settings.md`. Never publish those files.
 
-PhonePe notifications may omit account identity or a usable bank reference. Those cannot auto-confirm payment under this routing model. Use bank SMS containing the configured account marker and UTR, or reconcile the original bank records manually. Never submit a customer-supplied UTR or screenshot as proof of settlement.
+## Amounts, expiry and recovery
 
-## Payment behavior
+- IndianXtrade's existing minimum deposit is INR 500. To keep its positive paise offset from charging above a course total, shared Academy checkout currently requires an invoice total of at least INR 510. It requests the course total minus INR 10 and accepts only an exact amount within INR 19.99 below the invoice total. The difference is recorded as a discount; QR, saved total and receipt agree. Coupon totals below INR 510 fail before creating a gateway deposit.
+- The Academy QR is hidden after 50 minutes, ahead of the existing gateway's 60-minute reservation window. A replacement checkout is not created while the bound gateway payment is still pending. A completed gateway deposit is reconciled before a retry can create another course order. Never pay an expired QR or pay twice while confirmation is pending.
+- Duplicate confirmations use the same gateway checkout reference as the payment identity; purchase settlement, enrollment and receipt outbox are atomic and idempotent. Customer-supplied payment data, UTR claims and screenshots cannot grant course access.
+- A failed setup can leave an unused reservation at IndianXtrade if the network fails after creation but before Academy receives the response. No payment link has been presented in that case; the reservation expires normally. Creation claims and existing gateway rate limits limit retries.
+- The existing API limits apply: collector creation is limited to ten deposits per five minutes; deposit-status polling is limited to sixty per minute. Academy polls every fifteen seconds and fails closed on throttling or gateway errors. Higher-volume operation needs an explicitly reviewed gateway API capacity change; this integration does not alter IndianXtrade's limits.
+- Public checkout can be closed while bound payments continue to reconcile through the authenticated status API. Funds are never refunded or withdrawn by the integration. An operator must verify and return funds through the bank when a refund is approved, then reconcile course access using existing tooling.
+- GST-enabled real orders retain the existing approved-invoice configuration gate. Receipt email requires a working configured sender; a queued outbox entry alone is not proof of inbox delivery.
 
-- Checkout reserves an available amount at or below the saved course total (at most INR 9.99 less); any difference is recorded and displayed as a discount. The QR, saved total, receipt and settlement all use exactly the same paise amount. GST-enabled real orders keep the existing approved-invoice gate.
-- Reservations last 60 minutes. Retrying a live order preserves its amount and coupon. An expired order is cancelled when the student creates a replacement; its amount is quarantined for eight days. An expired QR must never be paid.
-- Credit insertion, reference deduplication, order confirmation, enrollment and receipt-outbox persistence use one database transaction. Wrong amounts, pre-checkout timestamps, account mismatches, debits, missing references and expired checkouts never grant access. A duplicate reference cannot pay a second order.
-- The phone stores routed messages before sending. Failed deliveries survive restarts and are retried on the foreground service's catch-up/network triggers. An unavailable Academy endpoint does not prevent delivery to IndianXtrade. Changing a destination's name/origin leaves old queued messages held rather than forwarding them to another server.
-- HTTP 202 acknowledges a persisted/ignored message; storage errors return 503 for retry. Ingestion uses a separate constant-time-checked operator secret, sender/account checks, bounded payloads and rate limiting.
-- Polling is owner-scoped, pauses while hidden, stops at expiry or confirmation, and cleans up on navigation. Students can also reopen the saved checkout from order history. Receipt delivery uses the existing durable purchase outbox and is attempted when a paid UPI order is checked.
-- Unmatched valid credits remain in `public.upi_credits` for service-operator reconciliation. Missing-reference messages and ambiguous account routing remain on the phone and require the original bank records. Refunds require an operator to return funds through the bank and reconcile access using the existing purchase settlement tooling; the relay does not initiate refunds. No new automated bank-refund API is introduced.
+## Checks
 
-## Verification
-
-Run `npm run check`, `npm run test:unit`, `npm run build` and the app's typecheck/build commands. `tests/upi-payments.test.ts` covers closed configuration, forged browser claims, account routing, unique reservations, immutable coupon retries, owner isolation, transactional rollback, duplicate/conflicting references, expired checkouts, quarantine and course access. Android routing unit tests cover exclusive routing and ambiguity. Local tests and an APK build do not prove real bank delivery or physical-phone background behavior.
+Run `npm run check`, `npm run test:unit`, `npm run format:check`, `npm run build`, and the Android typecheck/native routing tests. Tests cover authenticated pilot gating, shared allocation API use, exact QR amount/account validation, session recovery, owner-only binding, completed-only settlement, duplicate credits, course access and denial of the old Academy SMS path for shared intents. Browser suites include historical UI expectations and must be assessed against current route behavior; report failures rather than treating local test success as proof of live payment completion.

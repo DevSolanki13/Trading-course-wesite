@@ -1,4 +1,6 @@
 import "server-only";
+import { sharedUpiGateway } from "../payments/indianxtrade";
+import { reconcileGatewayPurchase } from "../purchase/upi-gateway";
 import { z } from "zod";
 import { AuthError, body, failure, json, limit } from "../auth/http";
 import { purchaseOrigin } from "../local/http";
@@ -55,11 +57,12 @@ export async function purchaseRequest(request: Request) {
         return json({ user, courses: courses.filter((c) => c.owned || c.accessExpiresAt), orders });
       }
       if (action === "order") {
-        const order = await purchaseOrder(
+        let order = await purchaseOrder(
           z.string().uuid().parse(url.searchParams.get("id")),
           user.id,
         );
         if (!order) throw new AuthError(404, "Order not found.");
+        if (sharedUpiGateway()) order = await reconcileGatewayPurchase(order, user.id);
         if (order.status === "paid" && order.provider === "upi")
           await sendPurchaseReceipt(order.id, user);
         return json({ order });
@@ -79,7 +82,7 @@ export async function purchaseRequest(request: Request) {
         })
         .strict()
         .parse(await body(request));
-      const provider = getCheckoutProvider();
+      const provider = getCheckoutProvider(process.env, user.id);
       const origin = process.env.NEXT_PUBLIC_APP_URL
         ? new URL(process.env.NEXT_PUBLIC_APP_URL).origin
         : url.origin;
@@ -108,7 +111,7 @@ export async function purchaseRequest(request: Request) {
         .parse(await body(request));
       const order = await purchaseOrder(input.orderId, user.id);
       if (!order) throw new AuthError(404, "Order not found.");
-      const provider = getCheckoutProvider();
+      const provider = getCheckoutProvider(process.env, user.id);
       if (order.provider !== provider.name)
         throw new AuthError(409, "This order uses a different provider. Check its saved status.");
       if (action === "mock" && provider.name !== "mock") return json({ error: "Not found" }, 404);
