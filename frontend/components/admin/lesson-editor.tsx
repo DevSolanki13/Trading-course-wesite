@@ -410,4 +410,3 @@ export function LessonEditor({
     </details>
   );
 }
-

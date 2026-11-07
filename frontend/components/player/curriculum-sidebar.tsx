@@ -48,7 +48,10 @@ export function CurriculumSidebar({
           <span>{!course.owned ? "Back to explore courses" : "Back to my courses"}</span>
         </button>
       ) : (
-        <Link href={!course.owned ? "/dashboard?view=explore" : "/dashboard"} className="vlp-back-link">
+        <Link
+          href={!course.owned ? "/dashboard?view=explore" : "/dashboard"}
+          className="vlp-back-link"
+        >
           <ArrowLeft size={16} />
           <span>{!course.owned ? "Back to explore courses" : "Back to my courses"}</span>
         </Link>
@@ -145,9 +148,7 @@ export function CurriculumSidebar({
                           <span className="vlp-lesson-name">
                             {lessonNumber} {item.title}
                           </span>
-                          <span className="vlp-locked-badge">
-                            Locked
-                          </span>
+                          <span className="vlp-locked-badge">Locked</span>
                         </div>
                       );
                     }

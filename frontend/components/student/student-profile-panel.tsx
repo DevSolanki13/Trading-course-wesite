@@ -102,9 +102,7 @@ export function StudentProfilePanel({
             },
           ]);
         } else {
-          setDeviceError(
-            err instanceof Error ? err.message : "Could not load registered devices.",
-          );
+          setDeviceError(err instanceof Error ? err.message : "Could not load registered devices.");
         }
       });
 
@@ -458,11 +456,7 @@ export function StudentProfilePanel({
               purchases remain unavailable in this preview.
             </p>
             {onSelectCoursesView ? (
-              <button
-                type="button"
-                className="button button-primary"
-                onClick={onSelectCoursesView}
-              >
+              <button type="button" className="button button-primary" onClick={onSelectCoursesView}>
                 <span>My learning</span>
                 <ArrowUpRight size={17} />
               </button>

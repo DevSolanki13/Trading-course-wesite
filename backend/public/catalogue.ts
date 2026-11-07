@@ -88,10 +88,7 @@ export const publicCatalog = cache(async function publicCatalog() {
           created_at: meta?.created_at,
           version: meta?.version ?? 1,
           status: meta?.status ?? "published",
-          artwork:
-            c.slug === "advance-course-with-live-qna"
-              ? "structure"
-              : "foundations",
+          artwork: c.slug === "advance-course-with-live-qna" ? "structure" : "foundations",
           color: "mint",
           outcomes: ["Test a complete purchase and learning journey"],
           audience: "Local demo learners",

@@ -51,8 +51,7 @@ export const courses: Course[] = [
     ],
     audience:
       "For new and intermediate learners wanting a structured, end-to-end curriculum without confusing jargon.",
-    prerequisites:
-      "No prior trading experience required. An open mind and dedication to practice.",
+    prerequisites: "No prior trading experience required. An open mind and dedication to practice.",
     prerequisiteList: [
       "No prior stock market or financial trading experience required — starts from ground zero",
       "A smartphone, tablet, or laptop with internet access to study charts and streaming lessons",
@@ -110,8 +109,7 @@ export const courses: Course[] = [
     ],
     audience:
       "For active traders looking to elevate their edge with institutional strategies and live mentorship.",
-    prerequisites:
-      "Basic candlestick knowledge and familiarity with support & resistance.",
+    prerequisites: "Basic candlestick knowledge and familiarity with support & resistance.",
     prerequisiteList: [
       "Familiarity with basic candlestick anatomy (bullish/bearish bodies, wicks, pinbars)",
       "Understanding of market trends, swing highs/lows, and basic support & resistance levels",
@@ -122,7 +120,11 @@ export const courses: Course[] = [
       {
         title: "Institutional Market Dynamics & Liquidity",
         lessons: [
-          { title: "Liquidity Sweeps, Stop Hunts & Trapped Traders", duration: "14:00", preview: true },
+          {
+            title: "Liquidity Sweeps, Stop Hunts & Trapped Traders",
+            duration: "14:00",
+            preview: true,
+          },
           { title: "Order Blocks & Fair Value Gaps", duration: "17:00" },
         ],
       },

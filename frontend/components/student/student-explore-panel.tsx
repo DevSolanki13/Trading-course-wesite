@@ -180,9 +180,7 @@ export function StudentExplorePanel({
             <span className="student-badge-pill">
               {selectedCourse.accessPeriod} {selectedCourse.accessUnit} full access
             </span>
-            <span className="student-badge-pill">
-              Prerequisites: {prerequisiteSummary}
-            </span>
+            <span className="student-badge-pill">Prerequisites: {prerequisiteSummary}</span>
           </div>
 
           <h1 className="student-explore-detail-title">{selectedCourse.title}</h1>
@@ -368,8 +366,9 @@ export function StudentExplorePanel({
                       onClick={() => {
                         onSelectCoursesView();
                         const firstLesson =
-                          selectedCourse.modules.flatMap((m) => m.lessons).find((l) => !l.completed) ||
-                          selectedCourse.modules[0]?.lessons[0];
+                          selectedCourse.modules
+                            .flatMap((m) => m.lessons)
+                            .find((l) => !l.completed) || selectedCourse.modules[0]?.lessons[0];
                         onOpenCourse(selectedCourse.slug, firstLesson?.id || null);
                       }}
                     >

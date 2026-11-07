@@ -4,10 +4,7 @@ import { safeNext, deviceName, isPrivileged, canManageStaff } from "../backend/a
 import { openToken, sealToken, tokenDigest } from "../backend/auth/crypto.ts";
 
 test("return paths preserve course checkout but reject external/auth/api redirects", () => {
-  assert.equal(
-    safeNext("/checkout?course=basic-to-advance"),
-    "/checkout?course=basic-to-advance",
-  );
+  assert.equal(safeNext("/checkout?course=basic-to-advance"), "/checkout?course=basic-to-advance");
   for (const value of [
     "https://evil.test",
     "//evil.test",

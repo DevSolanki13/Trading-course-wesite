@@ -59,4 +59,3 @@ export function useLessonNotes(lessonId: string, userId?: string | null) {
     userScopedKey,
   };
 }
-
