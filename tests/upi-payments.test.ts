@@ -3,7 +3,11 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { academyCreditMessage, upiConfig, upiLink } from "../backend/payments/upi-config.ts";
-import { getPaymentProvider, PaymentsUnavailableError } from "../backend/payments/providers.ts";
+import {
+  getPaymentProvider,
+  getCheckoutProvider,
+  PaymentsUnavailableError,
+} from "../backend/payments/providers.ts";
 import { parseBankSms } from "../backend/payments/parse-bank-sms.ts";
 
 const env = {
@@ -34,6 +38,31 @@ test("UPI fails closed, validates account routing, and cannot accept browser pay
   assert.equal(parseBankSms("A/c XX5678 debited INR 999.91 UTR: 123456789012")?.isCredit, false);
   assert.match(upiLink("academy@bank", "Academy", 99991, "order"), /am=999.91/);
   await assert.rejects(getPaymentProvider(env).verifyPayment({ status: "paid" }), /bank relay/);
+});
+
+test("new Academy checkout allows only configured UPI, regardless of legacy provider flags", () => {
+  assert.equal(getCheckoutProvider(env).name, "upi");
+  for (const PAYMENT_PROVIDER of [undefined, "cashfree", "razorpay", "mock", "demo"]) {
+    assert.throws(
+      () =>
+        getCheckoutProvider({
+          ...env,
+          PAYMENT_PROVIDER,
+          PAYMENT_MODE: "cashfree-sandbox",
+          ALLOW_MOCK_PAYMENTS: "true",
+          ALLOW_TEST_PAYMENTS: "true",
+          RAZORPAY_KEY_ID: "rzp_test_fixture",
+          RAZORPAY_KEY_SECRET: "fixture-secret",
+          CASHFREE_CLIENT_ID: "fixture-client",
+          CASHFREE_CLIENT_SECRET: "fixture-secret",
+        }),
+      PaymentsUnavailableError,
+    );
+  }
+  assert.throws(
+    () => getCheckoutProvider({ ...env, UPI_PAYMENTS_ENABLED: "off" }),
+    PaymentsUnavailableError,
+  );
 });
 
 test("UPI reservations and bank confirmation are atomic, unique, immutable, owner-scoped and replay-safe", async () => {

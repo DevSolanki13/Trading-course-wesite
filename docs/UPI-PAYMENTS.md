@@ -1,6 +1,6 @@
 # IndianXtrade Academy UPI payments
 
-Academy now supports the same bank-message-confirmed UPI flow used by IndianXtrade: reserve an exact amount, show a QR/deep link, and grant course access only after the operator's Android phone forwards a matching credit. The existing course price, coupon, access expiry, receipt and purchase outbox remain authoritative. Historical Cashfree orders and webhooks remain readable.
+Academy now supports the same bank-message-confirmed UPI flow used by IndianXtrade: reserve an exact amount, show a QR/deep link, and grant course access only after the operator's Android phone forwards a matching credit. The existing course price, coupon, access expiry, receipt and purchase outbox remain authoritative. Historical Cashfree orders and webhooks remain available. New Academy purchases offer UPI only, regardless of old Cashfree, Razorpay or test-payment flags. Provider-specific payment pages and the legacy checkout creation endpoint are retired; unsupported configuration displays an unavailable UPI checkout instead of falling back to another payment method. IndianXtrade’s existing gateway and repository are unchanged.
 
 ## Deployment
 

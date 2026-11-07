@@ -297,3 +297,9 @@ export function mockPaymentsAllowed(env: Environment = process.env) {
     return false;
   }
 }
+
+/** New Academy purchases support UPI only. Legacy adapters remain for saved payments. */
+export function getCheckoutProvider(env: Environment = process.env): PaymentProvider {
+  if (!upiConfig(env).enabled) throw new PaymentsUnavailableError();
+  return getPaymentProvider(env);
+}

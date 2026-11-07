@@ -16,8 +16,7 @@ import {
   purchaseQuoteCoupon,
 } from "../purchase/repository";
 import {
-  getPaymentProvider,
-  mockPaymentsAllowed,
+  getCheckoutProvider,
   PaymentsUnavailableError,
   InvalidPaymentSignatureError,
 } from "../payments/providers";
@@ -26,7 +25,7 @@ export async function purchaseRequest(request: Request) {
   const url = new URL(request.url);
   const action = url.pathname.replace(/^\/api\/purchase\//, "");
   try {
-    if (action === "mock" && !mockPaymentsAllowed()) return json({ error: "Not found" }, 404);
+    if (action === "mock") return json({ error: "Not found" }, 404);
     if (request.method === "GET") {
       if (action === "course") {
         const user = await purchaseUser(false);
@@ -80,7 +79,7 @@ export async function purchaseRequest(request: Request) {
         })
         .strict()
         .parse(await body(request));
-      const provider = getPaymentProvider();
+      const provider = getCheckoutProvider();
       const origin = process.env.NEXT_PUBLIC_APP_URL
         ? new URL(process.env.NEXT_PUBLIC_APP_URL).origin
         : url.origin;
@@ -109,7 +108,7 @@ export async function purchaseRequest(request: Request) {
         .parse(await body(request));
       const order = await purchaseOrder(input.orderId, user.id);
       if (!order) throw new AuthError(404, "Order not found.");
-      const provider = getPaymentProvider();
+      const provider = getCheckoutProvider();
       if (order.provider !== provider.name)
         throw new AuthError(409, "This order uses a different provider. Check its saved status.");
       if (action === "mock" && provider.name !== "mock") return json({ error: "Not found" }, 404);
