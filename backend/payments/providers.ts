@@ -1,4 +1,5 @@
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { upiConfig } from "./upi-config.ts";
 import { z } from "zod";
 import { configuredValue, type Environment } from "../config/environment.ts";
 
@@ -11,12 +12,12 @@ export type CreatePaymentOrder = {
 };
 export type ProviderOrder = { providerOrderId: string; amount: number; currency: "INR" };
 export type VerifiedPayment = ProviderOrder & {
-  provider: "mock" | "razorpay";
+  provider: "mock" | "razorpay" | "upi";
   providerPaymentId: string;
   status: "paid" | "failed" | "cancelled" | "refunded";
 };
 export interface PaymentProvider {
-  readonly name: "mock" | "razorpay";
+  readonly name: "mock" | "razorpay" | "upi";
   createOrder(input: CreatePaymentOrder): Promise<ProviderOrder>;
   verifyPayment(payload: unknown): Promise<VerifiedPayment>;
   handleWebhook(request: Request): Promise<VerifiedPayment | null>;
@@ -253,6 +254,21 @@ export function getPaymentProvider(
   env: Environment = process.env,
   fetcher: typeof fetch = fetch,
 ): PaymentProvider {
+  if (env.PAYMENT_PROVIDER === "upi") {
+    if (!upiConfig(env).enabled) throw new PaymentsUnavailableError();
+    return {
+      name: "upi",
+      async createOrder() {
+        throw new Error("UPI orders require an atomic amount reservation");
+      },
+      async verifyPayment() {
+        throw new InvalidPaymentSignatureError("UPI payments are confirmed by the bank relay");
+      },
+      async handleWebhook() {
+        return null;
+      },
+    };
+  }
   if (
     env.PAYMENT_PROVIDER === "razorpay" &&
     configuredValue(env.RAZORPAY_KEY_ID) &&

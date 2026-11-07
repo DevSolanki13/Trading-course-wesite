@@ -15,3 +15,8 @@ playwright-report
 supabase/.temp
 course-website-requirements.md
 IMPLEMENTATION-PLAN.md
+
+apps/payment-relay/android/
+apps/payment-relay/ios/
+apps/payment-relay/.expo/
+apps/payment-relay/modules/*/android/build/

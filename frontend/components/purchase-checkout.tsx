@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useHydrated } from "../lib/use-hydrated";
 import { useRouter } from "next/navigation";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import type { PurchaseCourse, PurchaseOrder } from "../../shared/purchase";
 import { LockSimple } from "@phosphor-icons/react";
 import { CheckoutLayout, checkoutMoney } from "./checkout-layout";
+const UpiPaymentPanel = dynamic(() => import("./upi-payment-panel").then((m) => m.UpiPaymentPanel));
 type RazorpayResult = {
   razorpay_order_id: string;
   razorpay_payment_id: string;
@@ -25,7 +27,7 @@ export function PurchaseCheckout({
   nonce,
 }: {
   course: PurchaseCourse;
-  provider: "mock" | "razorpay";
+  provider: "mock" | "razorpay" | "upi";
   available?: boolean;
   tax: number;
   nonce?: string;
@@ -94,6 +96,10 @@ export function PurchaseCheckout({
         setOrder(saved);
         if (data.keyId) setRazorpayKeyId(data.keyId);
       }
+      if (provider === "upi") {
+        setBusy(false);
+        return;
+      }
       if (provider === "razorpay") {
         const Gateway = (window as GatewayWindow).Razorpay;
         if (!Gateway) throw new Error("The payment service has not loaded. Try again shortly.");
@@ -153,8 +159,8 @@ export function PurchaseCheckout({
       title={failed ? "Your payment was not completed" : undefined}
       basePaise={course.price}
       taxPaise={tax}
-      discountPaise={couponApplied?.discount}
-      totalPaise={course.price - (couponApplied?.discount ?? 0) + tax}
+      discountPaise={order ? order.base + order.tax - order.amount : couponApplied?.discount}
+      totalPaise={order?.amount ?? course.price - (couponApplied?.discount ?? 0) + tax}
       notice={provider === "mock" ? "TEST MODE: no real money is charged" : undefined}
       details={
         <>
@@ -176,12 +182,12 @@ export function PurchaseCheckout({
               }}
               placeholder="Enter coupon code"
               aria-label="Coupon code"
-              disabled={busy || couponBusy}
+              disabled={busy || couponBusy || !!order}
             />
             <button
               className="button button-secondary"
               type="button"
-              disabled={!coupon.trim() || busy || couponBusy}
+              disabled={!coupon.trim() || busy || couponBusy || !!order}
               onClick={async () => {
                 setCouponBusy(true);
                 setError("");
@@ -207,7 +213,7 @@ export function PurchaseCheckout({
             <button
               className="text-link"
               type="button"
-              disabled={busy || couponBusy}
+              disabled={busy || couponBusy || !!order}
               onClick={() => {
                 setCoupon("");
                 setCouponApplied(null);
@@ -234,14 +240,23 @@ export function PurchaseCheckout({
       <p className="checkout-section-description">
         Review the total and accept the policies to continue.
       </p>
+      {provider === "upi" && order ? <UpiPaymentPanel order={order} /> : null}
       <div className="checkout-provider">
         <LockSimple size={22} aria-hidden="true" />
         <div>
-          <strong>{provider === "mock" ? "Demo payment" : "Pay with Razorpay"}</strong>
+          <strong>
+            {provider === "mock"
+              ? "Demo payment"
+              : provider === "upi"
+                ? "Pay with UPI"
+                : "Pay with Razorpay"}
+          </strong>
           <p>
             {provider === "mock"
               ? "Try the checkout with a simulated payment."
-              : "Choose your payment method in the payment window."}
+              : provider === "upi"
+                ? "Scan a QR code or open your UPI app. Your bank confirms the payment automatically."
+                : "Choose your payment method in the payment window."}
           </p>
         </div>
       </div>
@@ -276,7 +291,13 @@ export function PurchaseCheckout({
         <button
           className="button button-primary checkout-submit"
           onClick={() => void pay("paid")}
-          disabled={!terms || busy || !available || (provider === "razorpay" && !ready)}
+          disabled={
+            !terms ||
+            busy ||
+            !available ||
+            (provider === "upi" && !!order) ||
+            (provider === "razorpay" && !ready)
+          }
         >
           {busy
             ? "Processing…"
@@ -284,7 +305,9 @@ export function PurchaseCheckout({
               ? failed
                 ? "Retry test payment"
                 : "Pay successfully"
-              : "Pay with Razorpay"}
+              : provider === "upi"
+                ? "Generate UPI QR"
+                : "Pay with Razorpay"}
         </button>
         {provider === "mock" && (
           <>
@@ -309,7 +332,9 @@ export function PurchaseCheckout({
       </div>
       <p className="checkout-payment-total">
         Total to pay{" "}
-        <strong>{checkoutMoney(course.price - (couponApplied?.discount ?? 0) + tax)}</strong>
+        <strong>
+          {checkoutMoney(order?.amount ?? course.price - (couponApplied?.discount ?? 0) + tax)}
+        </strong>
       </p>
       {failed && (
         <p className="checkout-cancel">

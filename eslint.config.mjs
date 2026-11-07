@@ -45,6 +45,7 @@ export default defineConfig([
     },
   },
   globalIgnores([
+    "apps/payment-relay/**",
     ".next/**",
     ".next-demo/**",
     ".local-data/**",

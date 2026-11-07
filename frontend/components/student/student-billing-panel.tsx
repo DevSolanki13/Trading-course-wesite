@@ -150,7 +150,11 @@ export function StudentBillingPanel({
                         </Link>
                       ) : order.status === "pending" ? (
                         <Link
-                          href={`/checkout/status/${order.id}`}
+                          href={
+                            order.provider === "upi"
+                              ? `/checkout/success?orderId=${order.id}`
+                              : `/checkout/status/${order.id}`
+                          }
                           className="button button-secondary button-sm"
                         >
                           Check status

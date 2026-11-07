@@ -12,6 +12,7 @@ const eventSchema = z
   .strict();
 
 export function isDemoPaymentEnabled(env: Record<string, string | undefined> = process.env) {
+  if (env.PAYMENT_PROVIDER === "upi") return false;
   if (env.PAYMENT_PROVIDER === "razorpay" && env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET)
     return false;
   const stageAllowed =
@@ -19,10 +20,7 @@ export function isDemoPaymentEnabled(env: Record<string, string | undefined> = p
   const explicitTestAllowed =
     env.ALLOW_MOCK_PAYMENTS === "true" || env.ALLOW_TEST_PAYMENTS === "true";
   if (!stageAllowed && !explicitTestAllowed) return false;
-  return (
-    env.PAYMENT_MODE === "demo" &&
-    validSecret(env.DEMO_PAYMENT_SECRET)
-  );
+  return env.PAYMENT_MODE === "demo" && validSecret(env.DEMO_PAYMENT_SECRET);
 }
 function validSecret(raw: string | undefined): raw is string {
   const value = raw?.trim();

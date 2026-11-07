@@ -34,8 +34,9 @@ export type PurchaseOrder = {
   currency: "INR";
   status: string;
   paymentStatus?: "pending" | "failed" | "cancelled";
-  provider: "mock" | "razorpay" | "cashfree" | "demo";
+  provider: "mock" | "razorpay" | "cashfree" | "demo" | "upi";
   providerOrderId: string | null;
+  upi?: { vpa: string; payeeName: string; amount: number; expiresAt: string };
   createdAt: string;
   paidAt: string | null;
   accessPeriod: number;

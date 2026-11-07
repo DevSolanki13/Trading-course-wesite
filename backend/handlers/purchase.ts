@@ -61,6 +61,8 @@ export async function purchaseRequest(request: Request) {
           user.id,
         );
         if (!order) throw new AuthError(404, "Order not found.");
+        if (order.status === "paid" && order.provider === "upi")
+          await sendPurchaseReceipt(order.id, user);
         return json({ order });
       }
       return json({ error: "Not found" }, 404);

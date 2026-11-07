@@ -75,7 +75,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   if (!course) notFound();
   if (isUuid && course.slug) redirect(`/checkout/${course.slug}`);
   if (course.owned) redirect(`/learn/${course.slug}`);
-  let provider: "mock" | "razorpay" = "mock",
+  let provider: "mock" | "razorpay" | "upi" = "mock",
     available = true;
   try {
     provider = getPaymentProvider().name;

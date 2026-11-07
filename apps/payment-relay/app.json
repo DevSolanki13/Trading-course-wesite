@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "IndianXtrade Payments",
+    "slug": "indianxtrade-payments",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "indianxtradepayments",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.indianxtrade.payments",
+      "permissions": ["android.permission.RECEIVE_SMS", "android.permission.INTERNET"],
+      "allowBackup": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "minSdkVersion": 24,
+            "usesCleartextTraffic": false
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

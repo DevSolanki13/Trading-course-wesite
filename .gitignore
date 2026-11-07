@@ -24,3 +24,11 @@ playwright-report/
 certs/
 *.crt
 *.pem
+
+# Private Android relay builds and local Expo state
+apps/payment-relay/android/
+apps/payment-relay/ios/
+apps/payment-relay/.expo/
+apps/payment-relay/modules/*/android/build/
+apps/payment-relay/expo-env.d.ts
+apps/payment-relay/modules/*/android/.gradle/

@@ -1,10 +1,12 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import Link from "next/link";
 import { accessExpiryLabel } from "../../shared/course-access";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { PurchaseOrder } from "../../shared/purchase";
+const UpiPaymentPanel = dynamic(() => import("./upi-payment-panel").then((m) => m.UpiPaymentPanel));
 export function PurchaseConfirmation({
   order,
   expired = false,
@@ -55,7 +57,11 @@ export function PurchaseConfirmation({
         </>
       ) : order.status === "pending" ? (
         <>
-          <p>Check this saved order again shortly. Avoid paying twice.</p>
+          {order.provider === "upi" && order.upi ? (
+            <UpiPaymentPanel order={order} />
+          ) : (
+            <p>Check this saved order again shortly. Avoid paying twice.</p>
+          )}
           <button className="button button-secondary" onClick={() => router.refresh()}>
             Check again
           </button>

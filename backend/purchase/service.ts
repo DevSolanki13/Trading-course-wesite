@@ -1,3 +1,4 @@
+import { upiConfig } from "../payments/upi-config.ts";
 import { randomUUID } from "node:crypto";
 import { getPaymentProvider, type VerifiedPayment } from "../payments/providers.ts";
 import { purchaseOrder, purchaseRpc } from "./repository.ts";
@@ -16,6 +17,16 @@ export async function createPurchase(
     p_origin: origin,
     ...(coupon ? { p_coupon: coupon } : {}),
   });
+  if (provider.name === "upi") {
+    const config = upiConfig();
+    await purchaseRpc("purchase_upi_reserve", {
+      p_user: user.id,
+      p_order: id,
+      p_vpa: config.vpa,
+      p_payee: config.payeeName,
+    });
+    return (await purchaseOrder(id, user.id))!;
+  }
   let order = (await purchaseOrder(id, user.id))!;
   if (!order.providerOrderId) {
     const claim = randomUUID();
