@@ -555,7 +555,7 @@ body:has(.video-learning-page) .site-header-spacer {
 
 .vlp-lesson-duration {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--muted, #9ca3af);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
@@ -640,7 +640,7 @@ body:has(.video-learning-page) .site-header-spacer {
   border-radius: 9999px;
   background: rgba(0, 223, 143, 0.08);
   border: 1px solid rgba(0, 223, 143, 0.25);
-  color: #00df8f;
+  color: var(--accent, #00df8f);
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;

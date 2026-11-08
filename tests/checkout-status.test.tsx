@@ -28,6 +28,14 @@ describe("payment confirmation recovery", () => {
     vi.useFakeTimers();
     fetchOrder.mockReset();
     vi.stubGlobal("fetch", fetchOrder);
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        matches: false,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -36,8 +44,9 @@ describe("payment confirmation recovery", () => {
 
   it("bounds pending polling, offers Check again and never offers a second payment", async () => {
     fetchOrder.mockResolvedValue(response("pending"));
-    await mount();
+    const view = await mount();
     expect(screen.queryByRole("link", { name: "Start learning" })).not.toBeInTheDocument();
+    expect(view.container.querySelector(".payment-fireworks")).toBeNull();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(120_000);
     });
@@ -47,6 +56,11 @@ describe("payment confirmation recovery", () => {
     fetchOrder.mockResolvedValue(response("paid"));
     fireEvent.click(screen.getByRole("button", { name: "Check again" }));
     await act(async () => {});
+    act(() => vi.advanceTimersByTime(1));
+    expect(view.container.querySelector(".payment-fireworks")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
     expect(screen.getByRole("link", { name: "Start learning" })).toHaveAttribute(
       "href",
       "/learn/test-course",

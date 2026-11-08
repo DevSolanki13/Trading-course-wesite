@@ -188,7 +188,7 @@ export default function HomePage({
             <h2>
               One clear path.
               <br />
-              <span>Three ways to begin.</span>
+              <span>Two ways to begin.</span>
             </h2>
           </div>
           <p>
@@ -197,7 +197,7 @@ export default function HomePage({
         </div>
         <div className="course-grid">
           {courses.slice(0, 3).map((course) => (
-            <CourseCard key={course.slug} course={course} />
+            <CourseCard key={course.slug} course={course} showBrandMark />
           ))}
         </div>
         <p className="catalogue-note">

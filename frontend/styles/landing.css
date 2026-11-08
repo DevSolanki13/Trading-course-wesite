@@ -653,8 +653,14 @@ body:has(.landing-page) {
   padding: 26px 14px 18px;
 }
 .landing-page .course-tags {
+  align-items: center;
   flex-wrap: wrap;
   margin-bottom: 18px;
+}
+.landing-page .course-tags > .course-card-brand {
+  margin-inline-start: auto;
+  padding: 0;
+  border: 0;
 }
 .landing-page .course-meta {
   flex-wrap: wrap;

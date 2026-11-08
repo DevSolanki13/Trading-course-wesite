@@ -6,6 +6,7 @@ import { accessExpiryLabel } from "../../shared/course-access";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { PurchaseOrder } from "../../shared/purchase";
+import { PaymentFireworks } from "./payment-fireworks";
 const UpiPaymentPanel = dynamic(() => import("./upi-payment-panel").then((m) => m.UpiPaymentPanel));
 export function PurchaseConfirmation({
   order,
@@ -21,6 +22,9 @@ export function PurchaseConfirmation({
   }, [order.id, order.status, expired]);
   return (
     <section className="checkout-card">
+      {order.status === "paid" && !expired && (
+        <PaymentFireworks key={order.id} orderId={order.id} />
+      )}
       {order.provider === "mock" && (
         <div className="demo-banner">TEST MODE: no real money is charged</div>
       )}

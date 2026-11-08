@@ -1,20 +1,23 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { dismissOpeningVideo, openSite } from "../browser/support/site";
 async function login(page: import("@playwright/test").Page) {
-  await page.goto("/login");
+  await openSite(page, "/login");
   await page.getByRole("button", { name: "Fill demo credentials" }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
+  await dismissOpeningVideo(page);
 }
 test("Academy offers only UPI and refuses fallback payments without a configured bank relay", async ({
   page,
 }) => {
-  await page.goto("/courses/advance-course-with-live-qna");
+  await openSite(page, "/courses/advance-course-with-live-qna");
   await page.getByRole("link", { name: "Buy now", exact: true }).click();
   await expect(page).toHaveURL(/\/login\?redirect=/);
   await page.getByRole("button", { name: "Fill demo credentials" }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/checkout\//);
+  await dismissOpeningVideo(page);
   await expect(page.getByText("Pay with UPI", { exact: true })).toBeVisible();
   await page.getByRole("checkbox").check();
   await expect(page.getByRole("button", { name: "Generate UPI QR", exact: true })).toBeDisabled();
@@ -80,12 +83,12 @@ test("previously confirmed purchases retain private receipts and course access",
   const orders = (await (await page.request.get("/api/purchase/orders")).json()).orders;
   const paid = orders.find((order: { status: string }) => order.status === "paid");
   expect(paid).toBeTruthy();
-  await page.goto(`/checkout/success?orderId=${paid.id}`);
+  await openSite(page, `/checkout/success?orderId=${paid.id}`);
   await expect(page.getByRole("heading", { name: "Payment confirmed" })).toBeVisible();
   await page.getByRole("link", { name: "View printable receipt" }).click();
   await expect(page.getByRole("heading", { name: "Purchase receipt" })).toBeVisible();
   await expect(page.getByText(`Order ${paid.id}`, { exact: true })).toBeVisible();
-  await page.goto(`/checkout/success?orderId=${paid.id}`);
+  await openSite(page, `/checkout/success?orderId=${paid.id}`);
   await page.getByRole("link", { name: "Start learning", exact: true }).click();
   await expect(page.locator(".video-learning-page")).toBeVisible();
 });
@@ -102,7 +105,7 @@ test("local signup starts with no purchases and refuses a client supplied role",
     },
   });
   expect(denied.status()).toBe(400);
-  await page.goto("/signup");
+  await openSite(page, "/signup");
   await page.getByLabel("Full name", { exact: true }).fill("New learner");
   await page
     .getByLabel("Email address", { exact: true })
@@ -110,6 +113,7 @@ test("local signup starts with no purchases and refuses a client supplied role",
   await page.getByLabel("Password", { exact: true }).fill("TestPassword123");
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard(?:\?|$)/);
+  await dismissOpeningVideo(page);
   const saved = await (await page.request.get("/api/purchase/dashboard")).json();
   expect(saved.courses).toEqual([]);
   expect(saved.orders).toEqual([]);
@@ -118,6 +122,12 @@ test("new checkout, dashboard and player fit mobile/desktop and both themes", as
   page,
 }, info) => {
   await login(page);
+  const accessibilityFailures: {
+    theme: string;
+    width: number;
+    path: string;
+    violations: unknown[];
+  }[] = [];
   for (const theme of ["dark", "light"]) {
     await page.evaluate((value) => {
       localStorage.setItem("market-method-theme", value);
@@ -131,7 +141,7 @@ test("new checkout, dashboard and player fit mobile/desktop and both themes", as
         "/dashboard",
         "/learn/basic-to-advance",
       ]) {
-        await page.goto(path);
+        await openSite(page, path);
         await expect(page.locator("main")).toBeVisible();
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
@@ -140,11 +150,14 @@ test("new checkout, dashboard and player fit mobile/desktop and both themes", as
           .exclude("nextjs-portal")
           .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
           .analyze();
-        expect(audit.violations).toEqual([]);
+        if (audit.violations.length) {
+          accessibilityFailures.push({ theme, width, path, violations: audit.violations });
+        }
         await page.screenshot({
           path: info.outputPath(`${theme}-${width}-${path.split("/")[1]}.png`),
         });
       }
     }
   }
+  expect(accessibilityFailures).toEqual([]);
 });

@@ -18,6 +18,20 @@ export default defineConfig({
     url: "http://127.0.0.1:3102/courses/basic-to-advance",
     timeout: 180000,
     reuseExistingServer: false,
-    env: { LOCAL_DATA_NAME: `purchase-e2e-${Date.now()}` },
+    env: {
+      LOCAL_DATA_NAME: `purchase-e2e-${Date.now()}`,
+      // A developer's saved gateway/DRM credentials must never activate providers in this fixture.
+      UPI_GATEWAY: "",
+      UPI_PAYMENTS_ENABLED: "off",
+      UPI_RELAY_ENABLED: "off",
+      UPI_PILOT_USER_IDS: "",
+      UPI_COLLECTION_VPA: "",
+      SMS_RELAY_SECRET: "",
+      INDIANXTRADE_COLLECTOR_EMAIL: "",
+      INDIANXTRADE_COLLECTOR_PASSWORD: "",
+      INDIANXTRADE_SESSION_TOKEN: "",
+      VDOCIPHER_API_SECRET: "",
+      VDOCIPHER_TEST_VIDEO_ID: "",
+    },
   },
 });

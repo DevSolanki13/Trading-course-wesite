@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { openSite } from "../browser/support/site";
 
-test("public catalogue and both course actions share one authentication request", async ({
+test("landing and course actions share one authentication request per public page", async ({
   page,
 }) => {
-  for (const path of ["/courses", "/courses/basic-to-advance"]) {
+  // /courses now redirects through the private dashboard; measure stable public pages.
+  for (const path of ["/", "/courses/basic-to-advance"]) {
     let requests = 0;
     const count = (request: import("@playwright/test").Request) => {
       if (new URL(request.url()).pathname === "/api/auth/me") requests++;
@@ -12,7 +14,7 @@ test("public catalogue and both course actions share one authentication request"
     const checked = page.waitForResponse(
       (response) => new URL(response.url()).pathname === "/api/auth/me",
     );
-    await page.goto(path);
+    await openSite(page, path);
     await checked;
     await expect(page.locator("h1")).toBeVisible();
     await page.waitForTimeout(150);
@@ -21,9 +23,7 @@ test("public catalogue and both course actions share one authentication request"
   }
 });
 
-test("admin catalogue views and the deferred learner panel retain their controls", async ({
-  page,
-}) => {
+test("admin workspace course management opens the deferred learner panel", async ({ page }) => {
   await page.route("**/api/auth/me", (route) =>
     route.fulfill({
       json: {
@@ -37,6 +37,27 @@ test("admin catalogue views and the deferred learner panel retain their controls
       },
     }),
   );
+  await page.route("**/api/admin/courses", (route) =>
+    route.fulfill({
+      json: {
+        items: ["Market Foundations", "Price Action"].map((title, index) => ({
+          id: `fixture-course-${index}`,
+          title,
+          slug: `fixture-course-${index}`,
+          status: "published",
+          price_paise: 199900,
+          sale_price_paise: null,
+          access_period: 12,
+          access_unit: "months",
+          thumbnail_url: null,
+          artwork: "foundations",
+          version: 1,
+          created_at: "2026-11-01T00:00:00Z",
+          updated_at: "2026-11-01T00:00:00Z",
+        })),
+      },
+    }),
+  );
   await page.route("**/api/admin/course-learners?*", (route) =>
     route.fulfill({
       json: {
@@ -45,11 +66,9 @@ test("admin catalogue views and the deferred learner panel retain their controls
       },
     }),
   );
-  await page.goto("/courses");
+  await openSite(page, "/admin");
   await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(2);
-  await page.getByRole("button", { name: "Grid", exact: true }).click();
-  await expect(page.locator(".course-grid .course-card")).toHaveCount(2);
-  await page.getByRole("button", { name: "Horizontal", exact: true }).click();
+  await expect(page.getByRole("button", { name: "New course", exact: true })).toBeVisible();
   const learners = page.getByRole("button", { name: "Learners", exact: true }).first();
   await learners.focus();
   await learners.press("Enter");
@@ -57,5 +76,5 @@ test("admin catalogue views and the deferred learner panel retain their controls
   await expect(page.getByRole("button", { name: "Edit course" })).toBeVisible();
   await expect(page.getByText("No matching learners.", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "All courses" }).click();
-  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(3);
+  await expect(page.locator(".admin-course-horizontal-card")).toHaveCount(2);
 });

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CheckCircle, Clock, XCircle, ArrowCounterClockwise } from "@phosphor-icons/react";
+import { PaymentFireworks } from "./payment-fireworks";
 
 type Order = {
   id: string;
@@ -80,6 +81,9 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
       data-status={status ?? "checking"}
       aria-labelledby="order-heading"
     >
+      {status === "paid" && order && !order.confirmationUnavailable && (
+        <PaymentFireworks key={order.id} orderId={order.id} />
+      )}
       {order?.sandbox ? (
         <div className="demo-banner">CASHFREE SANDBOX — test payment only</div>
       ) : order?.demo ? (

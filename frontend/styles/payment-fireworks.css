@@ -1,0 +1,67 @@
+.payment-fireworks {
+  --firework-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1002;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.payment-fireworks[data-active="true"] {
+  display: block;
+}
+
+.payment-firework-burst {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
+.payment-firework-spark {
+  position: absolute;
+  width: 3px;
+  height: 8px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  opacity: 0;
+  animation: payment-firework-burst 1400ms var(--firework-ease-out) var(--burst-delay) both;
+}
+
+@keyframes payment-firework-burst {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(var(--spark-angle)) scale(0.95);
+  }
+  8% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.9;
+    transform: translate3d(var(--spark-x), var(--spark-y), 0) rotate(var(--spark-angle)) scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--spark-x), var(--spark-fall-y), 0) rotate(var(--spark-angle))
+      scale(0.9);
+  }
+}
+
+@media (max-width: 640px) {
+  .payment-firework-spark {
+    width: 2px;
+    height: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .payment-fireworks[data-active="true"] {
+    display: none;
+  }
+
+  .payment-firework-spark {
+    animation: none;
+  }
+}
