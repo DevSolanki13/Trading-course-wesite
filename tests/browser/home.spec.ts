@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("homepage renders and theme switch persists", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Skip video" }).click();
 
   await expect(
     page.getByRole("heading", { name: /Learn to trade with clarity and confidence/i }),

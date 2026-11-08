@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { DiwaliReplayButton } from "../festival-video";
 
 // Fixed positions follow the reference: staggered chains and a few faded lamps.
 // Keeping these deterministic also keeps the server and browser renders identical.
@@ -86,12 +87,12 @@ export function DiwaliDecor() {
 
 export function DiwaliGreeting() {
   return (
-    <div className="diwali-greeting">
+    <DiwaliReplayButton>
       <svg viewBox="0 0 36 30" fill="none" aria-hidden="true" focusable="false">
         <path d="M18 2c0 4-4 6-4 10a4 4 0 0 0 8 0c0-4-4-6-4-10Z" />
         <path d="M3 18q15 5 30 0c-3 8-8 10-15 10S6 26 3 18Z" />
       </svg>
       <span>Happy Diwali</span>
-    </div>
+    </DiwaliReplayButton>
   );
 }

@@ -1,0 +1,104 @@
+.festival-video-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  background: rgb(0 0 0 / 90%);
+}
+
+.festival-video-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 2101;
+  width: min(calc(100% - 32px), calc(80dvh * 16 / 9));
+  max-height: 80dvh;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #080808;
+  color: #fff;
+  outline: none;
+}
+
+.festival-video-player {
+  display: block;
+  width: 100%;
+  max-height: 80dvh;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #080808;
+}
+
+.festival-video-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 75%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.festival-video-close:hover,
+.festival-video-play:hover {
+  background: #292929;
+}
+
+.festival-video-dialog :is(button, video):focus-visible {
+  outline: 2px solid #f5d878;
+  outline-offset: -4px;
+}
+
+.festival-video-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translate(-50%, -50%);
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 85%);
+  color: #fff;
+  cursor: pointer;
+}
+
+.festival-video-error {
+  position: absolute;
+  inset: 50% 24px auto;
+  margin: 0 auto;
+  max-width: 400px;
+  transform: translateY(-50%);
+  padding: 16px;
+  border-radius: 8px;
+  background: #080808;
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .festival-video-dialog {
+    width: min(calc(100% - 16px), calc(80dvh * 16 / 9));
+    border-radius: 10px;
+  }
+
+  .festival-video-close {
+    top: 8px;
+    right: 8px;
+  }
+}
