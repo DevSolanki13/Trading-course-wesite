@@ -13,8 +13,13 @@ import {
   Plus,
   Trash,
 } from "@phosphor-icons/react";
-import { formNumber, formText, operation } from "../../lib/admin-api";
+import { adminApi, formNumber, formText, operation } from "../../lib/admin-api";
 import type { AdminCourse } from "../../../shared/admin";
+import {
+  MAX_THUMBNAIL_BYTES,
+  THUMBNAIL_TYPES,
+  UPLOADED_THUMBNAIL,
+} from "../../../shared/course-thumbnail";
 import { LessonList } from "./lesson-editor";
 
 export function CourseEditor({
@@ -32,6 +37,8 @@ export function CourseEditor({
   const [tab, setTab] = useState("details");
   const [thumbnailUrl, setThumbnailUrl] = useState(course?.thumbnail_url ?? "");
   const [thumbnailError, setThumbnailError] = useState(false);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [thumbnailUploadError, setThumbnailUploadError] = useState("");
   const [title, setTitle] = useState(course?.title ?? "");
   const [description, setDescription] = useState(course?.description ?? "");
   const [price, setPrice] = useState<number>((course?.price_paise ?? 0) / 100);
@@ -64,6 +71,7 @@ export function CourseEditor({
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (uploadingThumbnail) return;
     const f = new FormData(event.currentTarget);
     await run("course_save", {
       courseId: course?.id,
@@ -83,6 +91,38 @@ export function CourseEditor({
       prerequisites: formText(f, "prerequisites"),
       artwork: artwork || formText(f, "artwork") || "foundations",
     });
+  }
+
+  async function uploadThumbnail(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    setThumbnailUploadError("");
+    if (!THUMBNAIL_TYPES.includes(file.type)) {
+      setThumbnailUploadError("Choose a JPG, PNG or WebP photo.");
+      return;
+    }
+    if (!file.size || file.size > MAX_THUMBNAIL_BYTES) {
+      setThumbnailUploadError("Choose a photo smaller than 3 MB.");
+      return;
+    }
+    setUploadingThumbnail(true);
+    try {
+      const image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () =>
+          reject(new Error("This photo could not be read. Try another photo."));
+        reader.readAsDataURL(file);
+      });
+      const result = await adminApi<{ thumbnailUrl: string }>("thumbnail-upload", { image });
+      setThumbnailUrl(result.thumbnailUrl);
+      setThumbnailError(false);
+    } catch (e) {
+      setThumbnailUploadError(e instanceof Error ? e.message : "Photo could not be uploaded.");
+    } finally {
+      setUploadingThumbnail(false);
+    }
   }
 
   const modules = [...(course?.modules ?? [])].sort((a, b) => a.position - b.position);
@@ -134,7 +174,7 @@ export function CourseEditor({
             <button
               type="button"
               className={`button ${course.status === "published" ? "button-secondary" : "button-primary"} admin-publish-header-btn`}
-              disabled={pending}
+              disabled={pending || uploadingThumbnail}
               onClick={() =>
                 run("course_state", {
                   courseId: course.id,
@@ -431,10 +471,12 @@ export function CourseEditor({
                     <input
                       name="thumbnail"
                       type="url"
-                      value={thumbnailUrl}
+                      value={UPLOADED_THUMBNAIL.test(thumbnailUrl) ? "" : thumbnailUrl}
+                      disabled={pending || uploadingThumbnail}
                       onChange={(e) => {
                         setThumbnailUrl(e.target.value);
                         setThumbnailError(false);
+                        setThumbnailUploadError("");
                       }}
                       placeholder="https://"
                     />
@@ -452,7 +494,46 @@ export function CourseEditor({
                     </select>
                   </label>
                 </div>
-                <p className="admin-help-subtle">Used when no thumbnail is provided.</p>
+                <div className="admin-thumbnail-upload" aria-busy={uploadingThumbnail}>
+                  <label htmlFor="course-thumbnail-file">Choose photo from device</label>
+                  <input
+                    id="course-thumbnail-file"
+                    type="file"
+                    accept={THUMBNAIL_TYPES.join(",")}
+                    disabled={pending || uploadingThumbnail}
+                    aria-describedby="course-thumbnail-help"
+                    onChange={uploadThumbnail}
+                  />
+                  <p id="course-thumbnail-help" className="admin-help-subtle">
+                    JPG, PNG or WebP, up to 3 MB. Fallback artwork is used when no thumbnail is
+                    provided.
+                  </p>
+                  {uploadingThumbnail && <p role="status">Uploading photo…</p>}
+                  {thumbnailUploadError && (
+                    <p role="alert" className="auth-error">
+                      {thumbnailUploadError}
+                    </p>
+                  )}
+                  {UPLOADED_THUMBNAIL.test(thumbnailUrl) && !uploadingThumbnail && (
+                    <p role="status" className="admin-help-subtle">
+                      Device photo uploaded. Save changes to apply it.
+                    </p>
+                  )}
+                  {thumbnailUrl && (
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      disabled={pending || uploadingThumbnail}
+                      onClick={() => {
+                        setThumbnailUrl("");
+                        setThumbnailError(false);
+                        setThumbnailUploadError("");
+                      }}
+                    >
+                      Remove thumbnail
+                    </button>
+                  )}
+                </div>
               </div>
 
               {course && (
@@ -719,7 +800,7 @@ export function CourseEditor({
             type="submit"
             form="course-details-form"
             className="button button-primary"
-            disabled={pending}
+            disabled={pending || uploadingThumbnail}
           >
             Save changes
           </button>

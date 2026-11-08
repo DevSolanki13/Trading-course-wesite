@@ -19,6 +19,7 @@ import { LOCAL_SESSION_COOKIE, localSession } from "../local/auth";
 import { localCourseLearners } from "../admin/data";
 import { localDatabase } from "../local/database";
 import { localAdminRead } from "../local/admin";
+import { uploadCourseThumbnail } from "../admin/thumbnails";
 
 async function localCourse(db: Awaited<ReturnType<typeof localDatabase>>, id: string) {
   const course = (
@@ -299,6 +300,8 @@ export async function adminRequest(request: Request) {
         ].includes(action)
       )
         throw new AuthError(403, "This action requires an administrator.", "FORBIDDEN");
+      if (request.method === "POST" && action === "thumbnail-upload")
+        return await uploadCourseThumbnail(request);
       if (request.method === "GET") {
         const result = await localAdminRead(await localDatabase(), action, url, localUser.role);
         if (result === null) throw new AuthError(404, "Admin record not found.");
@@ -744,6 +747,7 @@ export async function adminRequest(request: Request) {
     }
     if (request.method !== "POST") throw new AuthError(405, "Method not allowed.");
     await limit(request, "admin-mutation", context.user.id, 100, 60);
+    if (action === "thumbnail-upload") return await uploadCourseThumbnail(request);
     if (action === "cashfree-reconcile" || action === "refund-process") {
       if (!cashfreeSandboxEnabled())
         throw new AuthError(404, "Sandbox provider actions are disabled.");

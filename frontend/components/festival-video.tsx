@@ -13,6 +13,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Play, X } from "@phosphor-icons/react";
 
 const FestivalVideoContext = createContext<(() => void) | null>(null);
+const FESTIVAL_VIDEO_SEEN_KEY = "indianxtrade-diwali-video-seen";
 
 function FestivalVideo() {
   const video = useRef<HTMLVideoElement>(null);
@@ -86,9 +87,27 @@ function FestivalVideo() {
 }
 
 export function FestivalVideoProvider({ children }: { children: ReactNode }) {
-  // The shared layout persists during navigation; only a new page load opens it automatically.
-  const [open, setOpen] = useState(true);
+  // The shared layout persists during navigation. Show the greeting once per browser, then let
+  // the replay button open it again on demand.
+  const [open, setOpen] = useState(false);
   const previousFocus = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(FESTIVAL_VIDEO_SEEN_KEY) === "1") return;
+    } catch {
+      // Storage can be disabled by privacy settings; still show the greeting for this visit.
+    }
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        window.localStorage.setItem(FESTIVAL_VIDEO_SEEN_KEY, "1");
+      } catch {
+        // Storage can be disabled by privacy settings; the greeting still works for this visit.
+      }
+      setOpen(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const replay = useCallback(() => {
     previousFocus.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;

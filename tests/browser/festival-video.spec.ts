@@ -36,6 +36,9 @@ test("opening video autoplays muted, ends with a close button and replays from t
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Skip video" }).click();
   await expect(greeting).toBeFocused();
+
+  await page.reload();
+  await expect(page.getByRole("dialog", { name: "Happy Diwali from indianXtrade" })).toHaveCount(0);
 });
 
 test("mobile visitors can skip and navigate without restarting the opening video", async ({

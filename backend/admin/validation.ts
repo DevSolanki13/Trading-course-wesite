@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UPLOADED_THUMBNAIL } from "../../shared/course-thumbnail";
 const id = z.string().uuid();
 const text = (max: number) => z.string().trim().max(max);
 const optionalId = id.nullable().optional();
@@ -6,8 +7,12 @@ const version = z.number().int().min(1);
 const url = z.union([
   z.literal(""),
   z.url().refine((value) => {
-    const u = new URL(value);
-    return u.protocol === "https:" && !u.username && !u.password;
+    try {
+      const u = new URL(value);
+      return u.protocol === "https:" && !u.username && !u.password;
+    } catch {
+      return false;
+    }
   }, "Use an HTTPS URL."),
 ]);
 const note = text(1000).min(5, "Add an explanation of at least five characters.");
@@ -29,7 +34,7 @@ export const courseSchema = z
     access_unit: z.enum(["days", "months"]).default("months"),
     level: z.enum(["beginner", "intermediate", "advanced"]),
     language: text(30).min(1),
-    thumbnail_url: url,
+    thumbnail_url: z.union([url, z.string().regex(UPLOADED_THUMBNAIL)]),
     outcomes: z.array(text(150)).max(12),
     audience: text(1000),
     prerequisites: text(1000),

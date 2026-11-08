@@ -980,6 +980,31 @@ body:has(.admin-page) .site-footer {
   line-height: 1.5;
 }
 
+.admin-thumbnail-upload {
+  display: grid;
+  gap: 10px;
+  padding-top: 8px;
+}
+.admin-thumbnail-upload input[type="file"] {
+  width: 100%;
+  min-width: 0;
+  color: var(--muted);
+  font: inherit;
+}
+.admin-thumbnail-upload input::file-selector-button {
+  margin-right: 12px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  cursor: pointer;
+}
+.admin-thumbnail-upload .button {
+  justify-self: start;
+}
+
 .admin-course-preview {
   position: sticky;
   top: 22px;
