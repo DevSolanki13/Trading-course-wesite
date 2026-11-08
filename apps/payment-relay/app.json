@@ -2,7 +2,7 @@
   "expo": {
     "name": "IndianXtrade Payments",
     "slug": "indianxtrade-payments",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "scheme": "indianxtradepayments",
     "userInterfaceStyle": "dark",
@@ -11,7 +11,12 @@
       "package": "com.indianxtrade.payments",
       "permissions": ["android.permission.RECEIVE_SMS", "android.permission.INTERNET"],
       "allowBackup": false,
-      "versionCode": 2
+      "versionCode": 3,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0e1620",
+        "monochromeImage": "./assets/monochrome-icon.png"
+      }
     },
     "plugins": [
       "expo-router",
@@ -30,6 +35,7 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "icon": "./assets/icon.png"
   }
 }
