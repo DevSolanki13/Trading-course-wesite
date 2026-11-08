@@ -1,0 +1,49 @@
+.header-lights {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1001;
+  height: 18px;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.header-lights > svg {
+  display: block;
+}
+
+.header-lights-wire {
+  stroke: #968665;
+  stroke-width: 0.6;
+  stroke-opacity: 0.32;
+}
+
+.header-lights-cord {
+  stroke: #c6a86b;
+  stroke-width: 0.7;
+  stroke-opacity: 0.65;
+}
+
+.header-lights-bulb {
+  fill: #ffe0a0;
+  filter: drop-shadow(0 0 3px rgb(255 195 93 / 80%));
+}
+
+:root[data-theme="light"] .header-lights-wire {
+  stroke: #806024;
+  stroke-opacity: 0.4;
+}
+
+:root[data-theme="light"] .header-lights-bulb {
+  fill: #c28d30;
+  filter: drop-shadow(0 0 2px rgb(209 154 50 / 45%));
+}
+
+@media (max-width: 640px) {
+  .header-lights > svg {
+    /* More closely spaced lights on small screens, with the same tiny bulbs. */
+    width: 200%;
+    transform: scaleX(0.5);
+    transform-origin: left top;
+  }
+}

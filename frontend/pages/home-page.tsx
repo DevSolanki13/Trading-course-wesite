@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { AnnotatedChart } from "../components/hero/AnnotatedChart";
 import { TeacherNotes } from "../components/hero/TeacherNotes";
 import { HeroAnnotations } from "../components/hero/HeroAnnotations";
+import { DiwaliDecor, DiwaliGreeting } from "../components/hero/DiwaliDecor";
 import { CourseCard } from "../components/course-card";
 import { FloatingCardMarquee } from "../components/floating-card-marquee";
 import { RiskExercise } from "../components/risk-exercise";
@@ -14,6 +15,7 @@ import type { SiteDocument } from "../../shared/admin";
 import "../styles/landing.css";
 import "../components/hero/hero-annotations.css";
 import "../styles/hero-fonts.css";
+import "../styles/diwali.css";
 
 const annotationFont = localFont({
   src: "../assets/fonts/caveat-500-latin.woff2",
@@ -136,7 +138,12 @@ export default function HomePage({
         </div>
         <span className="sr-only">Illustrative values for education only. Not live prices.</span>
       </div>
-      <section className="hero-modern container" aria-labelledby="landing-title">
+      <section
+        className="hero-modern hero-modern--diwali container"
+        aria-labelledby="landing-title"
+      >
+        <DiwaliDecor />
+        <DiwaliGreeting />
         {unavailable && (
           <p role="alert" className="auth-error">
             Course information is temporarily unavailable. Please try again later.

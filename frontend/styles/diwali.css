@@ -1,0 +1,140 @@
+/* Seasonal accents stay local to the landing hero; the brand palette is unchanged. */
+.hero-modern--diwali {
+  --diwali-gold: #d3ad50;
+  padding-top: 136px;
+}
+
+:root[data-theme="light"] .hero-modern--diwali {
+  --diwali-gold: #86631e;
+}
+
+.diwali-decor {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  height: 360px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.diwali-cluster {
+  position: absolute;
+  top: 0;
+  width: clamp(150px, 16vw, 280px);
+  height: auto;
+  overflow: visible;
+}
+
+.diwali-cluster--left {
+  left: 12px;
+}
+
+.diwali-cluster--right {
+  right: 12px;
+}
+
+.diwali-chain {
+  stroke: var(--diwali-gold);
+  stroke-width: 0.65;
+  stroke-opacity: 0.65;
+}
+
+.diwali-greeting {
+  position: absolute;
+  top: 28px;
+  inset-inline: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--diwali-gold);
+  pointer-events: none;
+}
+
+.diwali-greeting > svg {
+  width: 30px;
+  height: 25px;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.diwali-greeting > span {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font: 11px var(--mono);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.diwali-greeting > span::before,
+.diwali-greeting > span::after {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+/* Bring the lesson drawings inside the viewport and below the hanging lamps. */
+@media (min-width: 1280px) {
+  .hero-modern--diwali .hero-annotation-chart {
+    top: max(var(--annotation-chart-top), 300px);
+    right: auto;
+    left: clamp(24px, 4vw, 96px);
+    width: clamp(280px, 22vw, 420px);
+  }
+
+  .hero-modern--diwali .hero-teacher-notes {
+    right: clamp(24px, 4vw, 96px);
+    left: auto;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .hero-modern--diwali .hero-annotations {
+    display: none;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1279px) {
+  .diwali-cluster {
+    width: clamp(96px, 12vw, 136px);
+  }
+}
+
+@media (max-width: 800px) {
+  .hero-modern--diwali {
+    padding-top: 132px;
+  }
+
+  .diwali-cluster {
+    width: clamp(84px, 17vw, 136px);
+  }
+
+  .diwali-cluster--left {
+    left: 4px;
+  }
+
+  .diwali-cluster--right {
+    right: 4px;
+  }
+
+  .diwali-greeting {
+    top: 24px;
+  }
+
+  .diwali-greeting > span {
+    gap: 10px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+  }
+
+  .diwali-greeting > span::before,
+  .diwali-greeting > span::after {
+    width: 16px;
+  }
+}
