@@ -4,15 +4,8 @@ import { formatPrice } from "../content/courses";
 import { CourseArtwork } from "./course-artwork";
 import Image from "next/image";
 import { ArrowUpRight, Clock, BookOpen } from "./icons";
-import { BrandMark } from "./bull-mark";
 
-export function CourseCard({
-  course,
-  showBrandMark = false,
-}: {
-  course: Course;
-  showBrandMark?: boolean;
-}) {
+export function CourseCard({ course }: { course: Course }) {
   return (
     <article className="course-card">
       <Link
@@ -41,7 +34,6 @@ export function CourseCard({
         <div className="course-tags">
           <span>{course.level}</span>
           <span>Hindi</span>
-          {showBrandMark && <BrandMark height={28} className="course-card-brand" />}
         </div>
         <h3>
           <Link href={`/courses/${course.slug}`}>{course.title}</Link>

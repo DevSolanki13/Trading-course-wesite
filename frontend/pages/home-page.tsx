@@ -197,7 +197,7 @@ export default function HomePage({
         </div>
         <div className="course-grid">
           {courses.slice(0, 3).map((course) => (
-            <CourseCard key={course.slug} course={course} showBrandMark />
+            <CourseCard key={course.slug} course={course} />
           ))}
         </div>
         <p className="catalogue-note">
