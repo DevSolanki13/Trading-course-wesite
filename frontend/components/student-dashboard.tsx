@@ -154,6 +154,15 @@ export function StudentDashboard({
   const [lastExploreSlug, setLastExploreSlug] = useState<string | null>(initialCourseSlug || null);
 
   const handleOpenCourse = (slug: string, lessonId?: string | null) => {
+    if (
+      slug === activeCourseSlug &&
+      activeLessonContent &&
+      (!lessonId || lessonId === activeLessonContent.id)
+    ) {
+      setView("courses");
+      return;
+    }
+    if (slug === activeCourseSlug) setLessonFetchTrigger((value) => value + 1);
     setActiveCourseOrigin(view === "explore" ? "explore" : "courses");
     if (view === "explore") {
       setLastExploreSlug(slug);
@@ -193,6 +202,10 @@ export function StudentDashboard({
   };
 
   const handleLessonChange = (lessonId: string) => {
+    if (lessonId === currentActiveLessonId) {
+      if (activeLessonContent || lessonState === "loading") return;
+      setLessonFetchTrigger((value) => value + 1);
+    }
     setActiveLessonId(lessonId);
     setActiveLessonContent(null);
     setLessonState("loading");

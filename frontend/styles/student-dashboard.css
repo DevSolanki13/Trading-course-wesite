@@ -32,7 +32,9 @@ body:has(.student-dashboard-page) .site-footer {
   border-radius: 9px;
   color: var(--foreground, #ffffff);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-property: background-color, border-color;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   cursor: default;
 }
 
@@ -118,7 +120,9 @@ body:has(.student-dashboard-page) .site-footer {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.16s ease;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.16s;
+  transition-timing-function: ease;
 }
 
 .student-dashboard-page .admin-sidebar .admin-nav-group button.is-active .student-nav-badge,
@@ -197,7 +201,9 @@ body:has(.student-dashboard-page) .site-footer {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 
 .student-top-actions .theme-toggle:hover {
@@ -391,7 +397,9 @@ body:has(.student-dashboard-page) .site-footer {
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
   text-align: left;
 }
 
@@ -734,7 +742,9 @@ body:has(.student-dashboard-page) .site-footer {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 
 .student-pill-btn:hover {
@@ -1031,7 +1041,9 @@ body:has(.student-dashboard-page) .site-footer {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-property: background-color, border-color;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .student-explore-back-btn:hover {
@@ -1145,7 +1157,9 @@ body:has(.student-dashboard-page) .site-footer {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: var(--foreground, #ffffff);
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color, transform;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 
 .student-explore-free-lesson-btn:hover {
@@ -1687,7 +1701,9 @@ body:has(.student-dashboard-page) .site-footer {
   font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 
 .button-danger:hover:not(:disabled) {

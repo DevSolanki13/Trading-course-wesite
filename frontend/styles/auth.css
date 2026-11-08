@@ -706,7 +706,9 @@
   padding: 44px 36px;
   position: relative;
   backdrop-filter: blur(20px);
-  transition: all 0.25s ease;
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
 }
 
 .admin-terminal-pill {

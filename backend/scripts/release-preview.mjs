@@ -10,6 +10,7 @@ const port = process.argv[2] ?? "3100";
 const origin = `http://127.0.0.1:${port}`;
 const fixture = createServer((request, response) => {
   const path = new URL(request.url, origin).pathname;
+  process.send?.({ type: "fixture-read", path });
   response.setHeader("Content-Type", "application/json");
   if (request.method === "GET" && path.endsWith("/rest/v1/courses")) response.end("[]");
   else if (request.method === "GET" && path.endsWith("/rest/v1/site_content"))

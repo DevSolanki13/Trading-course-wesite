@@ -48,7 +48,9 @@ body:has(.admin-page) .site-footer {
   box-sizing: border-box;
   border-radius: 10px;
   border: 1px solid transparent;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-property: background-color, border-color;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 .admin-sidebar > a.admin-brand {
   gap: 0;
@@ -119,7 +121,9 @@ body:has(.admin-page) .site-footer {
   color: var(--muted);
   font-size: 13px;
   text-align: left;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
   cursor: pointer;
 }
 .admin-page > .admin-sidebar button:not(.admin-workspace-switcher):hover,
@@ -169,7 +173,9 @@ body:has(.admin-page) .site-footer {
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 .admin-user-menu:hover,
 .admin-user-menu.is-open {
@@ -257,7 +263,9 @@ body:has(.admin-page) .site-footer {
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition-property: background-color, color;
+  transition-duration: 0.12s;
+  transition-timing-function: ease;
 }
 .admin-popover-item:hover {
   background: var(--raised);

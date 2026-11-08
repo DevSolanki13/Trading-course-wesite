@@ -118,7 +118,9 @@ body:has(.video-learning-page) .site-header-spacer {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  transition: all 0.15s ease;
+  transition-property: background-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 
 .vlp-icon-btn:hover {
@@ -485,7 +487,9 @@ body:has(.video-learning-page) .site-header-spacer {
   border-radius: 8px;
   font-size: 13px;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
   border: 1px solid transparent;
   color: #9ca3af;
 }
@@ -750,7 +754,7 @@ body:has(.video-learning-page) .site-header-spacer {
   transition: opacity 0.25s ease;
 }
 
-.vlp-player-container.is-playing:not(:hover) .vlp-player-controls-overlay {
+.vlp-player-container.is-playing:not(:hover):not(:focus-within) .vlp-player-controls-overlay {
   opacity: 0;
   pointer-events: none;
 }
@@ -882,7 +886,9 @@ body:has(.video-learning-page) .site-header-spacer {
   border-radius: 4px;
   cursor: pointer;
   text-align: left;
-  transition: all 0.12s ease;
+  transition-property: background-color, color;
+  transition-duration: 0.12s;
+  transition-timing-function: ease;
 }
 
 .vlp-speed-option:hover {
@@ -935,7 +941,9 @@ body:has(.video-learning-page) .site-header-spacer {
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 
 .vlp-prev-btn:hover:not(:disabled) {
@@ -963,7 +971,9 @@ body:has(.video-learning-page) .site-header-spacer {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, color, filter, transform, opacity, box-shadow;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
   box-shadow: 0 2px 14px rgba(0, 223, 143, 0.25);
 }
 
@@ -1169,7 +1179,9 @@ body:has(.video-learning-page) .site-header-spacer {
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 
 .vlp-resource-dl-btn:hover {

@@ -1684,7 +1684,9 @@ body:has(.landing-page) .site-header .theme-toggle {
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: background-color, color, box-shadow;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
 }
 .admin-view-switcher .switcher-btn:hover {
   color: var(--foreground);

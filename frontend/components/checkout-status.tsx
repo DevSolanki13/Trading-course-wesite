@@ -28,10 +28,16 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
+    let inFlight = false;
+    let stopped = false;
     let checks = 0;
     let timer: ReturnType<typeof setTimeout>;
     const controller = new AbortController();
+    const isHidden = () => document.visibilityState === "hidden";
     const load = async () => {
+      if (!active || inFlight || stopped || isHidden()) return;
+      clearTimeout(timer);
+      inFlight = true;
       try {
         const response = await fetch(`/api/checkout/status/${encodeURIComponent(orderId)}`, {
           cache: "no-store",
@@ -45,19 +51,33 @@ export function CheckoutStatus({ orderId }: { orderId: string }) {
           data.order.status === "pending" &&
           !["failed", "cancelled"].includes(data.order.paymentStatus)
         ) {
-          if (++checks < 40) timer = setTimeout(load, 3000);
-          else setExpired(true);
-        }
+          if (++checks < 40) {
+            if (!isHidden()) timer = setTimeout(load, 3000);
+          } else {
+            stopped = true;
+            setExpired(true);
+          }
+        } else stopped = true;
       } catch (reason) {
-        if (active)
+        if (active) {
+          stopped = true;
           setError(reason instanceof Error ? reason.message : "Could not check this order.");
+        }
+      } finally {
+        inFlight = false;
       }
     };
+    const resume = () => {
+      clearTimeout(timer);
+      if (document.visibilityState !== "hidden") void load();
+    };
+    document.addEventListener("visibilitychange", resume);
     void load();
     return () => {
       active = false;
       controller.abort();
       clearTimeout(timer);
+      document.removeEventListener("visibilitychange", resume);
     };
   }, [orderId, attempt]);
   function retry() {

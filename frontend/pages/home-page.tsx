@@ -131,7 +131,7 @@ export default function HomePage({
               <b>{item}</b>
               <em className={index % 3 === 0 ? "down" : "up"}>
                 {index % 3 === 0 ? "−" : "+"}
-                {(index % 3) + 1}.{index + 2}%
+                {(index % 3) + 1}.{(index % ticker.length) + 2}%
               </em>
             </span>
           ))}

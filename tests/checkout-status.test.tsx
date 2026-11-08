@@ -25,6 +25,7 @@ async function mount() {
 }
 describe("payment confirmation recovery", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     vi.useFakeTimers();
     fetchOrder.mockReset();
     vi.stubGlobal("fetch", fetchOrder);
@@ -40,6 +41,38 @@ describe("payment confirmation recovery", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("does not spend polling attempts while hidden and resumes the saved order on return", async () => {
+    let visibility: DocumentVisibilityState = "hidden";
+    vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility);
+    fetchOrder.mockResolvedValue(response("pending"));
+    await mount();
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    expect(fetchOrder).not.toHaveBeenCalled();
+    visibility = "visible";
+    fireEvent(document, new Event("visibilitychange"));
+    await act(async () => {});
+    expect(fetchOrder).toHaveBeenCalledTimes(1);
+    visibility = "hidden";
+    fireEvent(document, new Event("visibilitychange"));
+    await act(async () => vi.advanceTimersByTimeAsync(300_000));
+    expect(fetchOrder).toHaveBeenCalledTimes(1);
+    fetchOrder.mockResolvedValue(response("paid"));
+    visibility = "visible";
+    fireEvent(document, new Event("visibilitychange"));
+    await act(async () => {});
+    expect(screen.getByRole("link", { name: "Start learning" })).toBeVisible();
+    expect(fetchOrder).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not restart terminal-state polling when the tab becomes visible", async () => {
+    fetchOrder.mockResolvedValue(response("paid"));
+    await mount();
+    fireEvent(document, new Event("visibilitychange"));
+    await act(async () => vi.advanceTimersByTimeAsync(30_000));
+    expect(fetchOrder).toHaveBeenCalledTimes(1);
   });
 
   it("bounds pending polling, offers Check again and never offers a second payment", async () => {
