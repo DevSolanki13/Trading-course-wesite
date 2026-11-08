@@ -51,3 +51,21 @@ Private, ready-to-save owner handoff files live under ignored `artifacts/upi-rol
 ## Checks
 
 Run `npm run check`, `npm run test:unit`, `npm run format:check`, `npm run build`, and the Android typecheck/native routing tests. Tests cover authenticated pilot gating, shared allocation API use, exact QR amount/account validation, session recovery, owner-only binding, completed-only settlement, duplicate credits, course access and denial of the old Academy SMS path for shared intents. Browser suites include historical UI expectations and must be assessed against current route behavior; report failures rather than treating local test success as proof of live payment completion.
+
+## Admin payment queues
+
+Academy administrators can open **UPI payments** in the Commerce sidebar
+(`/admin?view=payments`) for Needs review, Unmatched credits, and History. No
+USDT records or trading deposits appear in Academy's course payment queues.
+Unmatched bank credits are explicitly shared-account records until the payer
+can be identified; the amount alone cannot grant course access. Search accepts
+UTRs, student names/emails, course names, order IDs, and rupee amounts.
+
+A separate display-only job copies gateway states and unconsumed bank credits
+into Academy about every minute. It uses a read-only gateway transaction and a
+separate, restricted ingestion credential. IndianXtrade's gateway code, settings,
+balances and matching remain unchanged. The page shows its last successful
+update and warns if bank updates are delayed. **Check payment** verifies the
+bound checkout through the existing authenticated gateway API and uses the
+existing settlement transaction. There is no manual credit or approve action.
+See `deploy/academy-payment-sync/README.md` for installation and recovery.

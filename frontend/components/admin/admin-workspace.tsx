@@ -16,6 +16,9 @@ const StudentsPanel = dynamic(() =>
   import("./students-panel").then((module) => module.StudentsPanel),
 );
 const OrdersPanel = dynamic(() => import("./orders-panel").then((module) => module.OrdersPanel));
+const UpiPaymentsPanel = dynamic(() =>
+  import("./upi-payments-panel").then((module) => module.UpiPaymentsPanel),
+);
 const RefundsPanel = dynamic(() => import("./refunds-panel").then((module) => module.RefundsPanel));
 const SettingsPanel = dynamic(() =>
   import("./settings-panel").then((module) => module.SettingsPanel),
@@ -37,6 +40,7 @@ import {
   Books,
   Users,
   Receipt,
+  Bank,
   ArrowUUpLeft,
   Gear,
   CaretDown,
@@ -64,6 +68,7 @@ const allViews = [
   { id: "courses", label: "Courses", Icon: Books, admin: true },
   { id: "students", label: "Students", Icon: Users },
   { id: "orders", label: "Orders", Icon: Receipt },
+  { id: "payments", label: "UPI payments", Icon: Bank, admin: true },
   { id: "refunds", label: "Refunds", Icon: ClipboardText },
   { id: "coupons", label: "Coupons", Icon: Ticket, admin: true },
   { id: "announcements", label: "Announcements", Icon: MegaphoneSimple, admin: true },
@@ -220,7 +225,9 @@ export function AdminWorkspace() {
   const workspaceItems = views.filter((item) =>
     ["overview", "courses", "students"].includes(item.id),
   );
-  const commerceItems = views.filter((item) => ["orders", "refunds", "coupons"].includes(item.id));
+  const commerceItems = views.filter((item) =>
+    ["orders", "payments", "refunds", "coupons"].includes(item.id),
+  );
   const manageItems = views.filter((item) =>
     ["announcements", "team", "settings"].includes(item.id),
   );
@@ -410,6 +417,7 @@ export function AdminWorkspace() {
           {view === "courses" && user.role === "admin" && <CourseManager />}
           {view === "students" && <StudentsPanel role={user.role as "admin" | "support"} />}
           {view === "orders" && <OrdersPanel role={user.role as "admin" | "support"} />}
+          {view === "payments" && user.role === "admin" && <UpiPaymentsPanel />}
           {view === "refunds" && <RefundsPanel role={user.role as "admin" | "support"} />}
           {view === "coupons" && user.role === "admin" && <CouponsPanel />}
           {view === "announcements" && user.role === "admin" && <AnnouncementsPanel />}

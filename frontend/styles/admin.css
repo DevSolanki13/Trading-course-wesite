@@ -1921,3 +1921,76 @@ body:has(.admin-page) .site-footer {
   padding: 28px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
+
+/* Shared-account UPI queues follow Academy's existing admin table and theme. */
+.upi-payment-card {
+  padding: 0;
+  overflow: hidden;
+}
+.upi-payment-tabs {
+  padding: 8px 24px 0;
+  margin-bottom: 0;
+  overflow-x: auto;
+  gap: 28px;
+}
+.upi-payment-tabs button {
+  white-space: nowrap;
+}
+.upi-payment-description,
+.upi-sync-status {
+  padding: 0 24px;
+  max-width: 95ch;
+}
+.upi-payment-description {
+  margin-top: 20px;
+}
+.upi-sync-stale {
+  color: var(--foreground);
+}
+.upi-payment-search {
+  padding: 8px 24px 20px;
+  flex-wrap: wrap;
+}
+.upi-payment-search input {
+  min-width: min(100%, 280px);
+  flex: 1;
+}
+.upi-cell-sub {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted, #9ca3af);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.upi-reference {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.upi-reference span {
+  max-width: 280px;
+}
+.upi-payments .admin-pagination {
+  padding: 16px 24px;
+}
+.upi-payments [role="tabpanel"] > p {
+  padding: 16px 24px;
+}
+@media (max-width: 640px) {
+  .upi-payment-tabs {
+    padding-left: 16px;
+    padding-right: 16px;
+    gap: 20px;
+  }
+  .upi-payment-description,
+  .upi-sync-status {
+    padding: 0 16px;
+  }
+  .upi-payment-search {
+    padding: 8px 16px 16px;
+  }
+  .upi-reference {
+    min-width: 180px;
+  }
+}

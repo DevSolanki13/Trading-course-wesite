@@ -20,6 +20,7 @@ import { localCourseLearners } from "../admin/data";
 import { localDatabase } from "../local/database";
 import { localAdminRead } from "../local/admin";
 import { uploadCourseThumbnail } from "../admin/thumbnails";
+import { upiPaymentParams, checkAcademyUpiPayment } from "../admin/upi-payments";
 
 async function localCourse(db: Awaited<ReturnType<typeof localDatabase>>, id: string) {
   const course = (
@@ -300,6 +301,27 @@ export async function adminRequest(request: Request) {
         ].includes(action)
       )
         throw new AuthError(403, "This action requires an administrator.", "FORBIDDEN");
+      if (request.method === "GET" && action === "upi-payments") {
+        const params = upiPaymentParams(url);
+        const result = await (
+          await localDatabase()
+        ).query<{ result: Record<string, unknown> }>(
+          "select academy_upi_payment_read($1,$2,$3) as result",
+          [params.p_tab, params.p_query, params.p_page],
+        );
+        return json({ ...result.rows[0].result, preview: true });
+      }
+      if (request.method === "POST" && action === "upi-check") {
+        const input = parse(z.object({ id: uuid }).strict(), await body(request));
+        const order = await (
+          await localDatabase()
+        ).query<{ user_id: string }>(
+          "select user_id from orders where id=$1 and purchase_provider='upi'",
+          [input.id],
+        );
+        if (!order.rows[0]) throw new AuthError(404, "UPI order not found.");
+        return json(await checkAcademyUpiPayment(input.id, order.rows[0].user_id));
+      }
       if (request.method === "POST" && action === "thumbnail-upload")
         return await uploadCourseThumbnail(request);
       if (request.method === "GET") {
@@ -451,6 +473,11 @@ export async function adminRequest(request: Request) {
     ].includes(action);
     const context = await privileged(adminOnly);
     if (request.method === "GET") {
+      if (action === "upi-payments") {
+        const result = await context.admin.rpc("academy_upi_payment_read", upiPaymentParams(url));
+        databaseError(result.error);
+        return json(result.data);
+      }
       if (action === "video-test") {
         const videoId = requireEnv("VDOCIPHER_TEST_VIDEO_ID");
         return json({ videoId, ...(await videoStatus(videoId)) });
@@ -747,6 +774,21 @@ export async function adminRequest(request: Request) {
     }
     if (request.method !== "POST") throw new AuthError(405, "Method not allowed.");
     await limit(request, "admin-mutation", context.user.id, 100, 60);
+    if (action === "upi-check") {
+      await limit(request, "admin-upi-check", context.user.id, 20, 60);
+      const input = parse(z.object({ id: uuid }).strict(), await body(request));
+      const order = await context.admin
+        .from("orders")
+        .select("user_id")
+        .eq("id", input.id)
+        .eq("purchase_provider", "upi")
+        .maybeSingle();
+      databaseError(order.error);
+      if (!order.data) throw new AuthError(404, "UPI order not found.");
+      const result = await checkAcademyUpiPayment(input.id, order.data.user_id);
+      await audit(context, "upi_payment_checked", input.id);
+      return json(result);
+    }
     if (action === "thumbnail-upload") return await uploadCourseThumbnail(request);
     if (action === "cashfree-reconcile" || action === "refund-process") {
       if (!cashfreeSandboxEnabled())

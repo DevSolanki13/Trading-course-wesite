@@ -190,3 +190,27 @@ export type CouponView = {
   version: number;
   coupon_redemptions: { state: string }[];
 };
+
+export type AdminUpiPayment = {
+  id: string;
+  userId: string;
+  amount: number;
+  studentName: string;
+  email: string;
+  course: string;
+  status: string;
+  createdAt: string;
+  paidAt: string | null;
+  utr: string | null;
+  gatewayStatus: string | null;
+  gatewayBound: boolean;
+  reviewReason: string | null;
+};
+export type AdminUpiCredit = { id: string; utr: string; amount: number; receivedAt: string };
+export type AdminUpiPayments = {
+  preview?: boolean;
+  items: (AdminUpiPayment | AdminUpiCredit)[];
+  total: number;
+  counts: { review: number; unmatched: number };
+  syncedAt: string | null;
+};
