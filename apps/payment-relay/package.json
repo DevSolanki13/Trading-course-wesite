@@ -6,7 +6,9 @@
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
-    "prebuild": "expo prebuild --platform android --clean"
+    "prebuild": "expo prebuild --platform android --clean",
+    "start:qr": "PAYMENT_RELAY_VARIANT=development expo start --dev-client",
+    "prebuild:dev": "PAYMENT_RELAY_VARIANT=development expo prebuild --platform android --clean"
   },
   "dependencies": {
     "@expo/log-box": "^57.0.4",

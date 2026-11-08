@@ -15,3 +15,24 @@ The generated APK is `android/app/build/outputs/apk/release/app-release.apk`. Th
 Both sites use the same collection account and IndianXtrade's existing central deposit allocator. Academy consumes its own bound deposit's confirmed status through the existing API. No separate account markers or second bank-feed destination are required. Read [the deployment guide](../../docs/UPI-PAYMENTS.md) before enabling real payments.
 
 Stop the relay before editing configuration. A queued message remains tied to the original destination name and origin. When replacing a phone/app, keep the old installation until its queue has drained, then disable it. Pending notifications can only be recovered from that installation's durable queue; SMS can also be recovered from the phone inbox. The app cannot recover alerts from before its initial enable checkpoint.
+
+## Testing through an Expo QR code
+
+Install the custom **IndianXtrade Payments Dev** Android APK once on the phone. Expo Go cannot load this app's native SMS/notification module. The development app uses `com.indianxtrade.payments.dev`, so it can be installed beside the production operator relay without replacing its saved settings.
+
+Keep the computer and phone on the same Wi-Fi, then run from this folder:
+
+```sh
+npm run start:qr
+```
+
+Scan the terminal QR using the phone camera or open the development app and scan it there. For a phone on another network, use `npm run start:qr -- --tunnel` (Expo may offer to install its tunnel helper). No USB connection is needed after the development APK is installed. Configure the gateway address and relay secret inside the app only when ready to forward bank messages; do not enable two relay apps on the operator phone unintentionally.
+
+To rebuild that development APK without attaching a phone:
+
+```sh
+npm run prebuild:dev
+PAYMENT_RELAY_VARIANT=development ./android/gradlew -p android :app:assembleDebug -PreactNativeArchitectures=arm64-v8a
+```
+
+The output is `android/app/build/outputs/apk/debug/app-debug.apk`. This variant permits local HTTP only to reach the development server; the production configuration keeps cleartext traffic disabled. Before rebuilding the production operator APK, run `npm run prebuild` to restore its native package and use the release signing environment described above.
