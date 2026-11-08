@@ -57,3 +57,12 @@ it("closes a checkout only when the gateway declares it expired or rejected", as
     p_order: "order",
   });
 });
+
+it("cannot turn a trading deposit with no Academy binding into course access", async () => {
+  rpc.mockResolvedValue(null);
+  status.mockResolvedValue("COMPLETED");
+  expect(await reconcileGatewayPurchase(order, "student")).toEqual(order);
+  expect(status).not.toHaveBeenCalled();
+  expect(rpc).toHaveBeenCalledTimes(1);
+  expect(read).not.toHaveBeenCalled();
+});

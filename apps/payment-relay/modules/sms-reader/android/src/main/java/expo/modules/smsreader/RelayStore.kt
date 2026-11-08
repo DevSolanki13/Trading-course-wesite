@@ -62,7 +62,7 @@ object RelayStore {
       .putString("targetsJson", config.targetsJson)
       .putString(KEY_SENDERS, config.senders.joinToString(","))
       .putString(KEY_DEVICE_LABEL, config.deviceLabel)
-      .apply()
+      .commit()
   }
 
   fun getConfig(context: Context): Config? {
@@ -77,8 +77,13 @@ object RelayStore {
   }
 
   fun setEnabled(context: Context, enabled: Boolean) {
-    prefs(context).edit().putBoolean(KEY_ENABLED, enabled).apply()
+    val p = prefs(context)
+    val editor = p.edit().putBoolean(KEY_ENABLED, enabled)
+    if (enabled && !p.getBoolean(KEY_ENABLED, false)) editor.putLong("listeningStartedAt", System.currentTimeMillis())
+    editor.commit()
   }
+
+  fun listeningStartedAt(context: Context): Long = prefs(context).getLong("listeningStartedAt", 0L)
 
   fun isEnabled(context: Context): Boolean = prefs(context).getBoolean(KEY_ENABLED, false)
 
@@ -114,7 +119,7 @@ object RelayStore {
     }
 
     editor.putString(KEY_LOG, updated.toString())
-    editor.apply()
+    editor.commit()
   }
 
   fun getStats(context: Context): Pair<Int, Int> {
@@ -135,7 +140,7 @@ object RelayStore {
       .putLong(KEY_CHECKPOINT_AT, atMillis)
       .putInt(KEY_CHECKPOINT_AMOUNT, amountInr ?: -1)
       .putString(KEY_CHECKPOINT_UTR, utr)
-      .apply()
+      .commit()
   }
 
   fun getCheckpointAt(context: Context): Long = prefs(context).getLong(KEY_CHECKPOINT_AT, 0L)
@@ -154,14 +159,14 @@ object RelayStore {
   }
 
   fun setNotifEnabled(context: Context, enabled: Boolean) {
-    prefs(context).edit().putBoolean(KEY_NOTIF_ENABLED, enabled).apply()
+    prefs(context).edit().putBoolean(KEY_NOTIF_ENABLED, enabled).commit()
   }
 
   fun isNotifEnabled(context: Context): Boolean =
     prefs(context).getBoolean(KEY_NOTIF_ENABLED, false)
 
   fun setNotifPackages(context: Context, packages: List<String>) {
-    prefs(context).edit().putString(KEY_NOTIF_PACKAGES, packages.joinToString(",")).apply()
+    prefs(context).edit().putString(KEY_NOTIF_PACKAGES, packages.joinToString(",")).commit()
   }
 
   fun getNotifPackages(context: Context): List<String> {
@@ -184,7 +189,7 @@ object RelayStore {
     val existing = if (raw.isEmpty()) emptyList() else raw.split("\n")
     if (existing.contains(key)) return false
     val updated = (existing + key).takeLast(NOTIF_SEEN_LIMIT)
-    p.edit().putString(KEY_NOTIF_SEEN, updated.joinToString("\n")).apply()
+    p.edit().putString(KEY_NOTIF_SEEN, updated.joinToString("\n")).commit()
     return true
   }
 }

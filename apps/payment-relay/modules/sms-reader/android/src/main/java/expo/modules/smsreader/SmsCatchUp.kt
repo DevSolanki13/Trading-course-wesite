@@ -28,8 +28,8 @@ object SmsCatchUp {
       SmsForwarder.flush(context, config)
       val checkpoint = RelayStore.getCheckpointAt(context)
 
-      val projection = arrayOf(Telephony.Sms.ADDRESS, Telephony.Sms.BODY, Telephony.Sms.DATE)
-      val selection = "${Telephony.Sms.DATE} > ?"
+      val projection = arrayOf(Telephony.Sms.ADDRESS, Telephony.Sms.BODY, Telephony.Sms.DATE, Telephony.Sms.DATE_SENT)
+      val selection = "${Telephony.Sms.DATE} >= ?"
       val selectionArgs = arrayOf(checkpoint.toString())
       val sortOrder = "${Telephony.Sms.DATE} ASC LIMIT $BATCH_LIMIT"
 
@@ -51,11 +51,13 @@ object SmsCatchUp {
         val addressIdx = it.getColumnIndex(Telephony.Sms.ADDRESS)
         val bodyIdx = it.getColumnIndex(Telephony.Sms.BODY)
         val dateIdx = it.getColumnIndex(Telephony.Sms.DATE)
+        val sentIdx = it.getColumnIndex(Telephony.Sms.DATE_SENT)
 
         while (it.moveToNext()) {
           val sender = it.getString(addressIdx) ?: continue
           val body = it.getString(bodyIdx) ?: ""
           val date = it.getLong(dateIdx)
+          val messageTimestamp = if (sentIdx >= 0 && it.getLong(sentIdx) > 0L) it.getLong(sentIdx) else date
 
           if (body.isBlank() || !RelayStore.isAllowedSender(sender, config.senders)) {
             // Doesn't count as "handled" for forwarding, but still moves the
@@ -66,8 +68,8 @@ object SmsCatchUp {
           }
 
           Log.d(TAG, "catch-up forwarding sms from $sender dated $date")
-          val (ok, detail) = SmsForwarder.deliver(context, config, sender, body, date)
-          RelayStore.recordAttempt(context, sender, body.take(60), ok, detail)
+          val (ok, detail) = SmsForwarder.enqueue(context, config, sender, body, messageTimestamp)
+          if (!ok) RelayStore.recordAttempt(context, sender, "", false, detail)
 
           if (ok) {
             val amountInr = SmsParser.parseAmountInr(body)
@@ -84,6 +86,7 @@ object SmsCatchUp {
         }
       }
 
+      SmsForwarder.flush(context, config)
       if (processed > 0) Log.d(TAG, "catch-up forwarded $processed backlog message(s)")
     }
   }

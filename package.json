@@ -42,7 +42,8 @@
     "providers:email": "node backend/scripts/providers.mjs email",
     "smoke": "node backend/scripts/smoke.mjs",
     "db:migrate": "node backend/scripts/migrate.mjs",
-    "db:verify": "node backend/scripts/verify-database.mjs"
+    "db:verify": "node backend/scripts/verify-database.mjs",
+    "test:relay-ui": "vitest run --config vitest.relay.config.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.13",

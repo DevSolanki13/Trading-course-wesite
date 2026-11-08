@@ -44,6 +44,7 @@ class SmsReaderModule : Module() {
         RelayStore.initializeCheckpointIfNeeded(context)
       }
       RelayStore.setEnabled(context, enabled)
+      if (enabled) { RelayJobs.schedule(context); RelayJobs.kick(context) } else RelayJobs.cancel(context)
     }
 
     AsyncFunction("isEnabled") {

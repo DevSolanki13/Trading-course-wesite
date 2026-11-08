@@ -29,7 +29,7 @@ class NotificationListener : NotificationListenerService() {
     val notification = sbn ?: return
 
     if (!RelayStore.isNotifEnabled(applicationContext)) return
-    val config = RelayStore.getConfig(applicationContext) ?: return
+    if (!RelayStore.isEnabled(applicationContext)) return
 
     val packages = RelayStore.getNotifPackages(applicationContext)
     if (notification.packageName !in packages) return
@@ -57,26 +57,29 @@ class NotificationListener : NotificationListenerService() {
     }
 
     val postedAt = notification.postTime
+    if (postedAt < RelayStore.listeningStartedAt(applicationContext)) return
     // The durable outbox and server UTR constraint deduplicate deliveries.
     // Do not mark a notification seen before its payload has been persisted.
 
-    val bodyPreview = body.take(60)
-    val sender = notification.packageName
+    val config = RelayStore.getConfig(applicationContext) ?: return
+    val queued = SmsForwarder.enqueue(applicationContext, config, notification.packageName, body, postedAt, SOURCE)
+    if (!queued.first) RelayStore.recordAttempt(applicationContext, notification.packageName, "", false, queued.second)
+    RelayJobs.kick(applicationContext)
+    Thread { SmsForwarder.flush(applicationContext, config, 1) }.start()
+  }
 
-    Log.d(TAG, "forwarding notif from $sender: $bodyPreview")
+  override fun onListenerConnected() {
+    super.onListenerConnected()
+    if (!RelayStore.isEnabled(applicationContext)) return
+    for (notification in activeNotifications.orEmpty()) onNotificationPosted(notification)
+    RelayJobs.kick(applicationContext)
+  }
 
-    Thread {
-      val (ok, detail) = SmsForwarder.deliver(
-        context = applicationContext,
-        config = config,
-        sender = sender,
-        body = body,
-        receivedAt = postedAt,
-        source = SOURCE,
-      )
-      Log.d(TAG, "post result ok=$ok detail=$detail")
-      RelayStore.recordAttempt(applicationContext, sender, bodyPreview, ok, detail)
-    }.start()
+  override fun onListenerDisconnected() {
+    super.onListenerDisconnected()
+    if (RelayStore.isEnabled(applicationContext)) {
+      requestRebind(android.content.ComponentName(this, NotificationListener::class.java))
+    }
   }
 
   // onNotificationRemoved intentionally not overridden — PhonePe may clear

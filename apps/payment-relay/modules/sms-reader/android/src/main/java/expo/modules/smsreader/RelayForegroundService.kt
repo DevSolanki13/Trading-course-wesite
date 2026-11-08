@@ -3,6 +3,7 @@ package expo.modules.smsreader
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.app.PendingIntent
 import android.os.Handler
 import android.os.Looper
 import android.content.Context
@@ -39,17 +40,26 @@ class RelayForegroundService : Service() {
   override fun onBind(intent: Intent?): IBinder? = null
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    if (!RelayStore.isEnabled(this)) { stopSelf(); return START_NOT_STICKY }
+    RelayJobs.schedule(this)
     createNotificationChannel()
 
     val notification = NotificationCompat.Builder(this, CHANNEL_ID)
       .setContentTitle("IndianXtrade Payments")
-      .setContentText("Listening for bank SMS")
+      .setContentText("Listening • IndianXtrade and Academy")
+      .setStyle(NotificationCompat.BigTextStyle().bigText("Listening for payment messages in the background. IndianXtrade and Academy payments are matched automatically."))
+      .setCategory(NotificationCompat.CATEGORY_SERVICE)
+      .setOnlyAlertOnce(true)
+      .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+      .setContentIntent(packageManager.getLaunchIntentForPackage(packageName)?.let {
+        PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+      })
       .setSmallIcon(android.R.drawable.stat_notify_sync)
       .setOngoing(true)
       .build()
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-      startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+      startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
     } else {
       startForeground(NOTIFICATION_ID, notification)
     }
@@ -62,6 +72,12 @@ class RelayForegroundService : Service() {
     Thread { SmsCatchUp.run(applicationContext) }.start()
 
     return START_STICKY
+  }
+
+  override fun onTaskRemoved(rootIntent: Intent?) {
+    // Swiping away the screen must not disable native capture or its retry queue.
+    if (RelayStore.isEnabled(this)) RelayJobs.kick(this)
+    super.onTaskRemoved(rootIntent)
   }
 
   override fun onDestroy() {

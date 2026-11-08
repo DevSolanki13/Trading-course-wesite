@@ -1,411 +1,288 @@
 import { useEffect, useState } from "react";
 import {
+  AppState,
   PermissionsAndroid,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import {
   configure,
   getActivityLog,
   getStats,
-  getTargets,
   isEnabled,
   isNotifAccessGranted,
-  isNotifEnabled,
   openNotifAccessSettings,
-  recordActivity,
   requestIgnoreBatteryOptimizations,
   setEnabled,
   setNotifEnabled,
   startForegroundService,
   stopForegroundService,
-  type ActivityEntry,
 } from "../modules/sms-reader";
-import type { RelayTarget } from "../src/types";
-import { RELAY_CONFIG } from "@/relayConfig";
+import { RELAY_CONFIG, relayBuildReady } from "../src/relayConfig";
+
+const SMS_PERMISSIONS = [
+  PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+  PermissionsAndroid.PERMISSIONS.READ_SMS,
+];
+
+async function smsAccessGranted() {
+  if (Platform.OS !== "android") return false;
+  const permissions = [...SMS_PERMISSIONS];
+  if (PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS && Number(Platform.Version) >= 33)
+    permissions.push(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+  return (
+    await Promise.all(permissions.map((permission) => PermissionsAndroid.check(permission)))
+  ).every(Boolean);
+}
+
+async function savePreparedConfiguration() {
+  if (!relayBuildReady()) throw new Error("App setup is incomplete. Please contact support.");
+  await configure(
+    JSON.stringify(RELAY_CONFIG.targets),
+    RELAY_CONFIG.senders,
+    RELAY_CONFIG.deviceLabel,
+  );
+}
 
 export default function Home() {
-  const [targets, setTargets] = useState<RelayTarget[]>(RELAY_CONFIG.targets);
   const [listening, setListening] = useState(false);
-  const [granted, setGranted] = useState(true);
+  const [smsGranted, setSmsGranted] = useState(false);
+  const [notificationGranted, setNotificationGranted] = useState(false);
   const [stats, setStats] = useState({ sent: 0, failed: 0 });
-  const [activity, setActivity] = useState<ActivityEntry[]>([]);
-  const [notifListening, setNotifListening] = useState(false);
-  const [notifAccess, setNotifAccess] = useState(false);
+  const [lastSentAt, setLastSentAt] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const ready = smsGranted && notificationGranted && relayBuildReady();
 
   useEffect(() => {
-    // The enabled flag lives natively and survives an app restart (or kill),
-    // so reflect its real state on mount rather than assuming "stopped".
-    void isEnabled().then(setListening);
-    void getTargets().then((raw) => {
-      const saved = JSON.parse(raw) as RelayTarget[];
-      if (saved.length) setTargets(saved);
+    let active = true;
+    let refreshing = false;
+    async function refresh() {
+      if (refreshing) return;
+      refreshing = true;
+      try {
+        const [enabled, sms, notifications, counts, activity] = await Promise.all([
+          isEnabled(),
+          smsAccessGranted(),
+          isNotifAccessGranted(),
+          getStats(),
+          getActivityLog(),
+        ]);
+        if (!active) return;
+        setListening(enabled);
+        setSmsGranted(sms);
+        setNotificationGranted(notifications);
+        setStats(counts);
+        setLastSentAt(activity.find((entry) => entry.ok && entry.sender !== "system")?.at ?? null);
+        // One Start/Stop controls both native ingestion paths, including after permission changes.
+        await setNotifEnabled(enabled && sms && notifications && relayBuildReady());
+      } catch {
+        if (active) setError("Could not check listening status. Please reopen the app.");
+      } finally {
+        refreshing = false;
+      }
+    }
+    void savePreparedConfiguration()
+      .then(refresh)
+      .catch(() => {
+        if (active) setError("App setup is incomplete. Please contact support.");
+      });
+    const interval = setInterval(() => void refresh(), 2000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void refresh();
     });
-    void isNotifEnabled().then(setNotifListening);
-    void isNotifAccessGranted().then(setNotifAccess);
-
-    const interval = setInterval(() => {
-      void getStats().then(setStats);
-      void getActivityLog().then(setActivity);
-      // Access can flip to false any time the user revokes it in settings;
-      // re-poll so the UI reflects the real system state, not a mount-time
-      // snapshot.
-      void isNotifAccessGranted().then(setNotifAccess);
-    }, 2_000);
-
-    return () => clearInterval(interval);
+    return () => {
+      active = false;
+      clearInterval(interval);
+      subscription.remove();
+    };
   }, []);
 
-  async function toggleNotif() {
+  async function grantAccess() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
     try {
-      if (notifListening) {
-        await setNotifEnabled(false);
-        setNotifListening(false);
-        return;
-      }
-      // Nothing arrives without system-level access, even with our flag on —
-      // bounce the user to the settings panel first and fail softly if they
-      // haven't flipped it yet.
-      if (!(await isNotifAccessGranted())) {
-        await openNotifAccessSettings();
-        return;
-      }
-      await setNotifEnabled(true);
-      setNotifListening(true);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      await recordActivity("system", false, `Notif toggle failed: ${detail}`).catch(() => {});
-      void getActivityLog().then(setActivity);
-    }
-  }
-
-  async function requestPermission(): Promise<boolean> {
-    if (Platform.OS !== "android") return false;
-
-    // READ_SMS alongside RECEIVE_SMS: RECEIVE_SMS only covers the live
-    // broadcast — catching up on messages that arrived while offline means
-    // querying the inbox, which needs READ_SMS.
-    const results = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
-      PermissionsAndroid.PERMISSIONS.READ_SMS,
-    ]);
-    const ok =
-      results[PermissionsAndroid.PERMISSIONS.RECEIVE_SMS] === PermissionsAndroid.RESULTS.GRANTED &&
-      results[PermissionsAndroid.PERMISSIONS.READ_SMS] === PermissionsAndroid.RESULTS.GRANTED;
-    setGranted(ok);
-
-    // Best-effort: without this the "listening" notification just won't show,
-    // but the foreground service (and background execution) still works.
-    if (PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS) {
-      await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS).catch(
-        () => {},
+      await savePreparedConfiguration();
+      const results = await PermissionsAndroid.requestMultiple(SMS_PERMISSIONS);
+      const sms = SMS_PERMISSIONS.every(
+        (permission) => results[permission] === PermissionsAndroid.RESULTS.GRANTED,
       );
+      setSmsGranted(sms);
+      if (!sms) {
+        setError("Allow SMS access to receive payment confirmations.");
+        return;
+      }
+      if (PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS) {
+        const notificationPermission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        );
+        if (notificationPermission !== PermissionsAndroid.RESULTS.GRANTED) {
+          setError("Allow notifications so the listening status stays visible.");
+          return;
+        }
+      }
+      const notifications = await isNotifAccessGranted();
+      setNotificationGranted(notifications);
+      if (!notifications) await openNotifAccessSettings();
+    } catch {
+      setError("Could not request access. Please try again.");
+    } finally {
+      setBusy(false);
     }
-
-    return ok;
   }
 
-  async function toggle() {
+  async function toggleListening() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
     try {
       if (listening) {
+        await setNotifEnabled(false);
         await setEnabled(false);
         await stopForegroundService();
         setListening(false);
         return;
       }
-
-      // A build made without apps/relay/.env.local would send every message
-      // with an empty Bearer token and get a 401 each time — fail loudly here
-      // instead, where the operator can see it in the send log.
-      if (
-        targets.length === 0 ||
-        targets.some((target) => {
-          try {
-            const url = new URL(target.serverUrl);
-            return (
-              url.protocol !== "https:" ||
-              !!url.username ||
-              !!url.password ||
-              !!url.search ||
-              url.pathname !== "/" ||
-              target.secret.trim().length < 32 ||
-              (target.sharedGateway
-                ? url.origin !== "https://indianxtrade.com"
-                : target.markers.every((marker) => !marker.trim()))
-            );
-          } catch {
-            return true;
-          }
-        })
-      )
-        throw new Error("Set the IndianXtrade HTTPS address and relay secret before starting.");
-
-      if (!(await requestPermission())) return;
-
+      await savePreparedConfiguration();
+      if (!(await smsAccessGranted()) || !(await isNotifAccessGranted())) {
+        setError("Grant access before starting.");
+        return;
+      }
       await requestIgnoreBatteryOptimizations().catch(() => {});
-
-      await configure(
-        JSON.stringify(
-          targets.map((t) => ({
-            ...t,
-            serverUrl: t.serverUrl.replace(/\/$/, ""),
-            secret: t.secret.trim(),
-          })),
-        ),
-        RELAY_CONFIG.senders,
-        RELAY_CONFIG.deviceLabel,
-      );
       await setEnabled(true);
-      await startForegroundService();
+      await setNotifEnabled(true);
+      try {
+        await startForegroundService();
+      } catch (reason) {
+        await setNotifEnabled(false);
+        await setEnabled(false);
+        throw reason;
+      }
       setListening(true);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      await recordActivity("system", false, `Start/stop failed: ${detail}`).catch(() => {});
-      void getActivityLog().then(setActivity);
+    } catch {
+      setError("Could not change listening status. Please try again.");
+    } finally {
+      setBusy(false);
     }
   }
 
-  const lastMatch = activity.find((entry) => entry.sender !== "system");
-
+  const status = listening ? (ready ? "Listening" : "Access needed") : "Stopped";
   return (
     <ScrollView contentContainerStyle={styles.screen}>
       <View style={styles.card}>
-        <Text style={styles.cardLabel}>Payment destinations</Text>
-        <Text style={styles.meta}>
-          Both websites use IndianXtrade’s existing UPI gateway and collection account. This app
-          forwards payment alerts to that gateway; Academy checks its confirmed payment status.
-        </Text>
-        {targets.map((target, index) => (
-          <View key={target.name} style={{ gap: 8, marginTop: 16 }}>
-            <Text style={styles.cardLabel}>{target.name}</Text>
-            <TextInput
-              accessibilityLabel={`${target.name} website`}
-              editable={!listening}
-              value={target.serverUrl}
-              placeholder="https://your-website.com"
-              placeholderTextColor="#93a2b4"
-              autoCapitalize="none"
-              style={{ color: "white", borderColor: "#34445a", borderWidth: 1, padding: 10 }}
-              onChangeText={(value) =>
-                setTargets((all) =>
-                  all.map((t, i) => (i === index ? { ...t, serverUrl: value } : t)),
-                )
-              }
-            />
-            <TextInput
-              accessibilityLabel={`${target.name} relay secret`}
-              editable={!listening}
-              value={target.secret}
-              placeholder="SMS_RELAY_SECRET"
-              placeholderTextColor="#93a2b4"
-              secureTextEntry
-              autoCapitalize="none"
-              style={{ color: "white", borderColor: "#34445a", borderWidth: 1, padding: 10 }}
-              onChangeText={(value) =>
-                setTargets((all) => all.map((t, i) => (i === index ? { ...t, secret: value } : t)))
-              }
-            />
-            {!target.sharedGateway && (
-              <TextInput
-                accessibilityLabel={`${target.name} account markers`}
-                editable={!listening}
-                value={target.markers.join(",")}
-                placeholder="Exact account text in bank SMS, e.g. XX1234"
-                placeholderTextColor="#93a2b4"
-                autoCapitalize="none"
-                style={{ color: "white", borderColor: "#34445a", borderWidth: 1, padding: 10 }}
-                onChangeText={(value) =>
-                  setTargets((all) =>
-                    all.map((t, i) =>
-                      i === index
-                        ? {
-                            ...t,
-                            markers: value.split(",").map((m) => m.trim()),
-                          }
-                        : t,
-                    ),
-                  )
-                }
-              />
-            )}
-          </View>
-        ))}
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.cardLabel}>Status</Text>
-        <Text style={[styles.status, { color: listening ? "#2fbd85" : "#93a2b4" }]}>
-          {listening ? "Listening" : "Stopped"}
-        </Text>
-        <Text style={styles.meta}>{`Forwarding from ${RELAY_CONFIG.senders.join(", ")}`}</Text>
-      </View>
-
-      <View style={styles.row}>
-        <View style={styles.stat}>
-          <Text style={styles.cardLabel}>Sent</Text>
-          <Text style={styles.statValue}>{stats.sent}</Text>
-        </View>
-        <View style={styles.stat}>
-          <Text style={styles.cardLabel}>Failed</Text>
-          <Text style={styles.statValue}>{stats.failed}</Text>
-        </View>
-      </View>
-
-      {lastMatch ? (
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Last matched message</Text>
-          <Text style={styles.meta}>
-            {lastMatch.sender} · {lastMatch.bodyPreview}…
+        <Text style={styles.label}>Payment listener</Text>
+        <View style={styles.statusRow}>
+          <View
+            style={[styles.dot, { backgroundColor: listening && ready ? "#2fbd85" : "#93a2b4" }]}
+          />
+          <Text accessibilityRole="header" style={styles.status}>
+            {status}
           </Text>
         </View>
-      ) : null}
-
-      <Pressable
-        onPress={() => void toggle()}
-        style={[styles.button, { backgroundColor: listening ? "#e0526a" : "#2fbd85" }]}
-      >
-        <Text style={[styles.buttonText, { color: listening ? "#ffffff" : "#06231a" }]}>
-          {listening ? "Stop" : "Start listening"}
-        </Text>
-      </Pressable>
-
-      {!granted && listening ? (
-        <Text style={styles.warning}>SMS permission was not granted.</Text>
-      ) : null}
+        <Text style={styles.muted}>Payment confirmations are handled automatically.</Text>
+      </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardLabel}>PhonePe notifications</Text>
-        <Text
-          style={[styles.status, { color: notifListening ? "#2fbd85" : "#93a2b4", fontSize: 16 }]}
-        >
-          {notifListening ? (notifAccess ? "Listening" : "Enabled — access revoked") : "Stopped"}
-        </Text>
-        <Text style={styles.meta}>
-          PhonePe merchant QRs don&apos;t trigger a bank SMS. This reads the PhonePe app&apos;s own
-          &quot;Received Rs N&quot; notifications (consumer and Business) so each payment reaches
-          the server at the moment it&apos;s received, not at end-of-day settlement.
-        </Text>
-        <View style={styles.notifButtons}>
-          <Pressable
-            onPress={() => void toggleNotif()}
-            style={[
-              styles.smallButton,
-              { backgroundColor: notifListening ? "#e0526a" : "#2fbd85" },
-            ]}
-          >
-            <Text
-              style={[
-                styles.buttonText,
-                { color: notifListening ? "#ffffff" : "#06231a", fontSize: 13 },
-              ]}
-            >
-              {notifListening ? "Stop" : "Start"}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => void openNotifAccessSettings()}
-            style={[styles.smallButton, styles.secondaryButton]}
-          >
-            <Text style={[styles.buttonText, { color: "#e8edf3", fontSize: 13 }]}>
-              {notifAccess ? "Access granted" : "Grant access"}
-            </Text>
-          </Pressable>
+        <View style={styles.siteRow}>
+          <View>
+            <Text style={styles.siteName}>IndianXtrade</Text>
+            <Text style={styles.muted}>Trading payments</Text>
+          </View>
+          <Text style={styles.siteStatus}>{listening && ready ? "Listening" : "Ready"}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.siteRow}>
+          <View>
+            <Text style={styles.siteName}>Academy</Text>
+            <Text style={styles.muted}>Course payments</Text>
+          </View>
+          <Text style={styles.siteStatus}>{listening && ready ? "Listening" : "Ready"}</Text>
         </View>
       </View>
 
-      <Text style={styles.footer}>
-        Reads only this device&apos;s messages, only from the senders above, and sends them only to
-        your own server. Demonstration use. Forwards directly from a background-safe native
-        receiver, so it keeps working even if the app is backgrounded or killed — only a force-stop
-        or toggling Stop turns it off.
-      </Text>
-
-      {activity.length > 0 ? (
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Send log</Text>
-          {activity.map((entry) => (
-            <View key={entry.at} style={styles.logRow}>
-              <Text style={[styles.logStatus, { color: entry.ok ? "#2fbd85" : "#e0526a" }]}>
-                {entry.ok ? "✓" : "✗"}
-              </Text>
-              <View style={styles.logBody}>
-                <Text style={styles.logSender}>
-                  {entry.sender} · {new Date(entry.at).toLocaleTimeString()}
-                </Text>
-                <Text style={styles.logDetail}>{entry.detail}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: busy || ready }}
+        disabled={busy || ready}
+        onPress={() => void grantAccess()}
+        style={[styles.button, styles.secondary, ready && styles.dimmed]}
+      >
+        <Text style={styles.secondaryText}>{ready ? "Access granted" : "Grant access"}</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: busy || (!ready && !listening) }}
+        disabled={busy || (!ready && !listening)}
+        onPress={() => void toggleListening()}
+        style={[
+          styles.button,
+          { backgroundColor: listening ? "#e0526a" : "#2fbd85" },
+          !ready && !listening && styles.dimmed,
+        ]}
+      >
+        <Text style={[styles.buttonText, { color: listening ? "#ffffff" : "#06231a" }]}>
+          {busy ? "Please wait…" : listening ? "Stop listening" : "Start listening"}
+        </Text>
+      </Pressable>
+      {!ready && !error && (
+        <Text style={styles.hint}>
+          Allow SMS and notification access, then tap Start listening.
+        </Text>
+      )}
+      {error ? (
+        <Text accessibilityRole="alert" style={styles.error}>
+          {error}
+        </Text>
       ) : null}
+      <View style={styles.summary}>
+        <Text style={styles.muted}>
+          Sent {stats.sent} · Retry attempts {stats.failed}
+        </Text>
+        {lastSentAt ? (
+          <Text style={styles.muted}>Last sent {new Date(lastSentAt).toLocaleTimeString()}</Text>
+        ) : null}
+      </View>
+      <Text style={styles.hint}>You can leave the app in the background while listening.</Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flexGrow: 1, padding: 24, gap: 14, justifyContent: "center" },
+  screen: { flexGrow: 1, padding: 24, paddingBottom: 40, gap: 14, justifyContent: "center" },
   card: {
     backgroundColor: "#16202c",
     borderColor: "#253243",
     borderWidth: 1,
     borderRadius: 10,
-    padding: 16,
-    gap: 4,
+    padding: 18,
+    gap: 10,
   },
-  cardLabel: {
-    color: "#93a2b4",
-    fontSize: 10,
+  label: {
+    color: "#a9b5c5",
+    fontSize: 11,
     fontWeight: "700",
-    letterSpacing: 1.2,
+    letterSpacing: 1,
     textTransform: "uppercase",
   },
-  status: { fontSize: 22, fontWeight: "700" },
-  meta: { color: "#93a2b4", fontSize: 12, lineHeight: 17 },
-  row: { flexDirection: "row", gap: 12 },
-  stat: {
-    flex: 1,
-    backgroundColor: "#16202c",
-    borderColor: "#253243",
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 16,
-    gap: 4,
-  },
-  statValue: {
-    color: "#e8edf3",
-    fontSize: 22,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
-  },
-  button: { borderRadius: 10, paddingVertical: 15, alignItems: "center" },
-  smallButton: {
-    flex: 1,
-    borderRadius: 8,
-    paddingVertical: 11,
-    alignItems: "center",
-  },
-  secondaryButton: {
-    backgroundColor: "#1e2a3a",
-    borderColor: "#2f3f55",
-    borderWidth: 1,
-  },
-  notifButtons: { flexDirection: "row", gap: 10, marginTop: 10 },
+  statusRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  dot: { width: 9, height: 9, borderRadius: 5 },
+  status: { fontSize: 26, fontWeight: "700", color: "#e8edf3" },
+  muted: { color: "#a9b5c5", fontSize: 12, lineHeight: 18 },
+  siteRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  siteName: { color: "#e8edf3", fontSize: 15, fontWeight: "600" },
+  siteStatus: { color: "#9fdcc2", fontSize: 12 },
+  divider: { height: 1, backgroundColor: "#253243", marginVertical: 4 },
+  button: { borderRadius: 10, paddingVertical: 16, alignItems: "center", minHeight: 50 },
+  secondary: { backgroundColor: "#1e2a3a", borderColor: "#34475f", borderWidth: 1 },
+  secondaryText: { color: "#e8edf3", fontSize: 15, fontWeight: "600" },
   buttonText: { fontSize: 15, fontWeight: "700" },
-  warning: { color: "#e0ac50", fontSize: 12, textAlign: "center" },
-  footer: {
-    color: "#6b7a8d",
-    fontSize: 11,
-    lineHeight: 16,
-    textAlign: "center",
-    marginTop: 8,
-  },
-  logRow: { flexDirection: "row", gap: 8, paddingTop: 6 },
-  logStatus: { fontSize: 13, fontWeight: "700", width: 14 },
-  logBody: { flex: 1, gap: 1 },
-  logSender: { color: "#93a2b4", fontSize: 11, fontWeight: "600" },
-  logDetail: { color: "#6b7a8d", fontSize: 11, lineHeight: 15 },
+  dimmed: { opacity: 0.55 },
+  hint: { color: "#a9b5c5", fontSize: 12, lineHeight: 18, textAlign: "center" },
+  error: { color: "#ffc2cb", fontSize: 13, lineHeight: 19, textAlign: "center" },
+  summary: { alignItems: "center", gap: 3, paddingVertical: 6 },
 });

@@ -46,28 +46,15 @@ class SmsReceiver : BroadcastReceiver() {
       return
     }
 
-    val bodyPreview = body.take(60)
-    val receivedAt = System.currentTimeMillis()
-
-    // Extends our execution window past the receiver's normal ~10s limit —
-    // required since the POST happens on a background thread.
-    val pendingResult = goAsync()
+    // Commit before returning from the receiver: Android may terminate the process afterwards.
+    val receivedAt = messages[0].timestampMillis
+    val queued = SmsForwarder.enqueue(context, config, sender, body, receivedAt)
+    if (!queued.first) RelayStore.recordAttempt(context, sender, "", false, queued.second)
+    RelayJobs.kick(context)
+    val pending = goAsync()
     Thread {
-      try {
-        val (ok, detail) = SmsForwarder.deliver(context, config, sender, body, receivedAt)
-        Log.d(TAG, "post result ok=$ok detail=$detail")
-        RelayStore.recordAttempt(context, sender, bodyPreview, ok, detail)
-        // Only the chronological catch-up scan advances the checkpoint.
-        // A newer success must never skip an older failed message.
-
-        // Every live message is also a chance to check for backlog — e.g.
-        // messages that arrived while offline are now sitting in the inbox
-        // waiting, and this SMS being delivered means we have connectivity
-        // (or at least a working radio) right now.
-        SmsCatchUp.run(context)
-      } finally {
-        pendingResult.finish()
-      }
+      try { SmsForwarder.flush(context, config, 1) }
+      finally { pending.finish() }
     }.start()
   }
 

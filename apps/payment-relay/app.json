@@ -2,7 +2,7 @@
   "expo": {
     "name": "IndianXtrade Payments",
     "slug": "indianxtrade-payments",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "scheme": "indianxtradepayments",
     "userInterfaceStyle": "dark",
@@ -10,7 +10,8 @@
     "android": {
       "package": "com.indianxtrade.payments",
       "permissions": ["android.permission.RECEIVE_SMS", "android.permission.INTERNET"],
-      "allowBackup": false
+      "allowBackup": false,
+      "versionCode": 2
     },
     "plugins": [
       "expo-router",

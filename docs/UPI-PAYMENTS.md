@@ -8,7 +8,7 @@ Academy creates a deposit using IndianXtrade's existing authenticated `/api/depo
 
 Do not run independent amount allocators on the same UPI account or forward the same bank credit into two independent settlement systems. In shared mode, Academy's direct bank-feed consumer stays disabled, including during pilot testing. The Android app sends alerts to IndianXtrade only. There is no need to change IndianXtrade's gateway or create a separate bank account.
 
-A dedicated technical collector user holds Academy payment deposits in IndianXtrade. It has ordinary user permissions, no live trading access, and an exception allowing its server API calls through the network guard. Its funds are internal collection accounting and must not be traded or withdrawn through automation. Credentials and the existing relay secret are held in ignored private rollout files; none are bundled into the APK or committed to Git. Sessions refresh through the existing login API when required.
+A dedicated technical collector user holds Academy payment deposits in IndianXtrade. It has ordinary user permissions, no live trading access, and an exception allowing its server API calls through the network guard. Its funds are internal collection accounting and must not be traded or withdrawn through automation. Credentials and the existing relay secret are held in ignored private rollout files; collector credentials are never bundled into the APK or committed to Git. The owner’s private APK is preconfigured with the existing relay credential from ignored build-time environment; it must not be distributed publicly. Sessions refresh through the existing login API when required.
 
 ## Deployment
 
@@ -32,7 +32,7 @@ A dedicated technical collector user holds Academy payment deposits in IndianXtr
    ```
 
 3. Save and redeploy Production. Existing database, email, video and login variables stay in place. `/api/health` reports public checkout readiness without exposing credentials or pilot IDs.
-4. Install the Android APK on the operator phone and enter the **existing IndianXtrade** origin and relay secret. Grant SMS/inbox/notification permissions and exempt it from battery optimization. Verify the new app before disabling the old relay; gateway UTR deduplication protects against duplicate delivery while both are installed.
+4. Install the preconfigured Android APK on the operator phone. The owner taps **Grant access**, allows Android’s permission prompts, then taps **Start listening**. Both businesses are handled automatically with separate status rows; no technical settings or credentials are entered on the phone. Verify the new app before disabling the old relay; gateway UTR deduplication protects against duplicate delivery while both are installed.
 5. With public checkout still off, pay the exact QR amount as the allowlisted pilot student. Confirm the real bank reference, gateway deposit, Academy paid order, enrollment, printable receipt, and receipt email delivery. Automated local tests and an emulator install do not prove real payment delivery.
 6. Set `UPI_PAYMENTS_ENABLED=on`, clear the pilot allowlist and redeploy. Verify the live health endpoint and a regular authenticated student's UPI-only checkout.
 
