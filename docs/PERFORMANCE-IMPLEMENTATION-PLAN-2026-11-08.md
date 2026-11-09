@@ -2,7 +2,7 @@
 
 Date: 8 November 2026\
 Reference commit: `272990e`, plus existing uncommitted order-detail/component styles\
-Status: Phases 0-1 complete; Phase 2 code/non-browser verification complete, browser acceptance delegated to the user, 9 November 2026\
+Status: Phases 0-1 complete; Phases 2-3 code/non-browser verification complete, browser acceptance delegated to the user, 9 November 2026\
 Scope: preserve every existing feature, function, animation, responsive layout, and theme.
 
 This plan turns the project-wide audit into implementation batches. It does not replace the older [launch implementation plan](../IMPLEMENTATION-PLAN.md). A checked item means the stated result has been verified, not just that code was written. Recheck source before each batch because the audit describes a point in time.
@@ -198,14 +198,27 @@ Completion gate: smaller measured delivery for the affected assets, unchanged co
 
 Affected areas: [auth provider](../frontend/components/auth-provider.tsx), [admin workspace](../frontend/components/admin/admin-workspace.tsx), [server session checks](../backend/auth/session.ts), [request proxy](../proxy.ts), [dashboard route](../app/dashboard/page.tsx), [student dashboard](../frontend/components/student-dashboard.tsx), and [billing hook](../frontend/lib/use-billing-orders.ts).
 
-- [ ] **P3.1** Draw the actual anonymous/signed-in request chain and count duplicate identity requests before changing it. Separate proxy refresh, endpoint authorization, and client display state.
+Implementation update, 9 November: P3.1-P3.8 engineering work/decisions and local non-browser checks are complete. P3.9 browser/provider acceptance and signed-in timing measurements remain with the user. See [Phase 3 results, request chains and manual checklist](./PERFORMANCE-PHASE-3-RESULTS-2026-11-09.md). Items below remain unchecked where they include unperformed browser acceptance; no live/whole-site latency improvement is claimed.
+
+- [x] Share the admin/header identity request and preserve structured authentication errors, roles and MFA gating.
+- [x] Add navigation/focus verification and cross-tab invalidation without persisting identities or tokens; hide obsolete account data and ignore stale replies.
+- [x] Keep server identity memoization render-scoped; retain admission, revocation, role and activity checks at server boundaries.
+- [x] Limit proxy bypass to existing public UUID thumbnail GET/HEAD routes and the two exact public favicons; keep other APIs/private routes protected.
+- [x] Replace unrelated full billing payloads with owner-scoped count-only reads, preserve billing deep links and fetch details on demand.
+- [x] Reuse fresh server billing/announcement snapshots with explicit refresh rules and test abort/focus/history behavior.
+- [x] Reduce supported-provider full-history polling while retaining status checks, UPI freshness, authoritative settlement reads and bounded/hidden-tab guards.
+- [x] Evaluate the combined admission/activity RPC; retain the existing activity update rather than require a database migration in this batch.
+- [x] Pass build, lint, types, 193 component/API tests and 62 backend/asset tests.
+- [ ] Complete the user's browser/real-provider acceptance and comparable signed-in navigation measurements.
+
+- [x] **P3.1** Draw the actual anonymous/signed-in request chain and count duplicate identity requests before changing it. Separate proxy refresh, endpoint authorization, and client display state.
 - [ ] **P3.2** Reuse shared client identity/in-flight requests and verified server identity where available, rather than independently fetching the same identity in the admin shell. Preserve role, AAL/MFA, session revocation, blocked-account, and device-limit handling.
-- [ ] **P3.3** Define freshness, focus-refresh, account-switch, login, and logout invalidation rules. Avoid sharing private identity across requests or users. Keep authorization at every protected server boundary.
+- [x] **P3.3** Define freshness, focus-refresh, account-switch, login, and logout invalidation rules. Avoid sharing private identity across requests or users. Keep authorization at every protected server boundary.
 - [ ] **P3.4** Narrow unnecessary proxy work for explicitly public static assets. Verify all protected routes and public-thumbnail behavior; do not broadly exempt APIs or private files without checking their independent authorization.
 - [ ] **P3.5** Render the selected dashboard view from its required data first. Use lightweight summaries for counts; defer unrelated billing history or details. Keep deep links, history/back navigation, error/retry states, and every tab functional.
-- [ ] **P3.6** Use server-provided announcements as the initial snapshot and apply an explicit freshness policy. Remove the unconditional immediate duplicate fetch while retaining updates.
+- [x] **P3.6** Use server-provided announcements as the initial snapshot and apply an explicit freshness policy. Remove the unconditional immediate duplicate fetch while retaining updates.
 - [ ] **P3.7** Preserve existing billing poll overlap guards, bounded checks, hidden-tab pauses, and pending-order reconciliation. Avoid redundant full-history rereads; keep fresh payment state after returning from the payment app.
-- [ ] **P3.8** Consider combining the conditional five-minute activity touch with admission verification so a no-op activity update does not always require another network round trip. Preserve activity and revocation semantics.
+- [x] **P3.8** Consider combining the conditional five-minute activity touch with admission verification so a no-op activity update does not always require another network round trip. Preserve activity and revocation semantics. Decision: keep it unchanged in this batch; a combined RPC needs versioned database rollout and transactional revocation/activity verification, not omission of the check.
 - [ ] **P3.9** Test anonymous, student, support, admin, expired/revoked/blocked sessions, MFA/device-limit errors, focus refresh, logout, and account switching. Compare request counts and signed-in navigation timings.
 
 Completion gate: repeated identity/data requests decrease without weakening permissions, introducing cross-account state, or leaving navigation and billing stale.
@@ -368,3 +381,11 @@ Copy this section for each implementation batch:
 - Evidence and user testing steps: [Phase 2 results](./PERFORMANCE-PHASE-2-RESULTS-2026-11-09.md).
 - Video bytes reduced 38.7%; lossless branding reduced 28.9-46.5%. No unsupported whole-site latency improvement is claimed.
 - No browser tools/tests, production deployment, shared-database change, dependency change, commit or Phase 3 implementation.
+
+### Batch 4 - Phase 3 implementation, 9 November 2026
+
+- Task IDs: P3.1-P3.8 implementation/decisions and non-browser verification. P3.9 browser acceptance/timing comparisons remain open at the user's request.
+- Status: CODE COMPLETE; BROWSER/PROVIDER ACCEPTANCE PENDING. Supersedes Batch 3's Phase 3 not-started status only.
+- Evidence: [Phase 3 results](./PERFORMANCE-PHASE-3-RESULTS-2026-11-09.md).
+- Deterministic billing fixture: 80 requests before, 47 after; all 40 status checks retained. Non-billing dashboards use count-only reads instead of full history. These are local/source-backed reductions, not production navigation measurements.
+- No browser tests, new dependencies, SQL migrations, shared-data mutation, deployment, commit/push or Phase 4 implementation.

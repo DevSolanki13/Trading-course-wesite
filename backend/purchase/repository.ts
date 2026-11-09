@@ -81,6 +81,27 @@ export async function purchaseOrders(userId: string) {
     (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
   );
 }
+
+/** Only used after admission, with the verified user's ID; never transfers order details. */
+export async function purchaseOrderCount(userId: string): Promise<number> {
+  if (localDemoEnabled()) {
+    const { localDatabase } = await import("../local/database.ts");
+    const result = await (
+      await localDatabase()
+    ).query<{ count: number }>(
+      "select count(*)::integer as count from public.orders where user_id=$1",
+      [userId],
+    );
+    return result.rows[0].count;
+  }
+  const { createAdminClient } = await import("../database/supabase");
+  const { count, error } = await createAdminClient()
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  if (error || count === null) throw new Error("Billing summary is temporarily unavailable.");
+  return count;
+}
 export const purchaseLesson = async (id: string, userId: string | null) => {
   const content = await purchaseRpc<PurchaseLessonContent>("purchase_read", {
     p_action: "lesson",

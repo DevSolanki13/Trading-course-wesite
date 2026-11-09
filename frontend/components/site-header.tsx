@@ -106,11 +106,12 @@ export function SiteHeader() {
 
   async function logout() {
     try {
-      await fetch("/api/auth/logout", {
+      const response = await fetch("/api/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "{}",
       });
+      if (!response.ok) throw new Error("Sign out failed. Please retry.");
       clear();
       setProfileOpen(false);
       router.push("/login");

@@ -2,16 +2,21 @@ import { StrictMode } from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "../frontend/components/auth-provider";
+import { AUTH_CHANGE_KEY } from "../frontend/lib/auth-events";
 
 const route = vi.hoisted(() => ({ pathname: "/courses" }));
 vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
 
 function Consumer({ label }: { label: string }) {
-  const { user, ready, clear } = useAuth();
+  const { user, ready, clear, error, refresh } = useAuth();
   return (
     <>
       <output aria-label={label}>{ready ? (user?.name ?? "Anonymous") : "Checking"}</output>
       <button onClick={clear}>Clear {label}</button>
+      <button onClick={() => void refresh()}>Refresh {label}</button>
+      <output aria-label={`${label} error`}>
+        {error ? `${error.status}:${error.code}:${error.message}` : ""}
+      </output>
     </>
   );
 }
@@ -128,5 +133,83 @@ describe("shared authentication", () => {
     await act(async () => finishOld(new Response(null, { status: 401 })));
     expect(screen.getByLabelText("Header")).toHaveTextContent("Signed in");
     expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("shares explicit refreshes and retains structured admission/MFA errors", async () => {
+    let finish!: (value: Response) => void;
+    const fetcher = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    render(
+      <AuthProvider>
+        <Consumer label="Header" />
+        <Consumer label="Admin" />
+      </AuthProvider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Admin" }));
+    fireEvent.focus(window);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    await act(async () =>
+      finish(Response.json({ error: "Device limit", code: "DEVICE_LIMIT" }, { status: 409 })),
+    );
+    expect(screen.getByLabelText("Admin error")).toHaveTextContent("409:DEVICE_LIMIT:Device limit");
+    expect(screen.getByLabelText("Header")).toHaveTextContent("Anonymous");
+  });
+
+  it("invalidates in-flight identity after another tab logs in or out", async () => {
+    let stale!: (value: Response) => void;
+    const fetcher = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            stale = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(Response.json({ user: { id: "new", name: "New account" } }));
+    vi.stubGlobal("fetch", fetcher);
+    render(
+      <AuthProvider>
+        <Consumer label="Header" />
+      </AuthProvider>,
+    );
+    fireEvent(window, new StorageEvent("storage", { key: AUTH_CHANGE_KEY, newValue: "changed" }));
+    await waitFor(() => expect(screen.getByLabelText("Header")).toHaveTextContent("New account"));
+    await act(async () => stale(Response.json({ user: { id: "old", name: "Old account" } })));
+    expect(screen.getByLabelText("Header")).toHaveTextContent("New account");
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    fireEvent(
+      window,
+      new StorageEvent("storage", { key: "unrelated-preference", newValue: "changed" }),
+    );
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not persist identities or tokens when clearing the session", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(Response.json({ user: { id: "private-id", name: "Private learner" } })),
+    );
+    const write = vi.spyOn(Storage.prototype, "setItem");
+    render(
+      <AuthProvider>
+        <Consumer label="Header" />
+      </AuthProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("Header")).toHaveTextContent("Private learner"),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Clear Header" }));
+    expect(write).toHaveBeenCalledWith(AUTH_CHANGE_KEY, expect.stringMatching(/^\d+-/));
+    expect(write.mock.calls.some(([, value]) => /private-id|Private learner/.test(value))).toBe(
+      false,
+    );
+    write.mockRestore();
   });
 });

@@ -9,6 +9,8 @@ export function PurchaseDashboard({
   courses,
   allCourses,
   orders,
+  orderCount,
+  ordersFresh = false,
   announcements,
   ordersOnly = false,
   local = false,
@@ -20,6 +22,8 @@ export function PurchaseDashboard({
   courses: PurchaseCourse[];
   allCourses?: PurchaseCourse[];
   orders: PurchaseOrder[];
+  orderCount?: number;
+  ordersFresh?: boolean;
   announcements?: Announcement[];
   ordersOnly?: boolean;
   local?: boolean;
@@ -29,10 +33,13 @@ export function PurchaseDashboard({
 }) {
   return (
     <StudentDashboard
+      key={`${user.id}:${initialView}:${initialCourseSlug ?? ""}:${initialLessonId ?? ""}`}
       user={user}
       courses={courses}
       allCourses={allCourses}
       orders={orders}
+      orderCount={orderCount}
+      ordersFresh={ordersFresh}
       announcements={announcements}
       ordersOnly={ordersOnly}
       local={local}

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CircleNotch, CheckCircle, Eye, EyeSlash } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { notifyAuthChange } from "../lib/auth-events";
 
 export type AuthMode = "login" | "signup" | "forgot" | "reset" | "confirm";
 type AuthResponse = {
@@ -130,8 +131,10 @@ export function AuthForm({
         payload = { password: form.get("password") };
       }
       const result = await request(endpoint, payload);
-      if (result.redirect) window.location.assign(result.redirect);
-      else setMessage(result.message || "Check your inbox to continue.");
+      if (result.redirect) {
+        notifyAuthChange();
+        window.location.assign(result.redirect);
+      } else setMessage(result.message || "Check your inbox to continue.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Please try again.");
       toast.error(reason instanceof Error ? reason.message : "Please try again.");

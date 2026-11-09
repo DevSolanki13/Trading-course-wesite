@@ -1,5 +1,5 @@
 import { requirePurchaseUser } from "@/backend/purchase/pages";
-import { purchaseCatalog, purchaseOrders } from "@/backend/purchase/repository";
+import { purchaseCatalog, purchaseOrders, purchaseOrderCount } from "@/backend/purchase/repository";
 import { localDemoEnabled } from "@/backend/purchase/mode";
 import { listAnnouncements } from "@/backend/announcements/service";
 import { PurchaseDashboard } from "@/frontend/components/purchase-dashboard";
@@ -24,30 +24,37 @@ export default async function Dashboard({
   if (user.role === "admin") {
     redirect("/admin");
   }
-  const [courses, orders, announcements] = await Promise.all([
+  const viewParam = query.view || query.tab;
+  const billingRequested = viewParam === "billing" || viewParam === "orders";
+  const [courses, billing, announcements] = await Promise.all([
     purchaseCatalog(user.id),
-    purchaseOrders(user.id),
+    billingRequested
+      ? purchaseOrders(user.id).then((orders) => ({ orders, count: orders.length }))
+      : purchaseOrderCount(user.id).then((count) => ({ orders: [], count })),
     listAnnouncements(true),
   ]);
-  const viewParam = query.view || query.tab;
   const ownedCourses = courses.filter((c) => c.owned || c.accessExpiresAt);
   const initialView =
     viewParam === "courses" || viewParam === "study"
       ? "courses"
       : viewParam === "billing" || viewParam === "orders"
         ? "billing"
-        : viewParam === "account" || viewParam === "profile" || viewParam === "devices"
-          ? "account"
-          : query.course || ownedCourses.length > 0
-            ? "courses"
-            : "explore";
+        : viewParam === "explore"
+          ? "explore"
+          : viewParam === "account" || viewParam === "profile" || viewParam === "devices"
+            ? "account"
+            : query.course || ownedCourses.length > 0
+              ? "courses"
+              : "explore";
 
   return (
     <PurchaseDashboard
       user={user}
       courses={ownedCourses}
       allCourses={courses}
-      orders={orders}
+      orders={billing.orders}
+      orderCount={billing.count}
+      ordersFresh={billingRequested}
       announcements={announcements}
       local={localDemoEnabled()}
       initialCourseSlug={query.course}

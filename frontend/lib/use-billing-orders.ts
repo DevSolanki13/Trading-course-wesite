@@ -1,21 +1,40 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PurchaseOrder } from "../../shared/purchase";
 
-export function useBillingOrders(initialOrders: PurchaseOrder[], active: boolean) {
-  const [snapshot, setSnapshot] = useState({ source: initialOrders, orders: initialOrders });
+export function useBillingOrders(
+  initialOrders: PurchaseOrder[],
+  active: boolean,
+  initiallyFresh = false,
+) {
+  const [snapshot, setSnapshot] = useState({
+    source: initialOrders,
+    orders: initialOrders,
+    loaded: initiallyFresh || initialOrders.length > 0,
+  });
+  const seeded = useRef<PurchaseOrder[] | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   if (snapshot.source !== initialOrders)
-    setSnapshot({ source: initialOrders, orders: initialOrders });
+    setSnapshot({
+      source: initialOrders,
+      orders: initialOrders,
+      loaded: initiallyFresh || initialOrders.length > 0,
+    });
 
   useEffect(() => {
     if (!active) return;
     let alive = true;
     let inFlight = false;
+    let refreshRequested = false;
     let checks = 0;
     let cursor = 0;
+    // Consume a fresh server snapshot only once, not on later tab visits/manual refreshes.
+    const canSeed = initiallyFresh && seeded.current !== initialOrders && attempt === 0;
+    if (canSeed) seeded.current = initialOrders;
+    let knownOrders: PurchaseOrder[] | null = canSeed ? initialOrders : null;
+    let lastHistoryRead = canSeed ? Date.now() : -Infinity;
     const attemptStates = new Map<string, PurchaseOrder["paymentStatus"]>();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const controller = new AbortController();
@@ -29,13 +48,27 @@ export function useBillingOrders(initialOrders: PurchaseOrder[], active: boolean
         throw new Error(data.error || "Billing history could not be refreshed. Please try again.");
       return data.orders as PurchaseOrder[];
     };
-    const refresh = async () => {
-      if (!alive || inFlight || document.visibilityState === "hidden") return;
+    const refresh = async (forceHistory = false) => {
+      if (!alive || document.visibilityState === "hidden") return;
+      if (inFlight) {
+        if (forceHistory) refreshRequested = true;
+        return;
+      }
       clearTimeout(timer);
       inFlight = true;
       setSyncing(true);
       try {
-        let orders = await readOrders();
+        // Poll supported pending statuses every five seconds, but reread full history only
+        // every 30s or on focus/manual refresh. Other providers still need each history read.
+        const needsHistory =
+          forceHistory ||
+          !knownOrders ||
+          Date.now() - lastHistoryRead >= 30_000 ||
+          knownOrders.some(
+            (order) => order.status === "pending" && !["cashfree", "demo"].includes(order.provider),
+          );
+        let orders = needsHistory ? await readOrders() : knownOrders!;
+        if (needsHistory) lastHistoryRead = Date.now();
         if (!alive) return;
         const pending = orders.filter(
           (order) => order.status === "pending" && ["cashfree", "demo"].includes(order.provider),
@@ -69,8 +102,10 @@ export function useBillingOrders(initialOrders: PurchaseOrder[], active: boolean
               result.value.status &&
               result.value.status !== "pending",
           )
-        )
+        ) {
           orders = await readOrders();
+          lastHistoryRead = Date.now();
+        }
         if (!alive) return;
         for (const result of results) {
           if (result.status === "fulfilled") {
@@ -85,7 +120,8 @@ export function useBillingOrders(initialOrders: PurchaseOrder[], active: boolean
             ? { ...order, paymentStatus: attemptStates.get(order.id) }
             : order,
         );
-        setSnapshot({ source: initialOrders, orders });
+        knownOrders = orders;
+        setSnapshot({ source: initialOrders, orders, loaded: true });
         setError(
           results.some((result) => result.status === "rejected")
             ? "Some payments could not be checked. Refresh to try again; avoid paying twice."
@@ -94,6 +130,7 @@ export function useBillingOrders(initialOrders: PurchaseOrder[], active: boolean
         if (orders.some((order) => order.status === "pending") && ++checks < 40)
           timer = setTimeout(() => void refresh(), 5000);
       } catch (reason) {
+        knownOrders = null;
         if (alive) {
           setError(
             reason instanceof Error ? reason.message : "Billing history could not be refreshed.",
@@ -103,12 +140,16 @@ export function useBillingOrders(initialOrders: PurchaseOrder[], active: boolean
       } finally {
         inFlight = false;
         if (alive) setSyncing(false);
+        if (alive && refreshRequested) {
+          refreshRequested = false;
+          void refresh(true);
+        }
       }
     };
     const resume = () => {
       if (document.visibilityState !== "hidden") {
         checks = 0;
-        void refresh();
+        void refresh(true);
       }
     };
     void refresh();
@@ -121,9 +162,10 @@ export function useBillingOrders(initialOrders: PurchaseOrder[], active: boolean
       window.removeEventListener("focus", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, [active, initialOrders, attempt]);
+  }, [active, initialOrders, initiallyFresh, attempt]);
   return {
     orders: snapshot.orders,
+    loaded: snapshot.loaded,
     syncing,
     error,
     refresh: () => setAttempt((value) => value + 1),

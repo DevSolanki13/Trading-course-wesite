@@ -1,11 +1,13 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createAdminClient, createRequestClient } from "../database/supabase";
 import { AuthError } from "./http";
 import { deviceName, isPrivileged, safeNext } from "./policy";
 import { cookiePolicy } from "./cookies";
 
-export async function identity() {
+// React render-pass scope only, never a process-global or cross-request identity cache.
+export const identity = cache(async function identity() {
   const client = await createRequestClient();
   const {
     data: { user },
@@ -49,7 +51,7 @@ export async function identity() {
     aal: claims.aal as string,
     accessToken: session.access_token,
   };
-}
+});
 export type Identity = Awaited<ReturnType<typeof identity>>;
 
 export async function admitted() {

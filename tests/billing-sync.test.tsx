@@ -45,11 +45,13 @@ const request = vi.fn();
 function Harness({
   orders = initial,
   active = true,
+  fresh = false,
 }: {
   orders?: PurchaseOrder[];
   active?: boolean;
+  fresh?: boolean;
 }) {
-  const state = useBillingOrders(orders, active);
+  const state = useBillingOrders(orders, active, fresh);
   return (
     <StudentBillingPanel
       orders={state.orders}
@@ -60,7 +62,7 @@ function Harness({
     />
   );
 }
-async function mount(props: { orders?: PurchaseOrder[]; active?: boolean } = {}) {
+async function mount(props: { orders?: PurchaseOrder[]; active?: boolean; fresh?: boolean } = {}) {
   const view = render(<Harness {...props} />);
   await act(async () => {});
   return view;
@@ -251,7 +253,68 @@ describe("billing refresh and reconciliation", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(240000);
     });
-    expect(request).toHaveBeenCalledTimes(80);
+    expect(request.mock.calls.filter(([url]) => url === "/api/purchase/orders")).toHaveLength(7);
+    expect(request.mock.calls.filter(([url]) => String(url).includes("/status/"))).toHaveLength(40);
+    expect(request).toHaveBeenCalledTimes(47);
     expect(screen.getByRole("button", { name: "Refresh payments" })).toBeEnabled();
+  });
+
+  it("uses a fresh server snapshot once, but rereads on focus and when billing reopens", async () => {
+    request.mockResolvedValue(response({ orders: [paid] }));
+    const orders = [paid];
+    const view = await mount({ orders, fresh: true });
+    expect(request).not.toHaveBeenCalled();
+    await act(async () => window.dispatchEvent(new Event("focus")));
+    expect(request).toHaveBeenCalledTimes(1);
+    view.rerender(<Harness orders={orders} fresh active={false} />);
+    view.rerender(<Harness orders={orders} fresh active />);
+    await act(async () => {});
+    expect(request).toHaveBeenCalledTimes(2);
+  });
+
+  it("still checks a fresh pending snapshot immediately and waits for saved payment confirmation", async () => {
+    request
+      .mockResolvedValueOnce(response({ order: { status: "paid" } }))
+      .mockResolvedValueOnce(response({ orders: [paid] }));
+    await mount({ fresh: true });
+    expect(request.mock.calls.map(([url]) => url)).toEqual([
+      `/api/checkout/status/${paid.id}`,
+      "/api/purchase/orders",
+    ]);
+    expect(screen.getByRole("link", { name: "View receipt" })).toBeVisible();
+  });
+
+  it("keeps five-second history reads for UPI and other unsupported status providers", async () => {
+    const order = { ...pending, provider: "upi" as const };
+    request.mockResolvedValue(response({ orders: [order] }));
+    await mount({ orders: [order] });
+    await act(async () => vi.advanceTimersByTimeAsync(15_000));
+    expect(request.mock.calls.map(([url]) => url)).toEqual(Array(4).fill("/api/purchase/orders"));
+  });
+
+  it("does not overlap focus/status checks and pauses network work while hidden", async () => {
+    let finish!: (value: unknown) => void;
+    request.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    await mount();
+    await act(async () => window.dispatchEvent(new Event("focus")));
+    expect(request).toHaveBeenCalledTimes(1);
+    request.mockImplementation(async (url) =>
+      response(
+        url === "/api/purchase/orders" ? { orders: [paid] } : { order: { status: "pending" } },
+      ),
+    );
+    await act(async () => finish(response({ orders: [pending] })));
+    const visibility = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(request).toHaveBeenCalledTimes(3);
+    visibility.mockRestore();
+    request.mockResolvedValue(response({ orders: [paid] }));
+    await act(async () => document.dispatchEvent(new Event("visibilitychange")));
+    expect(screen.getByRole("link", { name: "View receipt" })).toBeVisible();
   });
 });

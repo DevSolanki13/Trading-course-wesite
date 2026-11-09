@@ -36,12 +36,16 @@ import type {
 import type { Announcement } from "../../shared/announcements";
 import { accessExpiryLabel } from "../../shared/course-access";
 import { useBillingOrders } from "../lib/use-billing-orders";
+import { useAnnouncements } from "../lib/use-announcements";
+import { useAuth } from "./auth-provider";
 
 interface StudentDashboardProps {
   user: PurchaseUser;
   courses: PurchaseCourse[];
   allCourses?: PurchaseCourse[];
   orders: PurchaseOrder[];
+  orderCount?: number;
+  ordersFresh?: boolean;
   announcements?: Announcement[];
   initialView?: "courses" | "explore" | "billing" | "account";
   ordersOnly?: boolean;
@@ -55,7 +59,9 @@ export function StudentDashboard({
   courses,
   allCourses = [],
   orders: initialOrders,
-  announcements = [],
+  orderCount,
+  ordersFresh = false,
+  announcements,
   initialView = "courses",
   ordersOnly = false,
   local = false,
@@ -63,6 +69,8 @@ export function StudentDashboard({
   initialLessonId,
 }: StudentDashboardProps) {
   const router = useRouter();
+  const auth = useAuth();
+  const sessionMismatch = auth.invalidated || (auth.ready && auth.user?.id !== user.id);
   const [view, setView] = useState<"courses" | "explore" | "billing" | "account">(
     ordersOnly ? "billing" : initialView,
   );
@@ -72,25 +80,21 @@ export function StudentDashboard({
     syncing: billingSyncing,
     error: billingError,
     refresh: refreshBilling,
-  } = useBillingOrders(initialOrders, view === "billing");
+    loaded: billingLoaded,
+  } = useBillingOrders(initialOrders, view === "billing" && !sessionMismatch, ordersFresh);
   const [exploreQuery, setExploreQuery] = useState("");
   const [exploreLevel, setExploreLevel] = useState("all");
   const [loggingOut, setLoggingOut] = useState(false);
 
-  // Admin Announcements state
-  const [announcementsList, setAnnouncementsList] = useState<Announcement[]>(announcements);
+  const announcementsList = useAnnouncements(announcements, user.id);
 
   useEffect(() => {
-    // If not passed initially or to ensure fresh data, fetch active announcements
-    fetch("/api/announcements", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.announcements && Array.isArray(data.announcements)) {
-          setAnnouncementsList(data.announcements);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    if (!auth.ready) return;
+    if (auth.error?.code === "DEVICE_LIMIT") router.replace("/auth/devices?next=%2Fdashboard");
+    else if (!auth.user && (!auth.error || auth.error.status === 401))
+      router.replace("/login?redirect=%2Fdashboard");
+    else if (auth.user && auth.user.id !== user.id) router.refresh();
+  }, [auth.ready, auth.user, auth.error, user.id, router]);
 
   // Active playing course state (when video player is open in the main area)
   const [activeCourseSlug, setActiveCourseSlug] = useState<string | null>(
@@ -126,7 +130,15 @@ export function StudentDashboard({
     const handlePopState = () => {
       if (typeof window === "undefined") return;
       const params = new URLSearchParams(window.location.search);
-      const urlView = params.get("view") || params.get("tab");
+      const requested = params.get("view") || params.get("tab");
+      const urlView =
+        requested === "orders"
+          ? "billing"
+          : requested === "profile" || requested === "devices"
+            ? "account"
+            : requested === "study"
+              ? "courses"
+              : requested;
       const urlCourse = params.get("course");
       const urlLesson = params.get("lesson");
       if (
@@ -230,6 +242,7 @@ export function StudentDashboard({
         body: "{}",
       });
       if (!r.ok) throw new Error("Sign out failed. Please retry.");
+      auth.clear();
       router.push("/login");
       router.refresh();
     } catch (reason) {
@@ -340,7 +353,7 @@ export function StudentDashboard({
   const currentActiveLessonId = activeLessonSummary?.id;
 
   useEffect(() => {
-    if (!currentActiveLessonId) {
+    if (!currentActiveLessonId || sessionMismatch) {
       return;
     }
     let cancelled = false;
@@ -379,7 +392,26 @@ export function StudentDashboard({
       cancelled = true;
       controller.abort();
     };
-  }, [currentActiveLessonId, lessonFetchTrigger]);
+  }, [currentActiveLessonId, lessonFetchTrigger, sessionMismatch]);
+
+  // A fresh identity mismatch must not leave the previous account's data visible.
+  if (sessionMismatch)
+    return (
+      <main id="main-content" aria-busy="true">
+        <p role={auth.error ? "alert" : "status"}>
+          {auth.error?.message ?? "Checking your session…"}
+        </p>
+        {auth.error && (
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => void auth.refresh()}
+          >
+            Retry session check
+          </button>
+        )}
+      </main>
+    );
 
   return (
     <main id="main-content" className="admin-page student-dashboard-page">
@@ -453,7 +485,9 @@ export function StudentDashboard({
           >
             <Receipt size={18} weight={view === "billing" ? "fill" : "regular"} />
             <span>Billing & receipts</span>
-            <span className="student-nav-badge">({orders.length})</span>
+            <span className="student-nav-badge">
+              ({billingLoaded ? orders.length : (orderCount ?? orders.length)})
+            </span>
           </button>
           <button
             type="button"
@@ -1005,7 +1039,7 @@ export function StudentDashboard({
           {view === "billing" && (
             <StudentBillingPanel
               orders={orders}
-              syncing={billingSyncing}
+              syncing={billingSyncing || (!billingLoaded && !billingError)}
               error={billingError}
               onRefresh={refreshBilling}
               onBrowseCourses={() => handleSelectView("explore")}

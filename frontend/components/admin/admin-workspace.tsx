@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { MfaPanel } from "../mfa-panel";
 import { BullMark } from "../bull-mark";
 import { ThemeToggle } from "../theme-toggle";
+import { useAuth } from "../auth-provider";
 const CourseManager = dynamic(() =>
   import("./course-manager").then((module) => module.CourseManager),
 );
@@ -55,14 +56,6 @@ import {
 } from "@phosphor-icons/react";
 import { AdminWorkspaceSkeleton } from "./admin-skeletons";
 
-type User = {
-  id?: string;
-  name?: string;
-  email: string;
-  phone?: string | null;
-  role: "admin" | "support" | "student";
-  aal: string;
-};
 const allViews = [
   { id: "overview", label: "Overview", Icon: ChartBar },
   { id: "courses", label: "Courses", Icon: Books, admin: true },
@@ -80,15 +73,27 @@ const allViews = [
 ] as const;
 export function AdminWorkspace() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<string>(() => {
+  const { user: identity, ready, error: authError, clear, refresh } = useAuth();
+  const user = identity
+    ? {
+        ...identity,
+        email: identity.email ?? "",
+        role: identity.role ?? "student",
+        aal: identity.aal ?? "",
+      }
+    : null;
+  const [selectedView, setView] = useState<string>(() => {
     if (typeof window !== "undefined") {
       const p = new URLSearchParams(window.location.search).get("view");
       if (p && allViews.some((v) => v.id === p)) return p;
     }
     return "courses";
   });
-  const [error, setError] = useState("");
+  const view = user?.role === "support" && selectedView === "courses" ? "overview" : selectedView;
+  const error =
+    authError?.status === 401 || authError?.code === "DEVICE_LIMIT"
+      ? ""
+      : (authError?.message ?? "");
   const [loggingOut, setLoggingOut] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
@@ -152,11 +157,13 @@ export function AdminWorkspace() {
     if (loggingOut) return;
     setLoggingOut(true);
     try {
-      await fetch("/api/auth/logout", {
+      const response = await fetch("/api/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "{}",
       });
+      if (!response.ok) throw new Error("Sign out failed. Please retry.");
+      clear();
       router.push("/login");
       router.refresh();
     } catch {
@@ -166,34 +173,13 @@ export function AdminWorkspace() {
     }
   }
   useEffect(() => {
-    let live = true;
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then(async (r) => {
-        const d = await r.json();
-        if (!r.ok) throw Object.assign(new Error(d.error), { code: d.code, status: r.status });
-        return d;
-      })
-      .then((d) => {
-        if (!live) return;
-        if (d.user.role === "student") {
-          router.replace("/account");
-          return;
-        }
-        if (d.user.role === "support") {
-          setView((prev) => (prev === "courses" ? "overview" : prev));
-        }
-        setUser(d.user);
-      })
-      .catch((e) => {
-        if (!live) return;
-        if (e.code === "DEVICE_LIMIT") router.replace("/auth/devices?next=%2Fadmin");
-        else if (e.status === 401) router.replace("/admin/login?next=%2Fadmin");
-        else setError(e.message);
-      });
-    return () => {
-      live = false;
-    };
-  }, [router]);
+    if (!ready) return;
+    if (authError?.code === "DEVICE_LIMIT") router.replace("/auth/devices?next=%2Fadmin");
+    else if (authError?.status === 401 || (!authError && !identity))
+      router.replace("/admin/login?next=%2Fadmin");
+    else if (identity?.role === "student") router.replace("/account");
+  }, [ready, identity, authError, router]);
+  if (!ready) return <AdminWorkspaceSkeleton />;
   if (error)
     return (
       <main id="main-content" className="container admin-page">
@@ -205,7 +191,7 @@ export function AdminWorkspace() {
         </Link>
       </main>
     );
-  if (!user) return <AdminWorkspaceSkeleton />;
+  if (!ready || !user || user.role === "student") return <AdminWorkspaceSkeleton />;
   if (user.aal !== "aal2" && user.aal !== "local-demo")
     return (
       <main id="main-content" className="container admin-page">
@@ -426,12 +412,7 @@ export function AdminWorkspace() {
           {view === "team" && user.role === "admin" && <TeamPanel currentUserId={user.id} />}
           {view === "settings" && user.role === "admin" && <SettingsPanel />}
           {view === "profile" && (
-            <AdminProfilePanel
-              user={user}
-              onProfileUpdated={(updated) => {
-                setUser((prev) => (prev ? { ...prev, ...updated } : prev));
-              }}
-            />
+            <AdminProfilePanel user={user} onProfileUpdated={() => void refresh()} />
           )}
         </div>
       </div>

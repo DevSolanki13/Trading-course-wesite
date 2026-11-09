@@ -23,6 +23,7 @@ export default async function Orders() {
       courses={courses.filter((c) => c.owned || c.accessExpiresAt)}
       allCourses={courses}
       orders={orders}
+      ordersFresh
       ordersOnly
       local={localDemoEnabled()}
     />

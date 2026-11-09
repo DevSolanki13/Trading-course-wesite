@@ -2,8 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { contentSecurityPolicy } from "./backend/security/content-policy";
 import { localDemoEnabled } from "./backend/purchase/mode";
+import { UPLOADED_THUMBNAIL } from "./shared/course-thumbnail";
 
 export async function proxy(request: NextRequest) {
+  // These UUID-bound uploads are already public and immutable in the GET handler.
+  // Do not refresh a signed-in session just to retrieve an image. No other API is exempt.
+  if (["GET", "HEAD"].includes(request.method) && UPLOADED_THUMBNAIL.test(request.nextUrl.pathname))
+    return NextResponse.next();
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isCashfree =
     request.nextUrl.pathname.startsWith("/pay/cashfree/") ||
@@ -79,6 +84,6 @@ export async function proxy(request: NextRequest) {
 }
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|images/|videos/|brand/|favicon.ico|robots.txt|sitemap.xml|opengraph-image).*)",
+    "/((?!_next/static|_next/image|images/|videos/|brand/|favicon-(?:dark|light)\\.png$|favicon.ico|robots.txt|sitemap.xml|opengraph-image).*)",
   ],
 };
