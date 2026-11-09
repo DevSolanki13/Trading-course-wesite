@@ -70,15 +70,20 @@ export async function purchaseConfirmation(id: string, userId: string) {
   };
 }
 export async function purchaseOrders(userId: string) {
-  const orders = await purchaseRpc<PurchaseOrder[]>("purchase_read", {
-    p_action: "orders",
-    p_user: userId,
-    p_ref: null,
-  });
-  if (localDemoEnabled()) return orders;
-  const { commerceOrders } = await import("./billing");
-  return [...orders, ...(await commerceOrders(userId))].sort(
-    (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+  const legacy = () =>
+    purchaseRpc<PurchaseOrder[]>("purchase_read", {
+      p_action: "orders",
+      p_user: userId,
+      p_ref: null,
+    });
+  if (localDemoEnabled()) return legacy();
+  const [orders, current] = await Promise.all([
+    legacy(),
+    import("./billing").then(({ commerceOrders }) => commerceOrders(userId)),
+  ]);
+  return [...orders, ...current].sort(
+    (a, b) =>
+      Date.parse(b.createdAt) - Date.parse(a.createdAt) || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0),
   );
 }
 

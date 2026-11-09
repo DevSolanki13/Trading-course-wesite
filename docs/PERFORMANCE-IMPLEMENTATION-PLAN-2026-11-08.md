@@ -2,7 +2,7 @@
 
 Date: 8 November 2026\
 Reference commit: `272990e`, plus existing uncommitted order-detail/component styles\
-Status: Phases 0-1 complete; Phases 2-3 code/non-browser verification complete, browser acceptance delegated to the user, 9 November 2026\
+Status: Phases 0-1 complete; Phases 2-3 code/non-browser verification complete; Phase 4 first batch verified locally, overall Phase 4 IN PROGRESS; browser acceptance delegated to the user, 9 November 2026\
 Scope: preserve every existing feature, function, animation, responsive layout, and theme.
 
 This plan turns the project-wide audit into implementation batches. It does not replace the older [launch implementation plan](../IMPLEMENTATION-PLAN.md). A checked item means the stated result has been verified, not just that code was written. Recheck source before each batch because the audit describes a point in time.
@@ -227,6 +227,16 @@ Completion gate: repeated identity/data requests decrease without weakening perm
 
 Affected areas: [purchase repository](../backend/purchase/repository.ts), [billing reads](../backend/purchase/billing.ts), [admin handler](../backend/handlers/admin.ts), [course lookup SQL](../backend/database/migrations/202610310011_course_access_expiry.sql), [learner reporting SQL](../backend/database/migrations/202611010012_admin_course_learners.sql), [lesson access](../backend/learning/data.ts), [receipt delivery](../backend/purchase/mail.ts), [success page](../app/checkout/success/page.tsx), and [gateway client](../backend/payments/indianxtrade.ts).
 
+First-batch update, 9 November: parallel history reads (part of P4.3), scoped/joined lesson authorization (P4.5 implementation), and collector-session reuse (P4.8 implementation) have passed local checks. Overall Phase 4 remains IN PROGRESS. See [Phase 4 first-batch evidence and remaining work](./PERFORMANCE-PHASE-4-RESULTS-2026-11-09.md). No browser tests, shared database changes or production deployment occurred.
+
+- [x] Run an isolated, fully migrated query-plan fixture: 100 courses, 100 modules, 1000 lessons; inspect the relevant existing indexes without adding speculative ones.
+- [x] Start independent order sources concurrently, retain all provider records and financial values, and add a deterministic timestamp/ID sort.
+- [x] Join lesson/module/course metadata in one read; scope enrollment/order evidence by verified owner and course, skipping unrelated progress for lesson authorization.
+- [x] Add bounded, credential-scoped collector-session reuse with expiry, coordinated login, safe delayed-401 recovery and no end-user authorization caching.
+- [x] Pass production build, lint, TypeScript, 209 component/API tests and 71 backend/asset tests.
+- [ ] Finish catalogue SQL optimization, combined-history pagination, refund batching, learner pagination and prompt durable receipt-worker delivery.
+- [ ] Complete representative/deployed query-plan and region checks, any justified additive migrations, and browser/provider acceptance.
+
 - [ ] **P4.1** Capture representative query plans, request counts, payload sizes, and latency distributions in an isolated or explicitly scoped environment. Inspect deployed indexes; do not assume missing indexes from source alone. Avoid executing mutating `EXPLAIN ANALYZE` statements against production.
 - [ ] **P4.2** Query the selected course before constructing curriculum/progress JSON, rather than assembling the entire personalized catalogue. Preserve published-state, preview, access-expiry, and progress rules; follow the current UPI SQL wrappers.
 - [ ] **P4.3** Parallelize independent legacy/current order reads or unify them. Introduce stable pagination across the combined history; preserve every historical order, total/count semantics, sorting, receipts, and pending-payment discovery.
@@ -389,3 +399,10 @@ Copy this section for each implementation batch:
 - Evidence: [Phase 3 results](./PERFORMANCE-PHASE-3-RESULTS-2026-11-09.md).
 - Deterministic billing fixture: 80 requests before, 47 after; all 40 status checks retained. Non-billing dashboards use count-only reads instead of full history. These are local/source-backed reductions, not production navigation measurements.
 - No browser tests, new dependencies, SQL migrations, shared-data mutation, deployment, commit/push or Phase 4 implementation.
+
+### Batch 5 - Phase 4 first batch, 9 November 2026
+
+- Task IDs: partial P4.1/P4.3; P4.5 and P4.8 local implementation; corresponding P4.11 regression checks.
+- Status: FIRST BATCH VERIFIED LOCALLY; PHASE 4 REMAINS IN PROGRESS. Supersedes Batch 4's Phase 4 not-started status only.
+- Evidence and remaining gates: [Phase 4 results](./PERFORMANCE-PHASE-4-RESULTS-2026-11-09.md).
+- Preserved Phase 3's uncommitted changes. No browser tools/tests, dependency changes, SQL migration files, shared-database writes, real-provider calls, deployment or commit/push.

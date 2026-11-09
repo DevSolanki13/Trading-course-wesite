@@ -131,6 +131,30 @@ describe("owner-scoped billing history", () => {
       "older-order",
     ]);
   });
+  it("starts the current-provider read before a slow legacy read finishes", async () => {
+    let finish!: (value: unknown) => void;
+    db.rpc.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    db.order.mockResolvedValue({ data: [row()], error: null });
+    const request = purchaseOrders(paid.userId);
+    await vi.waitFor(() => expect(db.order).toHaveBeenCalled());
+    finish({ data: [], error: null });
+    expect(await request).toHaveLength(1);
+  });
+  it("uses a deterministic descending ID tie-break without dropping either provider", async () => {
+    db.rpc.mockResolvedValueOnce({
+      data: [{ ...paid, id: "zz-order", provider: "upi" }],
+      error: null,
+    });
+    db.order.mockResolvedValue({ data: [row()], error: null });
+    const result = await purchaseOrders(paid.userId);
+    expect(result.map((order) => order.id)).toEqual(["zz-order", paid.id]);
+    expect(result.map((order) => order.amount)).toEqual([199900, 199900]);
+  });
   it("looks up a Cashfree receipt only within the requesting user's orders", async () => {
     db.rpc.mockResolvedValue({ data: null, error: null });
     db.order.mockResolvedValue({ data: [], error: null });

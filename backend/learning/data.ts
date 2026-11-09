@@ -36,21 +36,30 @@ type Progress = {
 };
 export const graphSelect =
   "id,slug,title,description,level,language,modules(id,title,position,lessons(id,title,position,duration_seconds,is_preview,published))";
-export async function learningAccount() {
+/** A course scope is used for lesson authorization, which does not need account-wide progress. */
+export async function learningAccount(courseId?: string) {
   const context = await admitted();
+  let enrollmentQuery = context.admin
+    .from("enrollments")
+    .select("course_id,source,order_id,active,revoked_at,expires_at")
+    .eq("user_id", context.user.id);
+  let orderQuery = context.admin
+    .from("orders")
+    .select(
+      "id,user_id,course_id,status,total_paise,course_snapshot,refund_policy_snapshot,paid_at,created_at",
+    )
+    .eq("user_id", context.user.id)
+    .order("created_at", { ascending: false });
+  if (courseId) {
+    enrollmentQuery = enrollmentQuery.eq("course_id", courseId);
+    orderQuery = orderQuery.eq("course_id", courseId);
+  }
   const [enrollments, orders, progress] = await Promise.all([
-    context.admin
-      .from("enrollments")
-      .select("course_id,source,order_id,active,revoked_at,expires_at")
-      .eq("user_id", context.user.id),
-    context.admin
-      .from("orders")
-      .select(
-        "id,user_id,course_id,status,total_paise,course_snapshot,refund_policy_snapshot,paid_at,created_at",
-      )
-      .eq("user_id", context.user.id)
-      .order("created_at", { ascending: false }),
-    context.admin.rpc("learning_progress", { p_user: context.user.id }),
+    enrollmentQuery,
+    orderQuery,
+    courseId
+      ? Promise.resolve({ data: [], error: null })
+      : context.admin.rpc("learning_progress", { p_user: context.user.id }),
   ]);
   if (enrollments.error || orders.error || progress.error)
     throw new AuthError(503, "Learning records are temporarily unavailable.");
@@ -226,24 +235,37 @@ export async function library(account: LearningAccount): Promise<LibraryView> {
     },
   };
 }
-export async function lessonAccess(lessonId: string, account: LearningAccount | null) {
+type LessonMetadata = {
+  id: string;
+  module_id: string;
+  title: string;
+  is_preview: boolean;
+  published: boolean;
+  duration_seconds: number;
+  modules: { course_id: string; courses: { id: string; status: string } | null } | null;
+};
+
+export async function lessonAccess(
+  lessonId: string,
+  accountOrLoad: LearningAccount | null | ((courseId: string) => Promise<LearningAccount | null>),
+) {
   const admin = createAdminClient();
-  const { data: lesson, error } = await admin
+  const { data, error } = await admin
     .from("lessons")
-    .select("id,module_id,title,is_preview,published,duration_seconds")
+    .select(
+      "id,module_id,title,is_preview,published,duration_seconds,modules!inner(course_id,courses!inner(id,status))",
+    )
     .eq("id", lessonId)
     .maybeSingle();
   if (error) throw new AuthError(503, "Lesson information is unavailable.");
-  if (!lesson?.published) throw new AuthError(404, "Lesson not found.");
-  const { data: module } = await admin
-    .from("modules")
-    .select("course_id")
-    .eq("id", lesson.module_id)
-    .single();
-  const { data: course } = module
-    ? await admin.from("courses").select("id,status").eq("id", module.course_id).single()
-    : { data: null };
-  if (course?.status !== "published") throw new AuthError(404, "Lesson not found.");
+  const metadata = data as unknown as LessonMetadata | null;
+  const course = metadata?.modules?.courses;
+  if (!metadata?.published || !course || course.status !== "published")
+    throw new AuthError(404, "Lesson not found.");
+  const { modules: module, ...lesson } = metadata;
+  if (module?.course_id !== course.id) throw new AuthError(404, "Lesson not found.");
+  const account =
+    typeof accountOrLoad === "function" ? await accountOrLoad(course.id) : accountOrLoad;
   if (
     !lesson.is_preview &&
     (!account ||
@@ -259,5 +281,5 @@ export async function lessonAccess(lessonId: string, account: LearningAccount | 
       .filter((e) => hasCourseAccess([e], account.orders, course.id, account.context.user.id))
       .map((e) => e.expires_at as string)
       .sort((a, b) => Date.parse(b) - Date.parse(a))[0] ?? null;
-  return { lesson, admin, accessExpiresAt };
+  return { lesson, admin, accessExpiresAt, account };
 }

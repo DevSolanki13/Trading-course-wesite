@@ -1,9 +1,43 @@
 import { z } from "zod";
 import jsQR from "jsqr";
 import { PNG } from "pngjs";
+import { createHash } from "node:crypto";
 import type { Environment } from "../config/environment.ts";
 
 const ORIGIN = "https://indianxtrade.com";
+const SESSION_TTL_MS = 5 * 60_000;
+type CollectorSession = { token: string; expiresAt: number; login?: Promise<void> };
+// Collector credentials only, never end-user identity. Transport-scoped for injected clients/tests.
+const sessions = new WeakMap<typeof fetch, Map<string, CollectorSession>>();
+
+function collectorSession(env: Environment, fetcher: typeof fetch) {
+  const key = createHash("sha256")
+    .update(
+      JSON.stringify([
+        ORIGIN,
+        env.UPI_GATEWAY,
+        env.INDIANXTRADE_COLLECTOR_EMAIL,
+        env.INDIANXTRADE_COLLECTOR_PASSWORD,
+        env.INDIANXTRADE_SESSION_TOKEN,
+        env.UPI_COLLECTION_VPA,
+      ]),
+    )
+    .digest("hex");
+  let cache = sessions.get(fetcher);
+  if (!cache) {
+    cache = new Map();
+    sessions.set(fetcher, cache);
+  }
+  let state = cache.get(key);
+  if (!state) {
+    for (const [entry, value] of cache)
+      if (!value.login && value.expiresAt <= Date.now()) cache.delete(entry);
+    if (cache.size >= 8) cache.delete(cache.keys().next().value!);
+    state = { token: env.INDIANXTRADE_SESSION_TOKEN ?? "", expiresAt: Date.now() + SESSION_TTL_MS };
+    cache.set(key, state);
+  }
+  return state;
+}
 const tokenSchema = z.string().regex(/^[A-Za-z0-9_-]{24,128}$/);
 const statusSchema = z.object({
   status: z.enum(["AWAITING_PAYMENT", "PENDING_CONFIRMATION", "COMPLETED", "REJECTED", "EXPIRED"]),
@@ -30,11 +64,12 @@ export type SharedUpiIntent = {
 
 /** Uses the existing gateway's authenticated public APIs; no IndianXtrade code is changed. */
 export class IndianxtradeGateway {
-  private session: string;
+  private session: CollectorSession;
   constructor(privateEnv: Environment = process.env, fetcher: typeof fetch = fetch) {
-    this.env = privateEnv;
+    // Keep a credential snapshot: runtime rotation creates a separate cache entry.
+    this.env = { ...privateEnv };
     this.fetcher = fetcher;
-    this.session = privateEnv.INDIANXTRADE_SESSION_TOKEN ?? "";
+    this.session = collectorSession(this.env, fetcher);
   }
   private env: Environment;
   private fetcher: typeof fetch;
@@ -51,22 +86,48 @@ export class IndianxtradeGateway {
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
     });
-    const cookie = response.headers
-      .get("set-cookie")
-      ?.match(/(?:^|[,;]\s*)asm_session=([A-Za-z0-9_-]+)/)?.[1];
+    const rawCookie =
+      response.headers.getSetCookie().find((value) => /(?:^|[,;]\s*)asm_session=/.test(value)) ??
+      "";
+    const cookie = rawCookie.match(/(?:^|[,;]\s*)asm_session=([A-Za-z0-9_-]+)/)?.[1];
     if (!response.ok || !cookie)
       throw new Error(
         "Shared payment gateway sign-in is unavailable. Check the saved order before retrying.",
       );
-    this.session = cookie;
+    let expiresAt = Date.now() + SESSION_TTL_MS;
+    const maxAge = rawCookie.match(/(?:^|;)\s*max-age=(-?\d+)/i)?.[1];
+    const expires = rawCookie.match(/(?:^|;)\s*expires=([^;]+)/i)?.[1];
+    if (maxAge !== undefined) expiresAt = Math.min(expiresAt, Date.now() + Number(maxAge) * 1000);
+    else if (expires && Number.isFinite(Date.parse(expires)))
+      expiresAt = Math.min(expiresAt, Date.parse(expires));
+    if (expiresAt <= Date.now())
+      throw new Error("Shared payment gateway returned an expired session.");
+    this.session.token = cookie;
+    this.session.expiresAt = expiresAt;
   }
+
+  private async ensureSession(rejectedToken?: string) {
+    // A delayed 401 for an older cookie must not discard a newer concurrent login.
+    if (rejectedToken !== undefined && this.session.token === rejectedToken) {
+      this.session.token = "";
+      this.session.expiresAt = 0;
+    }
+    if (this.session.token && this.session.expiresAt > Date.now()) return;
+    if (!this.session.login)
+      this.session.login = this.login().finally(() => {
+        this.session.login = undefined;
+      });
+    await this.session.login;
+  }
+
   private async request(path: string, method = "GET", data?: unknown) {
-    if (!this.session) await this.login();
-    const send = () =>
-      this.fetcher(`${ORIGIN}${path}`, {
+    const send = async () => {
+      await this.ensureSession();
+      const token = this.session.token;
+      const response = await this.fetcher(`${ORIGIN}${path}`, {
         method,
         headers: {
-          Cookie: `asm_session=${this.session}`,
+          Cookie: `asm_session=${token}`,
           Origin: ORIGIN,
           "Content-Type": "application/json",
         },
@@ -75,11 +136,19 @@ export class IndianxtradeGateway {
         cache: "no-store",
         signal: AbortSignal.timeout(15000),
       });
-    let response = await send();
-    if (response.status === 401) {
-      await this.login();
-      response = await send();
+      return { response, token };
+    };
+    let result = await send();
+    if (result.response.status === 401) {
+      await result.response.body?.cancel().catch(() => {});
+      await this.ensureSession(result.token);
+      result = await send();
+      if (result.response.status === 401 && this.session.token === result.token) {
+        this.session.token = "";
+        this.session.expiresAt = 0;
+      }
     }
+    const { response } = result;
     if (!response.ok)
       throw new Error(
         `Shared UPI gateway is temporarily unavailable (${response.status}). Check your saved order before retrying.`,

@@ -14,9 +14,9 @@ const parse = validationParser({
   fallback: "Check the learning request fields.",
   useIssueMessage: false,
 });
-async function optionalAccount(): Promise<LearningAccount | null> {
+async function optionalAccount(courseId?: string): Promise<LearningAccount | null> {
   try {
-    return await learningAccount();
+    return await learningAccount(courseId);
   } catch (e) {
     if (e instanceof AuthError && e.status === 401) return null;
     throw e;
@@ -63,7 +63,7 @@ export async function learningRequest(request: Request) {
         });
       if (action === "lesson") {
         const id = parse(z.string().uuid(), url.searchParams.get("id"));
-        const { admin } = await lessonAccess(id, await optionalAccount());
+        const { admin } = await lessonAccess(id, (courseId) => optionalAccount(courseId));
         const [asset, resources] = await Promise.all([
           admin.from("lesson_assets").select("notes").eq("lesson_id", id).maybeSingle(),
           admin
@@ -81,8 +81,10 @@ export async function learningRequest(request: Request) {
     sameOrigin(request);
     if (action === "playback") {
       const input = parse(z.object({ lessonId: z.string().uuid() }).strict(), await body(request));
-      const account = await optionalAccount();
-      const { lesson, admin, accessExpiresAt } = await lessonAccess(input.lessonId, account);
+      const { lesson, admin, accessExpiresAt, account } = await lessonAccess(
+        input.lessonId,
+        (courseId) => optionalAccount(courseId),
+      );
       await limit(request, "video-token", account?.context.user.id ?? "", 30, 900);
       if (!lesson.duration_seconds)
         throw new AuthError(503, "The lesson is awaiting video duration verification.");
