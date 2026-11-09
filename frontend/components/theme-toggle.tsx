@@ -1,7 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { Sun, Moon } from "@phosphor-icons/react";
+import { warmThemeBrandAssets } from "../lib/theme-brand-assets";
 
 const subscribe = (callback: () => void) => {
   if (typeof window === "undefined") return () => {};
@@ -24,9 +25,16 @@ export function ThemeToggle({
   size?: number;
 }) {
   const theme = useSyncExternalStore(subscribe, getTheme, getServerTheme);
+  const requested = useRef<string | null>(null);
+  const requestVersion = useRef(0);
 
-  function toggle() {
-    const next = theme === "dark" ? "light" : "dark";
+  async function toggle() {
+    const next = (requested.current ?? getTheme()) === "dark" ? "light" : "dark";
+    requested.current = next;
+    const version = ++requestVersion.current;
+    await warmThemeBrandAssets(next);
+    if (version !== requestVersion.current) return;
+    requested.current = null;
     if (typeof document !== "undefined") {
       document.documentElement.dataset.theme = next;
       const favicons = document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]');
@@ -49,6 +57,8 @@ export function ThemeToggle({
       type="button"
       className={className}
       onClick={toggle}
+      onPointerEnter={() => void warmThemeBrandAssets(theme === "dark" ? "light" : "dark")}
+      onFocus={() => void warmThemeBrandAssets(theme === "dark" ? "light" : "dark")}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
       title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
     >

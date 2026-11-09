@@ -47,7 +47,7 @@ function FestivalVideo() {
       <video
         ref={video}
         className="festival-video-player"
-        src="/videos/INDIAN_X_TRADE_Single_Logo_Smooth_Outro_1080p.mp4"
+        src="/videos/indianxtrade-greeting-v2.mp4"
         aria-label="indianXtrade Diwali greeting video"
         autoPlay
         muted

@@ -55,14 +55,22 @@ export function BrandLogo({
   return (
     <span className={`brand-logo-wrap ${className}`} style={inlineStyle}>
       <img
-        src="/brand/indianxtrade-dark.png"
+        src="/brand/indianxtrade-dark-v2.webp"
+        width={989}
+        height={210}
+        loading="lazy"
+        decoding="async"
         alt={alt}
         className="brand-logo-dark"
         style={imgStyle}
         {...props}
       />
       <img
-        src="/brand/indianxtrade-light.png"
+        src="/brand/indianxtrade-light-v2.webp"
+        width={1003}
+        height={211}
+        loading="lazy"
+        decoding="async"
         alt={alt}
         className="brand-logo-light"
         style={imgStyle}
@@ -109,14 +117,22 @@ export function BrandMark({
   return (
     <span className={`brand-mark-wrap ${className}`} style={inlineStyle}>
       <img
-        src="/brand/indianxtrade-mark.png"
+        src="/brand/indianxtrade-mark-v2.webp"
+        width={175}
+        height={120}
+        loading="lazy"
+        decoding="async"
         alt={alt}
         className="brand-mark-dark"
         style={imgStyle}
         {...props}
       />
       <img
-        src="/brand/indianxtrade-mark-light.png"
+        src="/brand/indianxtrade-mark-light-v2.webp"
+        width={175}
+        height={120}
+        loading="lazy"
+        decoding="async"
         alt={alt}
         className="brand-mark-light"
         style={imgStyle}

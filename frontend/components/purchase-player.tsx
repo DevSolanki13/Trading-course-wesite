@@ -21,6 +21,7 @@ import { BrandMark } from "./bull-mark";
 import { useLessonNotes } from "./player/use-lesson-notes";
 import { PlayerControls } from "./player/player-controls";
 import { CurriculumSidebar } from "./player/curriculum-sidebar";
+import { thumbnailVariant } from "../../shared/course-thumbnail";
 
 export function PurchasePlayer({
   course,
@@ -433,7 +434,7 @@ export function PurchasePlayer({
                   playsInline
                   preload="metadata"
                   src={lesson.videoUrl || ""}
-                  poster={course.thumbnail || undefined}
+                  poster={course.thumbnail ? thumbnailVariant(course.thumbnail, 960) : undefined}
                   onClick={togglePlay}
                   onTimeUpdate={() => {
                     if (videoRef.current) {

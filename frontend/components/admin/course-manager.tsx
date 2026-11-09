@@ -1,4 +1,6 @@
 "use client";
+
+import { CourseThumbnail } from "../course-thumbnail";
 import { useEffect, useState } from "react";
 import {
   CalendarBlank,
@@ -197,8 +199,8 @@ export function CourseManager() {
                           )?.trim();
                           if (thumb) {
                             return (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img
+                              <CourseThumbnail
+                                sizes="110px"
                                 src={thumb}
                                 alt={c.title}
                                 className="admin-course-thumb-img"

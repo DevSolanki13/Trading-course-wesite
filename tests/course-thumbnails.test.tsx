@@ -4,8 +4,9 @@ import sharp from "sharp";
 import { CourseEditor } from "../frontend/components/admin/course-editor";
 import { adminRequest } from "../backend/handlers/admin";
 import { courseThumbnail } from "../backend/admin/thumbnails";
+import { GET as thumbnailRoute } from "../app/api/course-thumbnails/[id]/route";
 import { courseSchema } from "../backend/admin/validation";
-import { MAX_THUMBNAIL_BYTES } from "../shared/course-thumbnail";
+import { MAX_THUMBNAIL_BYTES, thumbnailVariant } from "../shared/course-thumbnail";
 import type { AdminCourse } from "../shared/admin";
 
 const mocks = vi.hoisted(() => ({
@@ -98,7 +99,10 @@ describe("device thumbnail picker", () => {
     pick();
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
     await waitFor(() =>
-      expect(screen.getByAltText("Market basics")).toHaveAttribute("src", thumbnailUrl),
+      expect(screen.getByAltText("Market basics")).toHaveAttribute(
+        "src",
+        thumbnailVariant(thumbnailUrl, 640),
+      ),
     );
     expect(mocks.fetch.mock.calls[0][0]).toBe("/api/admin/thumbnail-upload");
     expect(JSON.parse(mocks.fetch.mock.calls[0][1].body).image).toMatch(/^data:image\/png;base64,/);
@@ -113,7 +117,10 @@ describe("device thumbnail picker", () => {
 
   it("previews saved uploads and allows removing or replacing them with an HTTPS URL", () => {
     mount({ ...course, thumbnail_url: thumbnailUrl });
-    expect(screen.getByAltText("Market basics")).toHaveAttribute("src", thumbnailUrl);
+    expect(screen.getByAltText("Market basics")).toHaveAttribute(
+      "src",
+      thumbnailVariant(thumbnailUrl, 640),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Remove thumbnail" }));
     expect(screen.queryByAltText("Market basics")).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Thumbnail HTTPS URL (optional)"), {
@@ -151,13 +158,59 @@ describe("device thumbnail picker", () => {
     mocks.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ thumbnailUrl }) });
     pick();
     await waitFor(() =>
-      expect(screen.getByAltText("Market basics")).toHaveAttribute("src", thumbnailUrl),
+      expect(screen.getByAltText("Market basics")).toHaveAttribute(
+        "src",
+        thumbnailVariant(thumbnailUrl, 640),
+      ),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
 
 describe("thumbnail upload and delivery", () => {
+  it("serves bounded width variants without cropping and preserves original full-size bytes", async () => {
+    const original = await sharp({
+      create: { width: 1200, height: 600, channels: 3, background: "#11aa88" },
+    })
+      .webp()
+      .toBuffer();
+    mocks.query.mockResolvedValue({ rows: [{ content: original.toString("base64") }] });
+    for (const width of [160, 320, 640, 960] as const) {
+      const response = await thumbnailRoute(
+        new Request(`http://localhost:3000${thumbnailUrl}?w=${width}`),
+        { params: Promise.resolve({ id }) },
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("cache-control")).toContain("immutable");
+      const metadata = await sharp(Buffer.from(await response.arrayBuffer())).metadata();
+      expect(metadata).toMatchObject({ format: "webp", width, height: width / 2 });
+    }
+    const full = await courseThumbnail(id, 1600);
+    expect(Buffer.from(await full.arrayBuffer()).equals(original)).toBe(true);
+  });
+
+  it("never enlarges small uploads and rejects invalid width requests before reading storage", async () => {
+    for (const query of ["w=0", "w=99999", "w=320.0", "w=abc", "w=", "w=160&w=320"]) {
+      const response = await thumbnailRoute(
+        new Request(`http://localhost:3000${thumbnailUrl}?${query}`),
+        { params: Promise.resolve({ id }) },
+      );
+      expect(response.status).toBe(400);
+    }
+    expect(mocks.query).not.toHaveBeenCalled();
+    const original = await sharp({
+      create: { width: 80, height: 40, channels: 3, background: "#11aa88" },
+    })
+      .webp()
+      .toBuffer();
+    mocks.query.mockResolvedValue({ rows: [{ content: original.toString("base64") }] });
+    const response = await courseThumbnail(id, 640);
+    expect(await sharp(Buffer.from(await response.arrayBuffer())).metadata()).toMatchObject({
+      width: 80,
+      height: 40,
+    });
+  });
+
   it("checks authentication, admin role and request origin before storing a photo", async () => {
     const image = await photo();
     mocks.session.mockResolvedValueOnce(null);

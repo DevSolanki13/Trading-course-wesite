@@ -5,7 +5,12 @@ import { AuthError, body, json } from "../auth/http";
 import { createAdminClient } from "../database/supabase";
 import { localDatabase } from "../local/database";
 import { localDemoEnabled } from "../purchase/mode";
-import { MAX_THUMBNAIL_BYTES, UPLOADED_THUMBNAIL } from "../../shared/course-thumbnail";
+import {
+  MAX_THUMBNAIL_BYTES,
+  UPLOADED_THUMBNAIL,
+  THUMBNAIL_WIDTHS,
+  type ThumbnailWidth,
+} from "../../shared/course-thumbnail";
 
 /** Called only after the admin handler has checked origin, session and role. */
 export async function uploadCourseThumbnail(request: Request) {
@@ -47,7 +52,9 @@ export async function uploadCourseThumbnail(request: Request) {
   return json({ thumbnailUrl: `/api/course-thumbnails/${id}` });
 }
 
-export async function courseThumbnail(id: string) {
+export async function courseThumbnail(id: string, width?: ThumbnailWidth) {
+  if (width !== undefined && !THUMBNAIL_WIDTHS.includes(width))
+    throw new AuthError(400, "Unsupported thumbnail width.");
   if (!UPLOADED_THUMBNAIL.test(`/api/course-thumbnails/${id}`))
     return new Response(null, { status: 404 });
   let content: string | undefined;
@@ -67,7 +74,16 @@ export async function courseThumbnail(id: string) {
     content = data?.content;
   }
   if (!content) return new Response(null, { status: 404 });
-  return new Response(Uint8Array.from(Buffer.from(content, "base64")), {
+  const original = Buffer.from(content, "base64");
+  // Full-size delivery remains byte-identical; smaller variants never upscale or crop.
+  const image =
+    width !== undefined && width < 1600
+      ? await sharp(original, { limitInputPixels: 40_000_000 })
+          .resize({ width, withoutEnlargement: true })
+          .webp({ quality: 82 })
+          .toBuffer()
+      : original;
+  return new Response(Uint8Array.from(image), {
     headers: {
       "Content-Type": "image/webp",
       "Cache-Control": "public, max-age=31536000, immutable",

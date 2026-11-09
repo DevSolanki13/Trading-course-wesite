@@ -2,7 +2,7 @@
 
 Date: 8 November 2026\
 Reference commit: `272990e`, plus existing uncommitted order-detail/component styles\
-Status: Phases 0-1 complete for local implementation/acceptance, 9 November 2026; Phase 2 not started\
+Status: Phases 0-1 complete; Phase 2 code/non-browser verification complete, browser acceptance delegated to the user, 9 November 2026\
 Scope: preserve every existing feature, function, animation, responsive layout, and theme.
 
 This plan turns the project-wide audit into implementation batches. It does not replace the older [launch implementation plan](../IMPLEMENTATION-PLAN.md). A checked item means the stated result has been verified, not just that code was written. Recheck source before each batch because the audit describes a point in time.
@@ -173,11 +173,22 @@ Completion gate: no stuck player loading on reselection; rapid order clicks neve
 
 Affected areas: [festival video](../frontend/components/festival-video.tsx), [branding component](../frontend/components/bull-mark.tsx), [course cards](../frontend/components/course-card.tsx), [uploaded thumbnails](../backend/admin/thumbnails.ts), [homepage font definitions](../frontend/pages/home-page.tsx), and [root imports](../frontend/layouts/root-layout.tsx).
 
+Implementation update, 9 November: P2.1-P2.6 code work and non-browser checks are complete. Browser testing was explicitly delegated to the user. Original acceptance items below remain unchecked where they include visual, network-in-browser, or interaction checks. See [Phase 2 results and manual checklist](./PERFORMANCE-PHASE-2-RESULTS-2026-11-09.md). This is not a claim of completed browser acceptance or a measured whole-site speed increase.
+
+- [x] Inspect/re-encode the full greeting; retain original audio, duration, frame rate, resolution and source file.
+- [x] Verify MP4 metadata ordering, production HTTP byte ranges, MIME types and versioned asset cache headers.
+- [x] Add pixel-identical lossless logos, intrinsic dimensions, native lazy loading and intent-driven alternate-theme warming.
+- [x] Add bounded responsive thumbnail widths across public, student, admin and player surfaces; preserve original/external/private URLs as appropriate.
+- [x] Review all `unoptimized` uses individually; retain QR/data-image and unconfigured external portrait handling.
+- [x] Remove forced annotation-font preload while retaining font files, families, glyphs and fallback metrics.
+- [x] Pass production build, lint, types, 152 component tests, 62 backend/asset tests and focused HTTP security/cache checks.
+- [ ] User completes the visual, playback, theme-switch, thumbnail, font and cold/warm network checklist.
+
 - [ ] **P2.1** Inspect the 15.2 MB greeting video's duration, bitrate, resolution, codec, audio, and MP4 metadata location. Produce candidate efficient encodes and, if justified, mobile/desktop variants. Preserve complete content and visible quality; keep originals until visual acceptance.
 - [ ] **P2.2** Verify streaming-friendly video delivery, byte ranges, MIME type, versioned URLs, and cache headers. Preserve once-per-browser autoplay, immediate skip, replay, muted playback, focus restoration, and error fallback. Do not delay autoplay merely to improve a benchmark.
 - [ ] **P2.3** Optimize logo dimensions/encoding and load the active theme asset first rather than eagerly requesting both themes. Load the alternate when needed without a theme-switch flash; reserve image dimensions.
 - [ ] **P2.4** Generate appropriate thumbnail variants for cards, compact player/sidebar uses, and course details. Preserve aspect ratios and sharpness; update responsive sizes and lazy loading. Keep immutable identifiers and existing publication/privacy rules.
-- [ ] **P2.5** Review each `unoptimized` image separately. Keep it for generated data images or authenticated sources where appropriate; do not blanket-enable an optimizer that cannot retrieve the source safely.
+- [x] **P2.5** Review each `unoptimized` image separately. Keep it for generated data images or authenticated sources where appropriate; do not blanket-enable an optimizer that cannot retrieve the source safely.
 - [ ] **P2.6** Avoid unnecessary handwriting-font preload at widths where annotations are hidden. Keep existing typefaces, fallback metrics, and necessary language glyphs. Confirm actual network/font usage instead of assuming every declared subset downloads.
 - [ ] **P2.7** Compare first-visit versus returning-visit bytes and visible quality at identical settings. Test video startup and skip during slow loading, logo theme switches, thumbnail updates, and font layout stability.
 
@@ -349,3 +360,11 @@ Copy this section for each implementation batch:
 - Evidence and measured budgets: [closeout](./PERFORMANCE-PHASE-0-1-CLOSEOUT-2026-11-09.md).
 - Preserved blur, shadows, masks, motion, functions and security boundaries. Layout-shift outliers and cold admin latency are measured future optimization work, not hidden or claimed fixed.
 - Phase 2 remains NOT STARTED, as requested for this handoff.
+
+### Batch 3 - Phase 2 implementation, 9 November 2026
+
+- Task IDs: P2.1-P2.6 implementation and non-browser verification; P2.7 browser acceptance delegated to the user by request.
+- Status: CODE COMPLETE; BROWSER/VISUAL ACCEPTANCE PENDING. Supersedes Batch 2's Phase 2 not-started status only.
+- Evidence and user testing steps: [Phase 2 results](./PERFORMANCE-PHASE-2-RESULTS-2026-11-09.md).
+- Video bytes reduced 38.7%; lossless branding reduced 28.9-46.5%. No unsupported whole-site latency improvement is claimed.
+- No browser tools/tests, production deployment, shared-database change, dependency change, commit or Phase 3 implementation.

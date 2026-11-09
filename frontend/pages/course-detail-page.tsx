@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { CourseThumbnail } from "../components/course-thumbnail";
 import type { Course } from "../content/courses";
 import { courses, formatPrice } from "../content/courses";
 import { CourseArtwork } from "../components/course-artwork";
@@ -95,10 +95,10 @@ export default function CourseDetailPage({
           </div>
           {course.thumbnailUrl ? (
             <div className="detail-artwork-photo">
-              <Image
-                unoptimized
-                fill
-                priority
+              <CourseThumbnail
+                loading="eager"
+                fetchPriority="high"
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
                 sizes="(max-width: 900px) 100vw, 45vw"
                 src={course.thumbnailUrl}
                 alt={`${course.title} course cover`}

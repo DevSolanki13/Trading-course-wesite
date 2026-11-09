@@ -1,11 +1,18 @@
 import { courseThumbnail } from "../../../../backend/admin/thumbnails";
-import { failure } from "../../../../backend/auth/http";
+import { AuthError, failure } from "../../../../backend/auth/http";
+import { parseThumbnailWidth } from "../../../../shared/course-thumbnail";
 
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    return await courseThumbnail((await params).id);
+    let width;
+    try {
+      width = parseThumbnailWidth(new URL(request.url).searchParams);
+    } catch {
+      throw new AuthError(400, "Unsupported thumbnail width.");
+    }
+    return await courseThumbnail((await params).id, width);
   } catch (error) {
     return failure(error);
   }

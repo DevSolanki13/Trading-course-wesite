@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import Image from "next/image";
+import { CourseThumbnail } from "../components/course-thumbnail";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../components/auth-provider";
 import { courses as sampleCourses, type Course } from "../content/courses";
@@ -158,8 +158,8 @@ export default function CataloguePage({
                           title={`View ${course.title} details`}
                         >
                           {course.thumbnailUrl ? (
-                            <Image
-                              unoptimized
+                            <CourseThumbnail
+                              sizes="110px"
                               src={course.thumbnailUrl}
                               alt=""
                               width={110}

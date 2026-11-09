@@ -1,5 +1,7 @@
 "use client";
 
+import { CourseThumbnail } from "../course-thumbnail";
+
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -613,8 +615,8 @@ export function CourseEditor({
 
             {thumbnailUrl.trim() && !thumbnailError ? (
               <div className="admin-course-preview-thumb">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <CourseThumbnail
+                  sizes="(max-width: 700px) 100vw, 400px"
                   src={thumbnailUrl.trim()}
                   alt={title || "Course thumbnail"}
                   className="admin-course-preview-img"

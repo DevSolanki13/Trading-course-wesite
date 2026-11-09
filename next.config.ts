@@ -28,6 +28,16 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: { "/*": ["./.local-data/**/*", "./.next-demo/**/*"] },
   async headers() {
     return [
+      ...[
+        "/videos/indianxtrade-greeting-v2.mp4",
+        "/brand/indianxtrade-dark-v2.webp",
+        "/brand/indianxtrade-light-v2.webp",
+        "/brand/indianxtrade-mark-v2.webp",
+        "/brand/indianxtrade-mark-light-v2.webp",
+      ].map((source) => ({
+        source,
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      })),
       {
         source: "/:path*",
         headers: [

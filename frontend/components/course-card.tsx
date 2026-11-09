@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Course } from "../content/courses";
 import { formatPrice } from "../content/courses";
 import { CourseArtwork } from "./course-artwork";
-import Image from "next/image";
+import { CourseThumbnail } from "./course-thumbnail";
 import { ArrowUpRight, Clock, BookOpen } from "./icons";
 
 export function CourseCard({ course }: { course: Course }) {
@@ -14,8 +14,7 @@ export function CourseCard({ course }: { course: Course }) {
         aria-label={`View course: ${course.title}`}
       >
         {course.thumbnailUrl ? (
-          <Image
-            unoptimized
+          <CourseThumbnail
             src={course.thumbnailUrl}
             alt={`${course.title} course thumbnail`}
             width={600}

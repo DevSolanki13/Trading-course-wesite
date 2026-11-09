@@ -18,6 +18,7 @@ import {
 } from "@phosphor-icons/react";
 import { BullMark } from "./bull-mark";
 import { CourseArtwork } from "./course-artwork";
+import { CourseThumbnail } from "./course-thumbnail";
 const PurchasePlayer = dynamic(() =>
   import("./purchase-player").then((module) => module.PurchasePlayer),
 );
@@ -735,8 +736,10 @@ export function StudentDashboard({
                         }}
                       >
                         {featuredCourse.thumbnail ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={featuredCourse.thumbnail} alt={featuredCourse.title} />
+                          <CourseThumbnail
+                            src={featuredCourse.thumbnail}
+                            alt={featuredCourse.title}
+                          />
                         ) : (
                           <CourseArtwork
                             kind={
@@ -807,8 +810,7 @@ export function StudentDashboard({
                                 }}
                               >
                                 {course.thumbnail ? (
-                                  /* eslint-disable-next-line @next/next/no-img-element */
-                                  <img src={course.thumbnail} alt={course.title} />
+                                  <CourseThumbnail src={course.thumbnail} alt={course.title} />
                                 ) : (
                                   <CourseArtwork
                                     kind={

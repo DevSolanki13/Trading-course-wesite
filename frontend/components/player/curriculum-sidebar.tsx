@@ -12,6 +12,7 @@ import {
   PlayCircle,
 } from "@phosphor-icons/react";
 import { CourseArtwork } from "../course-artwork";
+import { CourseThumbnail } from "../course-thumbnail";
 import { accessExpiryLabel } from "../../../shared/course-access";
 import type { PurchaseCourse, PurchaseLessonContent } from "../../../shared/purchase";
 
@@ -61,8 +62,7 @@ export function CurriculumSidebar({
       <div className="vlp-course-header-row">
         <div className="vlp-course-header-thumb">
           {course.thumbnail ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={course.thumbnail} alt={course.title} />
+            <CourseThumbnail src={course.thumbnail} alt={course.title} sizes="64px" />
           ) : (
             <CourseArtwork
               kind={

@@ -17,6 +17,7 @@ import {
   ListChecks,
 } from "@phosphor-icons/react";
 import { CourseArtwork } from "../course-artwork";
+import { CourseThumbnail } from "../course-thumbnail";
 import { getCourse } from "../../content/courses";
 import type { PurchaseCourse } from "../../../shared/purchase";
 
@@ -341,8 +342,11 @@ export function StudentExplorePanel({
             <div className="student-enroll-card">
               <div className="student-enroll-thumb">
                 {selectedCourse.thumbnail ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={selectedCourse.thumbnail} alt={selectedCourse.title} />
+                  <CourseThumbnail
+                    src={selectedCourse.thumbnail}
+                    alt={selectedCourse.title}
+                    sizes="(max-width: 900px) 100vw, 55vw"
+                  />
                 ) : (
                   <CourseArtwork kind={artworkKind} />
                 )}
@@ -534,8 +538,7 @@ export function StudentExplorePanel({
                   aria-label={`View details for ${c.title}`}
                 >
                   {c.thumbnail ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={c.thumbnail} alt={c.title} />
+                    <CourseThumbnail src={c.thumbnail} alt={c.title} />
                   ) : (
                     <CourseArtwork kind={artworkKind} />
                   )}

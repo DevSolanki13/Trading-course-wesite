@@ -22,6 +22,7 @@ const annotationFont = localFont({
   weight: "500",
   style: "normal",
   variable: "--font-annotations",
+  preload: false,
   display: "swap",
   adjustFontFallback: false,
   fallback: ["Caveat Fallback"],
