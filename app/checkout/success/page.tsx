@@ -1,4 +1,4 @@
-import { sendPurchaseReceipt } from "@/backend/purchase/mail";
+import { schedulePurchaseReceipt } from "@/backend/purchase/mail";
 import { sharedUpiGateway } from "@/backend/payments/indianxtrade";
 import { reconcileGatewayPurchase } from "@/backend/purchase/upi-gateway";
 import { notFound } from "next/navigation";
@@ -23,8 +23,7 @@ export default async function Success({
     ({ order, expired } = await purchaseConfirmation(String(q.orderId), user.id));
     if (!order) notFound();
   }
-  if (order.status === "paid" && order.provider === "upi")
-    await sendPurchaseReceipt(order.id, user);
+  if (order.status === "paid" && order.provider === "upi") schedulePurchaseReceipt(order.id, user);
   return (
     <main id="main-content" className="container checkout-page">
       <PurchaseConfirmation order={order} expired={expired} />

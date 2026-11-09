@@ -1,5 +1,5 @@
 import { requirePurchaseUser } from "@/backend/purchase/pages";
-import { purchaseCatalog, purchaseOrders } from "@/backend/purchase/repository";
+import { purchaseCatalog, purchaseOrdersPage } from "@/backend/purchase/repository";
 import { localDemoEnabled } from "@/backend/purchase/mode";
 import { PurchaseDashboard } from "@/frontend/components/purchase-dashboard";
 import { redirect } from "next/navigation";
@@ -16,13 +16,18 @@ export default async function Orders() {
   if (user.role === "admin") {
     redirect("/admin");
   }
-  const [courses, orders] = await Promise.all([purchaseCatalog(user.id), purchaseOrders(user.id)]);
+  const [courses, page] = await Promise.all([
+    purchaseCatalog(user.id),
+    purchaseOrdersPage(user.id),
+  ]);
   return (
     <PurchaseDashboard
       user={user}
       courses={courses.filter((c) => c.owned || c.accessExpiresAt)}
       allCourses={courses}
-      orders={orders}
+      orders={page.orders}
+      orderCount={page.totalCount}
+      ordersPage={page}
       ordersFresh
       ordersOnly
       local={localDemoEnabled()}

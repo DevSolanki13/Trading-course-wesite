@@ -2,7 +2,7 @@
 
 Date: 8 November 2026\
 Reference commit: `272990e`, plus existing uncommitted order-detail/component styles\
-Status: Phases 0-1 complete; Phases 2-3 code/non-browser verification complete; Phase 4 first batch verified locally, overall Phase 4 IN PROGRESS; browser acceptance delegated to the user, 9 November 2026\
+Status: Phases 0-1 complete; Phases 2-3 code/non-browser verification complete; Phase 4 remaining code integrated and local checks passed, hosted rollout/acceptance still pending; browser acceptance delegated to the user, 9 November 2026\
 Scope: preserve every existing feature, function, animation, responsive layout, and theme.
 
 This plan turns the project-wide audit into implementation batches. It does not replace the older [launch implementation plan](../IMPLEMENTATION-PLAN.md). A checked item means the stated result has been verified, not just that code was written. Recheck source before each batch because the audit describes a point in time.
@@ -229,25 +229,37 @@ Affected areas: [purchase repository](../backend/purchase/repository.ts), [billi
 
 First-batch update, 9 November: parallel history reads (part of P4.3), scoped/joined lesson authorization (P4.5 implementation), and collector-session reuse (P4.8 implementation) have passed local checks. Overall Phase 4 remains IN PROGRESS. See [Phase 4 first-batch evidence and remaining work](./PERFORMANCE-PHASE-4-RESULTS-2026-11-09.md). No browser tests, shared database changes or production deployment occurred.
 
+Remaining-implementation update, 9 November: scoped course reads, combined history pagination/pending discovery, refund-page batching, learner summary/detail APIs and post-response receipt scheduling are now implemented. Local tests pass (266 component/API and 79 backend tests), as does the production build. See [Phase 4 closeout, rollout requirements and user browser checklist](./PERFORMANCE-PHASE-4-CLOSEOUT-2026-11-09.md). The code checkboxes below cover local engineering only. P4.1/P4.7/P4.9 still have explicit hosted measurement/scheduler gates; they are not silently marked complete. No shared migration, deployment or scheduler installation has occurred.
+
+- [x] P4.2: selected-course-first SQL with equivalent anonymous/owner/expiry/progress results.
+- [x] P4.3: bounded mixed-provider keyset pages, exact global totals, receipt routing and independent off-page pending discovery.
+- [x] P4.4: one guarded remote refund-page operation; unchanged evidence and transactional refund action checks.
+- [x] P4.6: learner summary pagination/search/access filters and selected-learner lesson detail, including local-demo/staff boundaries.
+- [x] P4.7 engineering: response-independent Next-tracked receipt attempts, durable retry/claim tests and an external minute staging-scheduler example.
+- [x] P4.10: additive migration contracts, local forward/compatibility checks and application-first rollback notes.
+- [ ] P4.1/P4.9 hosted gates: deployed plans/indexes, representative timing/payload distributions and hosting/database region alignment.
+- [ ] P4.7 hosted gate: activate the permitted minute worker scheduler and verify provider delivery/recovery; retained daily Vercel cron is not the prompt fallback.
+- [ ] Apply reviewed migrations/deploy separately and complete the user's browser/provider acceptance checklist.
+
 - [x] Run an isolated, fully migrated query-plan fixture: 100 courses, 100 modules, 1000 lessons; inspect the relevant existing indexes without adding speculative ones.
 - [x] Start independent order sources concurrently, retain all provider records and financial values, and add a deterministic timestamp/ID sort.
 - [x] Join lesson/module/course metadata in one read; scope enrollment/order evidence by verified owner and course, skipping unrelated progress for lesson authorization.
 - [x] Add bounded, credential-scoped collector-session reuse with expiry, coordinated login, safe delayed-401 recovery and no end-user authorization caching.
 - [x] Pass production build, lint, TypeScript, 209 component/API tests and 71 backend/asset tests.
-- [ ] Finish catalogue SQL optimization, combined-history pagination, refund batching, learner pagination and prompt durable receipt-worker delivery.
+- [x] Finish local catalogue SQL optimization, combined-history pagination, refund batching, learner pagination and prompt receipt scheduling/recovery configuration. Hosted worker activation remains separately pending above.
 - [ ] Complete representative/deployed query-plan and region checks, any justified additive migrations, and browser/provider acceptance.
 
 - [ ] **P4.1** Capture representative query plans, request counts, payload sizes, and latency distributions in an isolated or explicitly scoped environment. Inspect deployed indexes; do not assume missing indexes from source alone. Avoid executing mutating `EXPLAIN ANALYZE` statements against production.
-- [ ] **P4.2** Query the selected course before constructing curriculum/progress JSON, rather than assembling the entire personalized catalogue. Preserve published-state, preview, access-expiry, and progress rules; follow the current UPI SQL wrappers.
-- [ ] **P4.3** Parallelize independent legacy/current order reads or unify them. Introduce stable pagination across the combined history; preserve every historical order, total/count semantics, sorting, receipts, and pending-payment discovery.
-- [ ] **P4.4** Batch refund evidence for the authorized page into one operation rather than one remote RPC per item. Compare results against the existing eligibility implementation. Recheck current evidence transactionally before consequential refund actions.
-- [ ] **P4.5** Scope lesson access data and join lesson/module/course metadata where appropriate, instead of repeated account-wide reads and sequential lookups. Preserve protected video/resource and expiry rules.
-- [ ] **P4.6** Paginate course-learner summaries and load individual lesson-level details on selection. Preserve totals, filters, progress calculations, and support access to every learner.
+- [x] **P4.2** Query the selected course before constructing curriculum/progress JSON, rather than assembling the entire personalized catalogue. Preserve published-state, preview, access-expiry, and progress rules; follow the current UPI SQL wrappers.
+- [x] **P4.3** Parallelize independent legacy/current order reads or unify them. Introduce stable pagination across the combined history; preserve every historical order, total/count semantics, sorting, receipts, and pending-payment discovery.
+- [x] **P4.4** Batch refund evidence for the authorized page into one operation rather than one remote RPC per item. Compare results against the existing eligibility implementation. Recheck current evidence transactionally before consequential refund actions.
+- [x] **P4.5** Scope lesson access data and join lesson/module/course metadata where appropriate, instead of repeated account-wide reads and sequential lookups. Preserve protected video/resource and expiry rules.
+- [x] **P4.6** Paginate course-learner summaries and load individual lesson-level details on selection. Preserve totals, filters, progress calculations, and support access to every learner.
 - [ ] **P4.7** Return confirmed payment state without waiting for receipt transport. Use the existing durable outbox with a prompt, retryable worker trigger; the existing daily schedule alone is not a substitute for prompt delivery. Preserve claim handling, idempotency, deduplication, and delivery visibility. Do not use untracked fire-and-forget promises.
-- [ ] **P4.8** Reuse shared-gateway collector sessions with account-keyed isolation, expiry handling, and coordinated refresh. Preserve 401 recovery and payment verification; never expose collector sessions or credentials to browsers or cache user authorization globally.
+- [x] **P4.8** Reuse shared-gateway collector sessions with account-keyed isolation, expiry handling, and coordinated refresh. Preserve 401 recovery and payment verification; never expose collector sessions or credentials to browsers or cache user authorization globally.
 - [ ] **P4.9** Add or adjust indexes only when query plans demonstrate the need. Check hosting/database region alignment before proposing infrastructure changes. Preserve local-demo compatibility where these flows support it.
-- [ ] **P4.10** Prepare additive/versioned migrations and API/UI changes together. Test on isolated data, preserve financial snapshots, verify rollback strategy, and document shared-environment execution separately.
-- [ ] **P4.11** Run targeted database/payment/auth regression checks, including wrong-owner access, expired access, pagination boundaries, duplicate settlement events, receipt retries, gateway failures, and unchanged refund calculations.
+- [x] **P4.10** Prepare additive/versioned migrations and API/UI changes together. Test on isolated data, preserve financial snapshots, verify rollback strategy, and document shared-environment execution separately. Forward application/old API compatibility are tested locally; hosted rollback execution remains unperformed.
+- [x] **P4.11** Run targeted database/payment/auth regression checks, including wrong-owner access, expired access, pagination boundaries, duplicate settlement events, receipt retries, gateway failures, and unchanged refund calculations.
 
 Completion gate: fewer proven round trips/smaller scoped payloads, unchanged authorized results and financial behavior, and payment confirmation no longer coupled to email transport latency. Source-based findings are not considered deployed until the target environment is separately verified.
 
@@ -406,3 +418,11 @@ Copy this section for each implementation batch:
 - Status: FIRST BATCH VERIFIED LOCALLY; PHASE 4 REMAINS IN PROGRESS. Supersedes Batch 4's Phase 4 not-started status only.
 - Evidence and remaining gates: [Phase 4 results](./PERFORMANCE-PHASE-4-RESULTS-2026-11-09.md).
 - Preserved Phase 3's uncommitted changes. No browser tools/tests, dependency changes, SQL migration files, shared-database writes, real-provider calls, deployment or commit/push.
+
+### Batch 6 - Phase 4 remaining local implementation, 9 November 2026
+
+- Task IDs: P4.2/P4.3/P4.4/P4.6, P4.7 local engineering, P4.10/P4.11 and additional isolated P4.1/P4.9 evidence.
+- Status: remaining local implementation integrated and automated checks passed; hosted measurement, migration/deployment, scheduler activation and browser/provider gates remain open.
+- Evidence, migration order/rollback and user checks: [Phase 4 closeout](./PERFORMANCE-PHASE-4-CLOSEOUT-2026-11-09.md).
+- 266 component/API tests and 79 backend tests passed; production build passed with the existing announcement tracing warning. Initial test failures and the independent review's stale-snapshot finding were diagnosed and corrected, not hidden.
+- No browser tests, new dependency, hosted data mutation, real-provider send, scheduler installation, deployment or commit/push.

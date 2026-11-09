@@ -5,7 +5,7 @@ import {
 } from "@/backend/payments/providers";
 import { settlePurchase } from "@/backend/purchase/service";
 import { purchaseRpc } from "@/backend/purchase/repository";
-import { sendPurchaseReceipt } from "@/backend/purchase/mail";
+import { schedulePurchaseReceipt } from "@/backend/purchase/mail";
 import type { PurchaseUser } from "@/shared/purchase";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
           "purchase_payment_owner",
           { p_provider_id: result.providerOrderId },
         );
-        if (owner) await sendPurchaseReceipt(owner.orderId, owner.user);
+        if (owner) schedulePurchaseReceipt(owner.orderId, owner.user);
       }
     }
     return Response.json({ received: true });

@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, MagnifyingGlass } from "@phosphor-icons/react";
 import { adminApi, when } from "../../lib/admin-api";
-import type { AdminCourseLearners } from "../../../shared/admin";
+import type { AdminLearnerDetail, AdminLearnerPage } from "../../../shared/admin-learners";
 import { TableSkeleton, AdminSectionHeadSkeleton } from "./admin-skeletons";
 
 function duration(seconds: number) {
@@ -19,36 +19,82 @@ export function CourseLearnersPanel({
   onBack: () => void;
   onEdit: () => void;
 }) {
-  const [data, setData] = useState<AdminCourseLearners | null>(null);
+  return <CourseLearners key={courseId} courseId={courseId} onBack={onBack} onEdit={onEdit} />;
+}
+
+function CourseLearners({
+  courseId,
+  onBack,
+  onEdit,
+}: {
+  courseId: string;
+  onBack: () => void;
+  onEdit: () => void;
+}) {
+  const [loaded, setLoaded] = useState<{ path: string; data: AdminLearnerPage } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<{ id: string; data: AdminLearnerDetail } | null>(null);
   const [query, setQuery] = useState("");
-  const [error, setError] = useState("");
-  const load = () => {
-    setError("");
-    return adminApi<AdminCourseLearners>(`course-learners?courseId=${encodeURIComponent(courseId)}`)
-      .then(setData)
-      .catch((e) => setError(e instanceof Error ? e.message : "Learners could not load."));
-  };
+  const [access, setAccess] = useState("all");
+  const [page, setPage] = useState(0);
+  const [retry, setRetry] = useState(0);
+  const [detailRetry, setDetailRetry] = useState(0);
+  const [failure, setFailure] = useState<{ path: string; message: string } | null>(null);
+  const path = `course-learners?${new URLSearchParams({ courseId, q: query, access, page: String(page) })}`;
+  const detailPath = selectedId
+    ? `course-learners?${new URLSearchParams({ courseId, learnerId: selectedId })}`
+    : null;
+  const error = failure?.path === (detailPath ?? path) ? failure.message : "";
+  const data = loaded?.data ?? null;
+  const loading = loaded?.path !== path;
   useEffect(() => {
     let live = true;
-    adminApi<AdminCourseLearners>(`course-learners?courseId=${encodeURIComponent(courseId)}`)
+    const timer = setTimeout(
+      () =>
+        void adminApi<AdminLearnerPage>(path)
+          .then((result) => {
+            if (live) {
+              setLoaded({ path, data: result });
+              setFailure((current) => (current?.path === path ? null : current));
+            }
+          })
+          .catch((e) => {
+            if (live)
+              setFailure({
+                path,
+                message: e instanceof Error ? e.message : "Learners could not load.",
+              });
+          }),
+      200,
+    );
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [path, retry]);
+  useEffect(() => {
+    if (!detailPath || !selectedId) return;
+    let live = true;
+    adminApi<AdminLearnerDetail>(detailPath)
       .then((result) => {
-        if (live) setData(result);
+        if (live) {
+          setDetail({ id: selectedId, data: result });
+          setFailure((current) => (current?.path === detailPath ? null : current));
+        }
       })
       .catch((e) => {
-        if (live) setError(e instanceof Error ? e.message : "Learners could not load.");
+        if (live)
+          setFailure({
+            path: detailPath,
+            message: e instanceof Error ? e.message : "Lesson details could not load.",
+          });
       });
     return () => {
       live = false;
     };
-  }, [courseId]);
-  const learners = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return (data?.learners ?? []).filter(
-      (learner) => !needle || `${learner.name} ${learner.email}`.toLowerCase().includes(needle),
-    );
-  }, [data, query]);
-  const selected = data?.learners.find((learner) => learner.id === selectedId) ?? null;
+  }, [detailPath, selectedId, detailRetry]);
+  const learners = loading ? [] : (data?.learners ?? []);
+  const selected = detail?.id === selectedId ? detail.data.learner : null;
   if (error && !data)
     return (
       <section>
@@ -58,7 +104,13 @@ export function CourseLearnersPanel({
         <p className="auth-error" role="alert">
           {error}
         </p>
-        <button className="button button-secondary" onClick={() => void load()}>
+        <button
+          className="button button-secondary"
+          onClick={() => {
+            setFailure(null);
+            setRetry((value) => value + 1);
+          }}
+        >
           Try again
         </button>
       </section>
@@ -80,7 +132,7 @@ export function CourseLearnersPanel({
           <span className="auth-section-label">Course learners</span>
           <h2>{data.course.title}</h2>
           <p>
-            {data.learners.length} enrolled · {data.course.lessonCount} published lessons
+            {data.enrolledTotal} enrolled · {data.course.lessonCount} published lessons
           </p>
         </div>
         <div className="admin-actions">
@@ -92,18 +144,55 @@ export function CourseLearnersPanel({
             <span className="sr-only">Search learners</span>
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(0);
+                setSelectedId(null);
+              }}
               placeholder="Search learners"
             />
+          </label>
+          <label>
+            <span className="sr-only">Filter learner access</span>
+            <select
+              aria-label="Filter learner access"
+              value={access}
+              onChange={(event) => {
+                setAccess(event.target.value);
+                setPage(0);
+                setSelectedId(null);
+              }}
+            >
+              <option value="all">All access</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+            </select>
           </label>
         </div>
       </div>
       {error && (
         <p className="auth-error" role="alert">
           {error}
+          <button
+            className="text-link"
+            onClick={() => {
+              setFailure(null);
+              if (selectedId) setDetailRetry((value) => value + 1);
+              else setRetry((value) => value + 1);
+            }}
+          >
+            Try again
+          </button>
         </p>
       )}
-      {selected ? (
+      {selectedId && !selected ? (
+        <section className="admin-panel">
+          <button className="text-link" onClick={() => setSelectedId(null)}>
+            <ArrowLeft size={16} /> All learners
+          </button>
+          {!error && <p role="status">Loading lesson details…</p>}
+        </section>
+      ) : selected ? (
         <section className="admin-panel">
           <button className="text-link" onClick={() => setSelectedId(null)}>
             <ArrowLeft size={16} /> All learners
@@ -157,7 +246,7 @@ export function CourseLearnersPanel({
           </div>
         </section>
       ) : (
-        <div className="admin-table-wrap">
+        <div className="admin-table-wrap" aria-busy={loading}>
           <table>
             <caption className="sr-only">Enrolled learners for {data.course.title}</caption>
             <colgroup>
@@ -178,9 +267,15 @@ export function CourseLearnersPanel({
             </thead>
             <tbody>
               {learners.map((learner) => (
-                <tr key={learner.id}>
+                <tr key={learner.enrollmentId}>
                   <td>
-                    <button className="text-link" onClick={() => setSelectedId(learner.id)}>
+                    <button
+                      className="text-link"
+                      onClick={() => {
+                        setDetail(null);
+                        setSelectedId(learner.id);
+                      }}
+                    >
                       {learner.name || learner.email}
                     </button>
                     <small>{learner.email}</small>
@@ -202,12 +297,33 @@ export function CourseLearnersPanel({
               ))}
             </tbody>
           </table>
-          {!learners.length && (
+          {loading && !error && <p role="status">Loading learners…</p>}
+          {!loading && !learners.length && (
             <div className="admin-empty">
               <h3>No matching learners.</h3>
               <p>Try a different name or email.</p>
             </div>
           )}
+          <nav className="admin-actions" aria-label="Learner pages">
+            <button
+              className="button button-secondary"
+              disabled={loading || page === 0}
+              onClick={() => setPage((value) => value - 1)}
+            >
+              Previous
+            </button>
+            <span aria-live="polite">
+              Page {page + 1}
+              {!loading && ` · ${data.total} matching learners`}
+            </span>
+            <button
+              className="button button-secondary"
+              disabled={loading || (page + 1) * data.pageSize >= data.total || page >= 10000}
+              onClick={() => setPage((value) => value + 1)}
+            >
+              Next
+            </button>
+          </nav>
         </div>
       )}
     </section>

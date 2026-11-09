@@ -3,6 +3,8 @@ import type {
   PurchaseCourse,
   PurchaseOrder,
   PurchaseLessonContent,
+  PurchaseOrdersPage,
+  PurchaseHistoryCursor,
 } from "../../shared/purchase.ts";
 export async function purchaseRpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
   if (!/^purchase_[a-z_]+$/.test(name) || Object.keys(args).some((key) => !/^p_[a-z_]+$/.test(key)))
@@ -85,6 +87,29 @@ export async function purchaseOrders(userId: string) {
     (a, b) =>
       Date.parse(b.createdAt) - Date.parse(a.createdAt) || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0),
   );
+}
+
+/** Versioned bounded history across every provider. Cursors retain Postgres timestamp precision. */
+export function purchaseOrdersPage(
+  userId: string,
+  options: {
+    limit?: number;
+    cursor?: PurchaseHistoryCursor | null;
+    status?: string;
+    provider?: string;
+    pendingCursor?: PurchaseHistoryCursor | null;
+    pendingOnly?: boolean;
+  } = {},
+): Promise<PurchaseOrdersPage> {
+  return purchaseRpc<PurchaseOrdersPage>("purchase_history_page", {
+    p_user: userId,
+    p_limit: options.limit ?? 20,
+    p_cursor: options.cursor ?? null,
+    p_status: options.status ?? "all",
+    p_provider: options.provider ?? "all",
+    p_pending_cursor: options.pendingCursor ?? null,
+    p_pending_only: options.pendingOnly ?? false,
+  });
 }
 
 /** Only used after admission, with the verified user's ID; never transfers order details. */

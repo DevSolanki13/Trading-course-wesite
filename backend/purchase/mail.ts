@@ -1,7 +1,18 @@
+import { after } from "next/server";
 import { localDemoEnabled } from "./mode.ts";
 import { purchaseRpc } from "./repository.ts";
 import { sendNotification, type Notification } from "../notifications/delivery.ts";
 import type { PurchaseUser } from "../../shared/purchase.ts";
+/** Settlement already saved the outbox row. Register transport after the response;
+ * the minute operations sweep recovers interrupted attempts and due retries. */
+export function schedulePurchaseReceipt(orderId: string, user: PurchaseUser) {
+  try {
+    after(() => sendPurchaseReceipt(orderId, user));
+  } catch {
+    console.error("Receipt scheduling deferred to worker; paid access is unaffected.");
+  }
+}
+
 export async function sendPurchaseReceipt(orderId: string, user: PurchaseUser) {
   try {
     if (

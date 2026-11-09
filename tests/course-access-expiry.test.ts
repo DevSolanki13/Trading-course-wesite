@@ -42,7 +42,12 @@ test("SQL freezes purchased terms, denies expired access, preserves progress and
       create function auth.jwt()returns jsonb language sql stable as $$select '{}'::jsonb$$;grant usage on schema public,auth to anon,authenticated,service_role;`);
     const root = new URL("../backend/database/migrations/", import.meta.url);
     const migrations = (await readdir(root)).filter((f) => f.endsWith(".sql")).sort();
-    for (const file of migrations.filter((f) => !f.includes("0011_") && !f.includes("0017_")))
+    // New read APIs require the expiry columns. Keep this backfill fixture's
+    // pre-expiry setup, then apply those dependent APIs after the backfill.
+    const dependentReads = migrations.filter((f) => f >= "202611090000");
+    for (const file of migrations.filter(
+      (f) => !f.includes("0011_") && !f.includes("0017_") && !dependentReads.includes(f),
+    ))
       await db.exec(await readFile(new URL(file, root), "utf8"));
     await db.query("insert into auth.users(id,email)values($1,'expiry@example.invalid')", [user]);
     const course = (
@@ -83,6 +88,7 @@ test("SQL freezes purchased terms, denies expired access, preserves progress and
         "utf8",
       ),
     );
+    for (const file of dependentReads) await db.exec(await readFile(new URL(file, root), "utf8"));
     assert.equal(
       (await db.query<{ expiry: string }>("select expires_at::text as expiry from enrollments"))
         .rows[0].expiry,

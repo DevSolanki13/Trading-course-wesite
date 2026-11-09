@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useBillingOrders } from "../frontend/lib/use-billing-orders";
 import { StudentBillingPanel } from "../frontend/components/student/student-billing-panel";
 import { commerceOrders } from "../backend/purchase/billing";
-import { purchaseOrder, purchaseOrders } from "../backend/purchase/repository";
+import { purchaseOrder, purchaseOrders, purchaseOrdersPage } from "../backend/purchase/repository";
 import type { PurchaseOrder } from "../shared/purchase";
 
 const db = vi.hoisted(() => ({
@@ -82,6 +82,23 @@ afterEach(() => {
 });
 
 describe("owner-scoped billing history", () => {
+  it("uses one bounded combined-provider RPC without loading either full-history source", async () => {
+    const page = { orders: [paid], totalCount: 200, nextCursor: null };
+    db.rpc.mockResolvedValue({ data: page, error: null });
+    expect(
+      await purchaseOrdersPage(paid.userId, { limit: 17, status: "paid", provider: "cashfree" }),
+    ).toEqual(page);
+    expect(db.rpc).toHaveBeenCalledWith("purchase_history_page", {
+      p_user: paid.userId,
+      p_limit: 17,
+      p_cursor: null,
+      p_status: "paid",
+      p_provider: "cashfree",
+      p_pending_cursor: null,
+      p_pending_only: false,
+    });
+    expect(db.from).not.toHaveBeenCalled();
+  });
   function row() {
     return {
       id: paid.id,
@@ -184,9 +201,9 @@ describe("billing refresh and reconciliation", () => {
       `/api/orders/${paid.id}/document`,
     );
     expect(request.mock.calls.map(([url]) => url)).toEqual([
-      "/api/purchase/orders",
+      "/api/purchase/orders?limit=20&status=all&provider=all",
       `/api/checkout/status/${paid.id}`,
-      "/api/purchase/orders",
+      "/api/purchase/orders?limit=20&status=all&provider=all",
     ]);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(60000);
@@ -277,7 +294,11 @@ describe("billing refresh and reconciliation", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(240000);
     });
-    expect(request.mock.calls.filter(([url]) => url === "/api/purchase/orders")).toHaveLength(7);
+    expect(
+      request.mock.calls.filter(
+        ([url]) => url === "/api/purchase/orders?limit=20&status=all&provider=all",
+      ),
+    ).toHaveLength(7);
     expect(request.mock.calls.filter(([url]) => String(url).includes("/status/"))).toHaveLength(40);
     expect(request).toHaveBeenCalledTimes(47);
     expect(screen.getByRole("button", { name: "Refresh payments" })).toBeEnabled();
@@ -303,7 +324,7 @@ describe("billing refresh and reconciliation", () => {
     await mount({ fresh: true });
     expect(request.mock.calls.map(([url]) => url)).toEqual([
       `/api/checkout/status/${paid.id}`,
-      "/api/purchase/orders",
+      "/api/purchase/orders?limit=20&status=all&provider=all",
     ]);
     expect(screen.getByRole("link", { name: "View receipt" })).toBeVisible();
   });
@@ -313,7 +334,9 @@ describe("billing refresh and reconciliation", () => {
     request.mockResolvedValue(response({ orders: [order] }));
     await mount({ orders: [order] });
     await act(async () => vi.advanceTimersByTimeAsync(15_000));
-    expect(request.mock.calls.map(([url]) => url)).toEqual(Array(4).fill("/api/purchase/orders"));
+    expect(request.mock.calls.map(([url]) => url)).toEqual(
+      Array(4).fill("/api/purchase/orders?limit=20&status=all&provider=all"),
+    );
   });
 
   it("does not overlap focus/status checks and pauses network work while hidden", async () => {
@@ -329,7 +352,9 @@ describe("billing refresh and reconciliation", () => {
     expect(request).toHaveBeenCalledTimes(1);
     request.mockImplementation(async (url) =>
       response(
-        url === "/api/purchase/orders" ? { orders: [paid] } : { order: { status: "pending" } },
+        url === "/api/purchase/orders?limit=20&status=all&provider=all"
+          ? { orders: [paid] }
+          : { order: { status: "pending" } },
       ),
     );
     await act(async () => finish(response({ orders: [pending] })));

@@ -1,5 +1,9 @@
 import { requirePurchaseUser } from "@/backend/purchase/pages";
-import { purchaseCatalog, purchaseOrders, purchaseOrderCount } from "@/backend/purchase/repository";
+import {
+  purchaseCatalog,
+  purchaseOrdersPage,
+  purchaseOrderCount,
+} from "@/backend/purchase/repository";
 import { localDemoEnabled } from "@/backend/purchase/mode";
 import { listAnnouncements } from "@/backend/announcements/service";
 import { PurchaseDashboard } from "@/frontend/components/purchase-dashboard";
@@ -29,8 +33,12 @@ export default async function Dashboard({
   const [courses, billing, announcements] = await Promise.all([
     purchaseCatalog(user.id),
     billingRequested
-      ? purchaseOrders(user.id).then((orders) => ({ orders, count: orders.length }))
-      : purchaseOrderCount(user.id).then((count) => ({ orders: [], count })),
+      ? purchaseOrdersPage(user.id).then((page) => ({
+          orders: page.orders,
+          count: page.totalCount,
+          page,
+        }))
+      : purchaseOrderCount(user.id).then((count) => ({ orders: [], count, page: undefined })),
     listAnnouncements(true),
   ]);
   const ownedCourses = courses.filter((c) => c.owned || c.accessExpiresAt);
@@ -55,6 +63,7 @@ export default async function Dashboard({
       orders={billing.orders}
       orderCount={billing.count}
       ordersFresh={billingRequested}
+      ordersPage={billing.page}
       announcements={announcements}
       local={localDemoEnabled()}
       initialCourseSlug={query.course}

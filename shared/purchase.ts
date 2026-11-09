@@ -55,6 +55,19 @@ export function purchaseReceiptHref(order: Pick<PurchaseOrder, "id" | "provider"
     ? `/api/orders/${order.id}/document`
     : `/dashboard/orders/${order.id}/receipt`;
 }
+export type PurchaseHistoryCursor = { createdAt: string; id: string };
+export type PurchaseOrdersPage = {
+  orders: PurchaseOrder[];
+  nextCursor: PurchaseHistoryCursor | null;
+  totalCount: number;
+  filteredCount: number;
+  totalAmount: number;
+  paidAmount: number;
+  pendingCount: number;
+  unsupportedPendingCount: number;
+  pending: Pick<PurchaseOrder, "id" | "provider" | "status" | "createdAt">[];
+  nextPendingCursor: PurchaseHistoryCursor | null;
+};
 export type PurchaseLessonContent = PurchaseLesson & {
   content: string;
   videoUrl: string | null;

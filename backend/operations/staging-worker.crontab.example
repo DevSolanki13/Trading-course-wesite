@@ -1,0 +1,9 @@
+# External staging scheduler example. This file is not installed automatically.
+# Replace /srv/indianxtrade with a dedicated checkout containing npm dependencies
+# and Node >=22.19.0. Ensure cron's PATH contains the matching node and npm.
+# Provision runner environment/permissions as described in
+# docs/PERFORMANCE-PHASE-4-RECEIPTS.md. Never put credentials in this crontab.
+# The existing command authenticates to the permitted staging worker; it refuses
+# disabled/production runner configuration and reports non-2xx/timeout failures.
+# Repeated/overlapping runs share existing durable outbox claims and retry fences.
+* * * * * cd "/srv/indianxtrade" && npm run operations:run -- --run

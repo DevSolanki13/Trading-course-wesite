@@ -31,6 +31,7 @@ import type {
   PurchaseUser,
   PurchaseCourse,
   PurchaseOrder,
+  PurchaseOrdersPage,
   PurchaseLessonContent,
 } from "../../shared/purchase";
 import type { Announcement } from "../../shared/announcements";
@@ -46,6 +47,7 @@ interface StudentDashboardProps {
   orders: PurchaseOrder[];
   orderCount?: number;
   ordersFresh?: boolean;
+  ordersPage?: PurchaseOrdersPage;
   announcements?: Announcement[];
   initialView?: "courses" | "explore" | "billing" | "account";
   ordersOnly?: boolean;
@@ -61,6 +63,7 @@ export function StudentDashboard({
   orders: initialOrders,
   orderCount,
   ordersFresh = false,
+  ordersPage,
   announcements,
   initialView = "courses",
   ordersOnly = false,
@@ -81,7 +84,20 @@ export function StudentDashboard({
     error: billingError,
     refresh: refreshBilling,
     loaded: billingLoaded,
-  } = useBillingOrders(initialOrders, view === "billing" && !sessionMismatch, ordersFresh);
+    page: billingPage,
+    pageNumber,
+    nextPage,
+    previousPage,
+    status: billingStatus,
+    provider: billingProvider,
+    setStatus: setBillingStatus,
+    setProvider: setBillingProvider,
+  } = useBillingOrders(
+    initialOrders,
+    view === "billing" && !sessionMismatch,
+    ordersFresh,
+    ordersPage,
+  );
   const [exploreQuery, setExploreQuery] = useState("");
   const [exploreLevel, setExploreLevel] = useState("all");
   const [loggingOut, setLoggingOut] = useState(false);
@@ -486,7 +502,7 @@ export function StudentDashboard({
             <Receipt size={18} weight={view === "billing" ? "fill" : "regular"} />
             <span>Billing & receipts</span>
             <span className="student-nav-badge">
-              ({billingLoaded ? orders.length : (orderCount ?? orders.length)})
+              ({billingPage?.totalCount ?? orderCount ?? orders.length})
             </span>
           </button>
           <button
@@ -1039,6 +1055,14 @@ export function StudentDashboard({
           {view === "billing" && (
             <StudentBillingPanel
               orders={orders}
+              page={billingPage}
+              pageNumber={pageNumber}
+              onNextPage={nextPage}
+              onPreviousPage={previousPage}
+              status={billingStatus}
+              provider={billingProvider}
+              onStatusChange={setBillingStatus}
+              onProviderChange={setBillingProvider}
               syncing={billingSyncing || (!billingLoaded && !billingError)}
               error={billingError}
               onRefresh={refreshBilling}

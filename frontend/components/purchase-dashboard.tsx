@@ -1,7 +1,12 @@
 "use client";
 
 import { StudentDashboard } from "./student-dashboard";
-import type { PurchaseUser, PurchaseCourse, PurchaseOrder } from "../../shared/purchase";
+import type {
+  PurchaseUser,
+  PurchaseCourse,
+  PurchaseOrder,
+  PurchaseOrdersPage,
+} from "../../shared/purchase";
 import type { Announcement } from "../../shared/announcements";
 
 export function PurchaseDashboard({
@@ -11,6 +16,7 @@ export function PurchaseDashboard({
   orders,
   orderCount,
   ordersFresh = false,
+  ordersPage,
   announcements,
   ordersOnly = false,
   local = false,
@@ -24,6 +30,7 @@ export function PurchaseDashboard({
   orders: PurchaseOrder[];
   orderCount?: number;
   ordersFresh?: boolean;
+  ordersPage?: PurchaseOrdersPage;
   announcements?: Announcement[];
   ordersOnly?: boolean;
   local?: boolean;
@@ -40,6 +47,7 @@ export function PurchaseDashboard({
       orders={orders}
       orderCount={orderCount}
       ordersFresh={ordersFresh}
+      ordersPage={ordersPage}
       announcements={announcements}
       ordersOnly={ordersOnly}
       local={local}

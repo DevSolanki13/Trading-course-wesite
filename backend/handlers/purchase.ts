@@ -14,6 +14,7 @@ import {
   purchaseLesson,
   purchaseOrder,
   purchaseOrders,
+  purchaseOrdersPage,
   purchaseRpc,
   purchaseQuoteCoupon,
 } from "../purchase/repository";
@@ -22,7 +23,7 @@ import {
   PaymentsUnavailableError,
   InvalidPaymentSignatureError,
 } from "../payments/providers";
-import { sendPurchaseReceipt } from "../purchase/mail";
+import { schedulePurchaseReceipt } from "../purchase/mail";
 export async function purchaseRequest(request: Request) {
   const url = new URL(request.url);
   const action = url.pathname.replace(/^\/api\/purchase\//, "");
@@ -47,6 +48,39 @@ export async function purchaseRequest(request: Request) {
       const user = (await purchaseUser())!;
       if (action === "orders") {
         if (!localDemoEnabled()) await limit(request, "billing-history", user.id, 30, 60);
+        if (url.searchParams.size) {
+          const cursorSchema = z
+            .object({ createdAt: z.iso.datetime({ offset: true }), id: z.uuid() })
+            .strict();
+          const cursor = (name: string) => {
+            const value = url.searchParams.get(name);
+            if (!value) return null;
+            try {
+              return cursorSchema.parse(JSON.parse(value));
+            } catch {
+              throw new AuthError(400, "Invalid history cursor.");
+            }
+          };
+          return json(
+            await purchaseOrdersPage(user.id, {
+              limit: z.coerce
+                .number()
+                .int()
+                .min(1)
+                .max(50)
+                .parse(url.searchParams.get("limit") ?? 20),
+              cursor: cursor("cursor"),
+              pendingCursor: cursor("pendingCursor"),
+              pendingOnly: z.enum(["0", "1"]).parse(url.searchParams.get("pending") ?? "0") === "1",
+              status: z
+                .enum(["all", "pending", "paid", "failed", "cancelled", "refunded"])
+                .parse(url.searchParams.get("status") ?? "all"),
+              provider: z
+                .enum(["all", "mock", "razorpay", "upi", "cashfree", "demo"])
+                .parse(url.searchParams.get("provider") ?? "all"),
+            }),
+          );
+        }
         return json({ orders: await purchaseOrders(user.id) });
       }
       if (action === "dashboard") {
@@ -64,7 +98,7 @@ export async function purchaseRequest(request: Request) {
         if (!order) throw new AuthError(404, "Order not found.");
         if (sharedUpiGateway()) order = await reconcileGatewayPurchase(order, user.id);
         if (order.status === "paid" && order.provider === "upi")
-          await sendPurchaseReceipt(order.id, user);
+          schedulePurchaseReceipt(order.id, user);
         return json({ order });
       }
       return json({ error: "Not found" }, 404);
@@ -135,7 +169,7 @@ export async function purchaseRequest(request: Request) {
         throw new AuthError(400, "Payment does not match the saved order.");
       await settlePurchase(verified);
       const saved = (await purchaseOrder(order.id, user.id))!;
-      if (saved.status === "paid") await sendPurchaseReceipt(order.id, user);
+      if (saved.status === "paid") schedulePurchaseReceipt(order.id, user);
       return json({ order: saved });
     }
     if (action === "complete") {

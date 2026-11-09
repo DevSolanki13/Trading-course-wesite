@@ -2,6 +2,8 @@
 
 Date: 9 November 2026
 
+Follow-up: the remaining local implementation is recorded in [Phase 4 closeout](./PERFORMANCE-PHASE-4-CLOSEOUT-2026-11-09.md). The first-batch status and remaining-work list below are historical; use the closeout for current implementation and external acceptance gates.
+
 Status: **First batch implemented and verified locally. Phase 4 overall is IN PROGRESS, not complete.** Phase 3's existing uncommitted changes were preserved. Browser tests remain delegated to the user.
 
 Full Phase 4 estimate at the start: approximately **4–8 hours for local implementation/verification**, dependent on database findings. Hosted rollout, required external coordination and browser/provider acceptance are additional gates, not a guaranteed deadline.

@@ -104,7 +104,7 @@ export async function localAdminRead(
         ? state
         : null;
     const items = await db.query(
-      "select r.*,public.refund_evidence(r.order_id) as current_evidence from refund_requests r where ($1::text is null or state=$1) order by created_at desc,id limit 50 offset $2",
+      "with page as materialized(select r.* from refund_requests r where ($1::text is null or state=$1) order by created_at desc,id limit 50 offset $2) select page.*,public.refund_evidence(page.order_id) as current_evidence from page order by created_at desc,id",
       [filter, page * 50],
     );
     const total = await db.query<{ total: number }>(

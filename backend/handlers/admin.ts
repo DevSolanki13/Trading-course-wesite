@@ -16,7 +16,7 @@ import { reconcilePayment, reconcileRefund } from "../payments/workflow";
 import { cookies } from "next/headers";
 import { localDemoEnabled } from "../purchase/mode";
 import { LOCAL_SESSION_COOKIE, localSession } from "../local/auth";
-import { localCourseLearners } from "../admin/data";
+import { adminLearnersRequest } from "./admin-learners";
 import { localDatabase } from "../local/database";
 import { localAdminRead } from "../local/admin";
 import { uploadCourseThumbnail } from "../admin/thumbnails";
@@ -281,6 +281,8 @@ export async function adminRequest(request: Request) {
   try {
     const url = new URL(request.url);
     const action = url.pathname.replace(/^\/api\/admin\//, "");
+    if (request.method === "GET" && action === "course-learners")
+      return adminLearnersRequest(request);
     if (request.method !== "GET") sameOrigin(request);
     if (localDemoEnabled()) {
       const localUser = await localSession((await cookies()).get(LOCAL_SESSION_COOKIE)?.value);
@@ -366,10 +368,6 @@ export async function adminRequest(request: Request) {
           }
           return json(result);
         }
-      }
-      if (request.method === "GET" && action === "course-learners") {
-        const id = parse(uuid, url.searchParams.get("courseId"));
-        return json(await localCourseLearners(id));
       }
       if (request.method === "GET" && action === "courses") {
         const db = await localDatabase();
@@ -497,16 +495,6 @@ export async function adminRequest(request: Request) {
       }
       if (action === "course")
         return json({ course: await getCourse(context, parse(uuid, url.searchParams.get("id"))) });
-      if (action === "course-learners") {
-        const id = parse(uuid, url.searchParams.get("courseId"));
-        const result = await context.admin.rpc("admin_course_learners", {
-          p_actor: context.user.id,
-          p_session: context.sessionId,
-          p_course: id,
-        });
-        databaseError(result.error);
-        return json(result.data);
-      }
       if (action === "students") {
         const r = await context.admin.rpc("admin_students", {
           p_actor: context.user.id,
@@ -661,29 +649,22 @@ export async function adminRequest(request: Request) {
         });
       }
       if (action === "refunds") {
-        let q = context.admin
-          .from("refund_requests")
-          .select("*", { count: "exact" })
-          .order("created_at", { ascending: false });
         const state = url.searchParams.get("state");
-        if (
+        const filter =
           state &&
           ["requested", "approved", "processing", "failed", "rejected", "refunded"].includes(state)
-        )
-          q = q.eq("state", state);
+            ? state
+            : null;
         const page = pageNumber(url.searchParams.get("page"));
-        const result = await q.range(page * 50, page * 50 + 49);
+        const result = await context.admin.rpc("admin_refund_page_v2", {
+          p_actor: context.user.id,
+          p_session: context.sessionId,
+          p_state: filter,
+          p_page: page,
+        });
         databaseError(result.error);
-        const items = await Promise.all(
-          (result.data ?? []).map(async (r) => {
-            const e = await context.admin.rpc("refund_evidence", { p_order: r.order_id });
-            databaseError(e.error);
-            return { ...r, current_evidence: e.data };
-          }),
-        );
         return json({
-          items,
-          total: result.count,
+          ...result.data,
           providerActionsAvailable: cashfreeSandboxEnabled(),
         });
       }

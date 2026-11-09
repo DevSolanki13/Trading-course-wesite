@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { PurchaseOrder } from "../../../shared/purchase";
+import type { PurchaseOrder, PurchaseOrdersPage } from "../../../shared/purchase";
 import { purchaseReceiptHref } from "../../../shared/purchase";
 import { StudentBillingSkeleton } from "./student-billing-skeleton";
 
@@ -21,6 +21,14 @@ export interface StudentBillingPanelProps {
   syncing?: boolean;
   error?: string;
   onRefresh?: () => void;
+  page?: PurchaseOrdersPage;
+  pageNumber?: number;
+  onNextPage?: () => void;
+  onPreviousPage?: () => void;
+  status?: string;
+  provider?: string;
+  onStatusChange?: (value: string) => void;
+  onProviderChange?: (value: string) => void;
 }
 
 export function StudentBillingPanel({
@@ -29,6 +37,14 @@ export function StudentBillingPanel({
   syncing = false,
   error = "",
   onRefresh,
+  page,
+  pageNumber = 1,
+  onNextPage,
+  onPreviousPage,
+  status = "all",
+  provider = "all",
+  onStatusChange,
+  onProviderChange,
 }: StudentBillingPanelProps) {
   return (
     <div>
@@ -48,11 +64,73 @@ export function StudentBillingPanel({
           </button>
         )}
       </div>
+      {onStatusChange && onProviderChange && (
+        <div className="student-greeting-head">
+          <label>
+            Status{" "}
+            <select
+              aria-label="Order status"
+              value={status}
+              disabled={syncing}
+              onChange={(event) => onStatusChange(event.target.value)}
+            >
+              {["all", "pending", "paid", "failed", "cancelled", "refunded"].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Provider{" "}
+            <select
+              aria-label="Payment provider"
+              value={provider}
+              disabled={syncing}
+              onChange={(event) => onProviderChange(event.target.value)}
+            >
+              {["all", "cashfree", "demo", "upi", "razorpay", "mock"].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+      {page && (
+        <p role="status">
+          {page.totalCount} orders · {page.filteredCount} matching · Total ₹
+          {(page.totalAmount / 100).toLocaleString("en-IN")} · Paid ₹
+          {(page.paidAmount / 100).toLocaleString("en-IN")} · {page.pendingCount} pending
+        </p>
+      )}
       {syncing && orders.length > 0 && <p role="status">Syncing your latest transactions…</p>}
       {error && (
         <p className="auth-error" role="alert">
           {error}
         </p>
+      )}
+      {page && onNextPage && onPreviousPage && (
+        <nav aria-label="Order history pages">
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={syncing || pageNumber === 1}
+            onClick={onPreviousPage}
+          >
+            Previous orders
+          </button>
+          <span aria-live="polite"> Page {pageNumber} </span>
+          <button
+            type="button"
+            className="button button-secondary"
+            disabled={syncing || !page.nextCursor}
+            onClick={onNextPage}
+          >
+            Next orders
+          </button>
+        </nav>
       )}
 
       {syncing && !orders.length ? (
@@ -176,8 +254,16 @@ export function StudentBillingPanel({
         </div>
       ) : (
         <div className="student-empty-state">
-          <h3>No purchase history found</h3>
-          <p>When you purchase a course, your tax receipt and order invoice will appear here.</p>
+          <h3>
+            {page && page.totalCount > 0
+              ? "No orders match these filters"
+              : "No purchase history found"}
+          </h3>
+          <p>
+            {page && page.totalCount > 0
+              ? "Change the status or provider filter to see your other orders."
+              : "When you purchase a course, your tax receipt and order invoice will appear here."}
+          </p>
           <button type="button" className="button button-primary" onClick={onBrowseCourses}>
             Browse courses
           </button>
