@@ -215,7 +215,7 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
                     </td>
                     <td>{when(o.created_at)}</td>
                     <td className="admin-col-action">
-                      <button className="text-link" onClick={() => open(o.id)}>
+                      <button className="button button-secondary button-sm" onClick={() => open(o.id)}>
                         Details
                       </button>
                     </td>
