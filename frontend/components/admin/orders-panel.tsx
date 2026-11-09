@@ -408,7 +408,7 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
                       <td className="admin-col-action">
                         <button
                           id={`order-trigger-${o.id}`}
-                          className="text-link"
+                          className="button button-secondary button-sm"
                           aria-expanded={detail?.order.id === o.id}
                           aria-controls={
                             detail?.order.id === o.id ? `order-detail-${o.id}` : undefined
