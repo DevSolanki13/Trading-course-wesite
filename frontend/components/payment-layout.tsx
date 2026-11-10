@@ -158,36 +158,48 @@ export function PaymentTotals({
   couponCode?: string | null;
   gateway?: boolean;
 }) {
+  // This is an offer illustration, not tax collected or an invoice calculation.
+  const referenceGst = tax === 0 ? Math.floor((Math.max(0, base - couponDiscount) * 18) / 100) : 0;
+  const earlyBirdOffer = referenceGst + gatewaySavings;
   return (
-    <dl className="ix-price-list">
-      <div>
-        <dt>Course price</dt>
-        <dd>{checkoutMoney(base)}</dd>
-      </div>
-      {couponDiscount > 0 && (
-        <div className="ix-savings">
-          <dt>{couponCode ? `Coupon · ${couponCode}` : "Coupon discount"}</dt>
-          <dd>−{checkoutMoney(couponDiscount)}</dd>
+    <>
+      <dl className="ix-price-list">
+        <div>
+          <dt>Course price</dt>
+          <dd>{checkoutMoney(base)}</dd>
         </div>
-      )}
-      {gatewaySavings > 0 && (
-        <div className="ix-savings">
-          <dt>Gateway savings</dt>
-          <dd>−{checkoutMoney(gatewaySavings)}</dd>
+        {couponDiscount > 0 && (
+          <div className="ix-savings">
+            <dt>{couponCode ? `Coupon · ${couponCode}` : "Coupon discount"}</dt>
+            <dd>−{checkoutMoney(couponDiscount)}</dd>
+          </div>
+        )}
+        <div>
+          <dt>{referenceGst > 0 ? "GST (18%, reference)" : "GST"}</dt>
+          <dd>{checkoutMoney(tax || referenceGst)}</dd>
         </div>
+        {earlyBirdOffer > 0 && (
+          <div className="ix-savings">
+            <dt>Early bird offer</dt>
+            <dd>−{checkoutMoney(earlyBirdOffer)}</dd>
+          </div>
+        )}
+        <div className="ix-total">
+          <dt>
+            {gateway ? "Exact amount to pay" : "Order total"}
+            <small>One-time payment</small>
+          </dt>
+          <dd>{checkoutMoney(total)}</dd>
+        </div>
+      </dl>
+      {referenceGst > 0 && (
+        <p className="ix-offer-note">
+          GST charged: ₹0.00. The 18% reference amount is fully offset by the early bird offer.
+          {gatewaySavings > 0 &&
+            ` The offer also includes the ${checkoutMoney(gatewaySavings)} payment amount adjustment.`}
+        </p>
       )}
-      <div>
-        <dt>GST</dt>
-        <dd>{checkoutMoney(tax)}</dd>
-      </div>
-      <div className="ix-total">
-        <dt>
-          {gateway ? "Exact amount to pay" : "Order total"}
-          <small>One-time payment</small>
-        </dt>
-        <dd>{checkoutMoney(total)}</dd>
-      </div>
-    </dl>
+    </>
   );
 }
 export function GatewayOrderSummary({
@@ -229,12 +241,6 @@ export function GatewayOrderSummary({
           </span>
         </div>
         {totals}
-        {savings > 0 && (
-          <p className="ix-rail-note">
-            Your gateway amount includes an additional{" "}
-            <strong>{checkoutMoney(savings)} saving</strong>.
-          </p>
-        )}
         <div className="ix-order-reference">
           <span>Order reference</span>
           <strong>{order.id}</strong>
