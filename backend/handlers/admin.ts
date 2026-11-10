@@ -20,7 +20,11 @@ import { localCourseLearners } from "../admin/data";
 import { localDatabase } from "../local/database";
 import { localAdminRead } from "../local/admin";
 import { uploadCourseThumbnail } from "../admin/thumbnails";
-import { upiPaymentParams, checkAcademyUpiPayment } from "../admin/upi-payments";
+import {
+  upiPaymentParams,
+  checkAcademyUpiPayment,
+  approveAcademyUpiPayment,
+} from "../admin/upi-payments";
 
 async function localCourse(db: Awaited<ReturnType<typeof localDatabase>>, id: string) {
   const course = (
@@ -321,6 +325,26 @@ export async function adminRequest(request: Request) {
         );
         if (!order.rows[0]) throw new AuthError(404, "UPI order not found.");
         return json(await checkAcademyUpiPayment(input.id, order.rows[0].user_id));
+      }
+      if (request.method === "POST" && action === "upi-manual-approve") {
+        const input = parse(
+          z
+            .object({
+              id: uuid,
+              utr: z.string().regex(/^[A-Za-z0-9]{6,32}$/),
+              reason: z.string().trim().min(10).max(300),
+              confirmAmount: z.number().int().positive(),
+              bankChecked: z.boolean(),
+            })
+            .strict(),
+          await body(request),
+        );
+        const db = await localDatabase();
+        return json(
+          await approveAcademyUpiPayment(localUser.id, input, {
+            localDb: db,
+          }),
+        );
       }
       if (request.method === "POST" && action === "thumbnail-upload")
         return await uploadCourseThumbnail(request);
@@ -787,6 +811,26 @@ export async function adminRequest(request: Request) {
       if (!order.data) throw new AuthError(404, "UPI order not found.");
       const result = await checkAcademyUpiPayment(input.id, order.data.user_id);
       await audit(context, "upi_payment_checked", input.id);
+      return json(result);
+    }
+    if (action === "upi-manual-approve") {
+      await limit(request, "admin-upi-approve", context.user.id, 10, 60);
+      const input = parse(
+        z
+          .object({
+            id: uuid,
+            utr: z.string().regex(/^[A-Za-z0-9]{6,32}$/),
+            reason: z.string().trim().min(10).max(300),
+            confirmAmount: z.number().int().positive(),
+            bankChecked: z.boolean(),
+          })
+          .strict(),
+        await body(request),
+      );
+      const result = await approveAcademyUpiPayment(context.user.id, input, {
+        adminClient: context.admin,
+      });
+      await audit(context, "upi_payment_manually_approved", input.id);
       return json(result);
     }
     if (action === "thumbnail-upload") return await uploadCourseThumbnail(request);

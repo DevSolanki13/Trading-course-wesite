@@ -2335,6 +2335,84 @@ body:has(.admin-page) .site-footer {
 .upi-payments [role="tabpanel"] > p {
   padding: 16px 24px;
 }
+
+.upi-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.upi-manual-approve-btn {
+  font-size: 12px !important;
+  min-height: 32px !important;
+  padding: 4px 10px !important;
+  white-space: nowrap;
+}
+.upi-manual-badge {
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  font-weight: 600 !important;
+}
+.upi-approval-dialog {
+  max-width: 540px !important;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.upi-approval-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  background: color-mix(in srgb, var(--foreground) 3%, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 14px 0;
+  font-size: 12px;
+}
+.upi-approval-summary div {
+  overflow-wrap: anywhere;
+}
+.upi-approval-summary strong {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.upi-approval-warning {
+  background: color-mix(in srgb, #f59e0b 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, #f59e0b 35%, var(--line));
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--foreground);
+  margin-bottom: 16px;
+}
+.upi-approval-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.upi-approval-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+@media (max-width: 600px) {
+  .upi-approval-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .upi-approval-actions {
+    flex-direction: column;
+  }
+  .upi-approval-actions button {
+    width: 100%;
+  }
+}
 @media (max-width: 640px) {
   .upi-payment-tabs {
     padding-left: 16px;

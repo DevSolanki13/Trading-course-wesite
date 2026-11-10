@@ -207,6 +207,7 @@ export type AdminUpiPayment = {
   gatewayStatus: string | null;
   gatewayBound: boolean;
   reviewReason: string | null;
+  manualApproval?: { by: string; at: string; reason: string } | null;
 };
 export type AdminUpiCredit = { id: string; utr: string; amount: number; receivedAt: string };
 export type AdminUpiPayments = {

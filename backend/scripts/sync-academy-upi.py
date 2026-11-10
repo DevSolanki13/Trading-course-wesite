@@ -6,7 +6,10 @@ Academy's UPI deposit states and unconsumed credits in the shared collection
 account. No SMS bodies, trading customers, admin cookies or USDT data leave it.
 """
 import argparse
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 import json
 import pathlib
 import re
@@ -91,10 +94,11 @@ def main():
     if config_file.stat().st_mode & 0o077:
         raise ValueError("configuration permissions must be 600")
     with open(str(config_file) + ".lock", "w") as lock:
-        try:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            return
+        if fcntl is not None:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                return
         config = json.loads(config_file.read_text())
         data = snapshot(config)
         if not args.dry_run:

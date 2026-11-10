@@ -49,6 +49,92 @@ export function UpiPaymentsPanel() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+
+  const [approvingPayment, setApprovingPayment] = useState<AdminUpiPayment | null>(null);
+  const [approvalUtr, setApprovalUtr] = useState("");
+  const [approvalReason, setApprovalReason] = useState("");
+  const [approvalConfirmAmount, setApprovalConfirmAmount] = useState("");
+  const [approvalBankChecked, setApprovalBankChecked] = useState(false);
+  const [approvalBusy, setApprovalBusy] = useState(false);
+  const [approvalError, setApprovalError] = useState("");
+
+  useEffect(() => {
+    if (!approvingPayment) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !approvalBusy) {
+        setApprovingPayment(null);
+        setApprovalError("");
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [approvingPayment, approvalBusy]);
+
+  function openApprovalModal(row: AdminUpiPayment) {
+    setApprovingPayment(row);
+    setApprovalUtr(row.utr || row.submittedReference || "");
+    setApprovalReason("");
+    setApprovalConfirmAmount((row.amount / 100).toString());
+    setApprovalBankChecked(false);
+    setApprovalError("");
+  }
+
+  function closeApprovalModal() {
+    if (approvalBusy) return;
+    setApprovingPayment(null);
+    setApprovalError("");
+  }
+
+  async function handleManualApprove(e: React.FormEvent) {
+    e.preventDefault();
+    if (!approvingPayment) return;
+    if (!approvingPayment.gatewayBound) {
+      setApprovalError(
+        "Checkout was never set up with the gateway for this order; nothing to approve.",
+      );
+      return;
+    }
+    const normalizedUtr = approvalUtr.trim().toUpperCase();
+    if (!/^[A-Z0-9]{6,32}$/.test(normalizedUtr)) {
+      setApprovalError("UTR must be 6 to 32 uppercase alphanumeric characters.");
+      return;
+    }
+    const trimmedReason = approvalReason.trim();
+    if (trimmedReason.length < 10 || trimmedReason.length > 300) {
+      setApprovalError("Reason must be between 10 and 300 characters.");
+      return;
+    }
+    const parsedRupees = parseFloat(approvalConfirmAmount);
+    if (isNaN(parsedRupees) || parsedRupees <= 0) {
+      setApprovalError("Enter a valid confirmation amount in rupees.");
+      return;
+    }
+    const confirmPaise = Math.round(parsedRupees * 100);
+    if (confirmPaise !== approvingPayment.amount) {
+      setApprovalError(
+        `Confirmation amount must match order total (${money(approvingPayment.amount)}).`,
+      );
+      return;
+    }
+    setApprovalBusy(true);
+    setApprovalError("");
+    try {
+      const res = await adminApi<{ message: string }>("upi-manual-approve", {
+        id: approvingPayment.id,
+        utr: normalizedUtr,
+        reason: trimmedReason,
+        confirmAmount: confirmPaise,
+        bankChecked: approvalBankChecked,
+      });
+      setMessage(res.message);
+      setApprovingPayment(null);
+      reload();
+    } catch (err) {
+      setApprovalError(err instanceof Error ? err.message : "Approval failed. Try again.");
+    } finally {
+      setApprovalBusy(false);
+    }
+  }
   useEffect(() => {
     let live = true;
     adminApi<AdminUpiPayments>(
@@ -317,26 +403,55 @@ export function UpiPaymentsPanel() {
                                   </td>
                                   <td data-label="Created">{when(row.createdAt)}</td>
                                   <td data-label="Payment status">
-                                    <span className="admin-badge">{paymentState(row)}</span>
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: "6px",
+                                        alignItems: "center",
+                                        flexWrap: "wrap",
+                                      }}
+                                    >
+                                      <span className="admin-badge">{paymentState(row)}</span>
+                                      {row.manualApproval && (
+                                        <span className="admin-badge upi-manual-badge">Manual</span>
+                                      )}
+                                    </div>
                                     <span className="upi-cell-sub">
-                                      {row.reviewReason || `Course order: ${row.status}`}
+                                      {row.manualApproval
+                                        ? `Approved by ${row.manualApproval.by} · ${when(row.manualApproval.at)} · ${row.manualApproval.reason}`
+                                        : row.reviewReason || `Course order: ${row.status}`}
                                     </span>
                                   </td>
                                   <td data-label="Action" className="admin-col-action">
-                                    {row.status === "pending" && row.gatewayBound ? (
-                                      <button
-                                        type="button"
-                                        className="text-link"
-                                        disabled={!!busy}
-                                        onClick={() => check(row)}
-                                      >
-                                        {busy === row.id ? "Checking…" : "Check payment"}
-                                      </button>
-                                    ) : (
-                                      <a className="text-link" href={`/admin?view=orders`}>
-                                        View orders
-                                      </a>
-                                    )}
+                                    <div className="upi-action-group">
+                                      {row.status === "pending" && (
+                                        <>
+                                          {row.gatewayBound && (
+                                            <button
+                                              type="button"
+                                              className="text-link"
+                                              disabled={!!busy}
+                                              onClick={() => check(row)}
+                                            >
+                                              {busy === row.id ? "Checking…" : "Check payment"}
+                                            </button>
+                                          )}
+                                          <button
+                                            type="button"
+                                            className="button button-secondary upi-manual-approve-btn"
+                                            disabled={!!busy}
+                                            onClick={() => openApprovalModal(row)}
+                                          >
+                                            Approve manually
+                                          </button>
+                                        </>
+                                      )}
+                                      {row.status !== "pending" && (
+                                        <a className="text-link" href={`/admin?view=orders`}>
+                                          View orders
+                                        </a>
+                                      )}
+                                    </div>
                                   </td>
                                 </tr>
                               );
@@ -394,6 +509,163 @@ export function UpiPaymentsPanel() {
           )}
         </div>
       </div>
+
+      {approvingPayment && (
+        <div className="admin-modal-backdrop" onClick={() => !approvalBusy && closeApprovalModal()}>
+          <div
+            className="admin-modal-dialog upi-approval-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upi-approval-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="upi-approval-title" style={{ margin: "0 0 10px", fontSize: "17px" }}>
+              Approve payment manually
+            </h3>
+            <div className="upi-approval-summary">
+              <div>
+                <strong>Student</strong>
+                <span>{approvingPayment.studentName || approvingPayment.email}</span>
+                <small className="upi-cell-sub">{approvingPayment.email}</small>
+              </div>
+              <div>
+                <strong>Course</strong>
+                <span>{approvingPayment.course}</span>
+              </div>
+              <div>
+                <strong>Order ID</strong>
+                <span className="upi-cell-sub">{approvingPayment.id}</span>
+              </div>
+              <div>
+                <strong>Amount</strong>
+                <span style={{ font: "15px var(--mono, monospace)", fontWeight: 600 }}>
+                  {money(approvingPayment.amount)}
+                </span>
+              </div>
+              <div>
+                <strong>Student reference</strong>
+                <span>{approvingPayment.submittedReference || "Not submitted"}</span>
+              </div>
+              <div>
+                <strong>Gateway status</strong>
+                <span>
+                  {approvingPayment.gatewayBound
+                    ? approvingPayment.gatewayStatus || "Pending"
+                    : "Unbound checkout (no gateway order)"}
+                </span>
+              </div>
+            </div>
+
+            <div className="upi-approval-warning" role="note">
+              <strong>Caution:</strong> This grants course access and sends the receipt. It can only
+              be reversed by a refund.
+            </div>
+
+            {!approvingPayment.gatewayBound ? (
+              <div>
+                <p className="auth-error" role="alert">
+                  Checkout was never set up with the gateway for this order. It cannot be manually
+                  approved.
+                </p>
+                <div className="upi-approval-actions">
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={closeApprovalModal}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form
+                aria-label="Manual approval form"
+                className="upi-approval-form"
+                onSubmit={handleManualApprove}
+              >
+                <label className="admin-form label">
+                  Bank UTR / Reference
+                  <input
+                    value={approvalUtr}
+                    onChange={(e) => setApprovalUtr(e.target.value.toUpperCase())}
+                    placeholder="e.g. 123456789012"
+                    maxLength={32}
+                    required
+                    autoFocus
+                    disabled={approvalBusy}
+                  />
+                  <span className="admin-help">
+                    6 to 32 uppercase alphanumeric characters from the bank credit.
+                  </span>
+                </label>
+
+                <label className="admin-form label">
+                  Reason for manual approval
+                  <textarea
+                    value={approvalReason}
+                    onChange={(e) => setApprovalReason(e.target.value)}
+                    placeholder="Explain why this payment is being manually approved (10–300 characters)"
+                    minLength={10}
+                    maxLength={300}
+                    rows={3}
+                    required
+                    disabled={approvalBusy}
+                  />
+                  <span className="admin-help">
+                    Recorded in the audit log and visible on the payment history row.
+                  </span>
+                </label>
+
+                <label className="admin-form label">
+                  Confirm order amount (in ₹)
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={approvalConfirmAmount}
+                    onChange={(e) => setApprovalConfirmAmount(e.target.value)}
+                    placeholder={(approvingPayment.amount / 100).toString()}
+                    required
+                    disabled={approvalBusy}
+                  />
+                  <span className="admin-help">
+                    Re-type exact amount in rupees: {(approvingPayment.amount / 100).toFixed(2)}
+                  </span>
+                </label>
+
+                <label className="admin-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={approvalBankChecked}
+                    onChange={(e) => setApprovalBankChecked(e.target.checked)}
+                    disabled={approvalBusy}
+                  />
+                  <span>I checked this payment in the bank statement</span>
+                </label>
+
+                {approvalError && (
+                  <p className="auth-error" role="alert" style={{ margin: "4px 0 0" }}>
+                    {approvalError}
+                  </p>
+                )}
+
+                <div className="upi-approval-actions">
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    disabled={approvalBusy}
+                    onClick={closeApprovalModal}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="button button-primary" disabled={approvalBusy}>
+                    {approvalBusy ? "Approving…" : "Approve payment"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

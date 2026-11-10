@@ -4,9 +4,10 @@ import { execFileSync } from "node:child_process";
 import { PGlite } from "@electric-sql/pglite";
 
 test("bank mirror includes all approved collection accounts and excludes unrelated credits", async () => {
+  const pythonBin = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
   const fixture = JSON.parse(
     execFileSync(
-      "python3",
+      pythonBin,
       [
         "-B",
         "-c",

@@ -80,7 +80,7 @@ it("shows the three UPI-only queues and labels unmatched credits as shared", asy
   );
   expect(screen.getByRole("textbox", { name: "Search payments" })).toHaveValue("999.00");
 });
-it("checks a bound Academy order without a manual credit approval", async () => {
+it("checks a bound Academy order with manual approval option available", async () => {
   mocks.fetch.mockImplementation(async (path: string) => ({
     ok: true,
     json: async () =>
@@ -89,13 +89,146 @@ it("checks a bound Academy order without a manual credit approval", async () => 
         : { ...base, items: [order], total: 1 },
   }));
   render(<UpiPaymentsPanel />);
-  fireEvent.click(await screen.findByRole("button", { name: "Check payment" }));
+  expect(await screen.findByRole("button", { name: "Approve manually" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Check payment" }));
   expect(await screen.findByText("The gateway has not confirmed payment yet.")).toBeInTheDocument();
   expect(mocks.fetch).toHaveBeenCalledWith(
     "/api/admin/upi-check",
     expect.objectContaining({ method: "POST", body: JSON.stringify({ id: order.id }) }),
   );
-  expect(screen.queryByRole("button", { name: /approve/i })).not.toBeInTheDocument();
+});
+
+it("opens manual approval modal, validates inputs, and submits approval", async () => {
+  mocks.fetch.mockImplementation(async (path: string) => {
+    if (path.endsWith("upi-manual-approve")) {
+      return {
+        ok: true,
+        json: async () => ({
+          status: "paid",
+          message: "Payment approved manually and course access granted.",
+        }),
+      };
+    }
+    return {
+      ok: true,
+      json: async () => ({ ...base, items: [order], total: 1 }),
+    };
+  });
+
+  render(<UpiPaymentsPanel />);
+  fireEvent.click(await screen.findByRole("button", { name: "Approve manually" }));
+
+  // Modal opens
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(screen.getByText("Approve payment manually")).toBeInTheDocument();
+  expect(screen.getByText(/Caution:/)).toBeInTheDocument();
+
+  // Test validation: invalid/empty UTR
+  const form = screen.getByRole("form", { name: "Manual approval form" });
+  const utrInput = screen.getByPlaceholderText(/123456789012/);
+  fireEvent.change(utrInput, { target: { value: "bad" } });
+  fireEvent.submit(form);
+  expect(
+    await screen.findByText("UTR must be 6 to 32 uppercase alphanumeric characters."),
+  ).toBeInTheDocument();
+
+  // Test validation: short reason
+  fireEvent.change(utrInput, { target: { value: "123456789012" } });
+  const reasonInput = screen.getByPlaceholderText(
+    /Explain why this payment is being manually approved/,
+  );
+  fireEvent.change(reasonInput, { target: { value: "Too short" } });
+  fireEvent.submit(form);
+  expect(
+    await screen.findByText("Reason must be between 10 and 300 characters."),
+  ).toBeInTheDocument();
+
+  // Fix reason and submit valid approval
+  fireEvent.change(reasonInput, {
+    target: { value: "Verified with bank branch manager directly" },
+  });
+  const checkbox = screen.getByLabelText(/I checked this payment in the bank statement/);
+  fireEvent.click(checkbox);
+
+  fireEvent.submit(form);
+
+  await waitFor(() => {
+    expect(mocks.fetch).toHaveBeenCalledWith(
+      "/api/admin/upi-manual-approve",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          id: order.id,
+          utr: "123456789012",
+          reason: "Verified with bank branch manager directly",
+          confirmAmount: 99900,
+          bankChecked: true,
+        }),
+      }),
+    );
+  });
+
+  expect(
+    await screen.findByText("Payment approved manually and course access granted."),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+it("shows failure inside manual approval dialog and keeps modal open", async () => {
+  mocks.fetch.mockImplementation(async (path: string) => {
+    if (path.endsWith("upi-manual-approve")) {
+      return {
+        ok: false,
+        status: 409,
+        json: async () => ({ error: "This UTR has already been used to approve an order." }),
+      };
+    }
+    return {
+      ok: true,
+      json: async () => ({ ...base, items: [order], total: 1 }),
+    };
+  });
+
+  render(<UpiPaymentsPanel />);
+  fireEvent.click(await screen.findByRole("button", { name: "Approve manually" }));
+
+  const form = screen.getByRole("form", { name: "Manual approval form" });
+  const utrInput = screen.getByPlaceholderText(/123456789012/);
+  fireEvent.change(utrInput, { target: { value: "123456789012" } });
+  const reasonInput = screen.getByPlaceholderText(
+    /Explain why this payment is being manually approved/,
+  );
+  fireEvent.change(reasonInput, { target: { value: "Valid reason for payment approval test" } });
+
+  fireEvent.submit(form);
+
+  expect(
+    await screen.findByText("This UTR has already been used to approve an order."),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+it("shows Manual badge and approval details on history rows", async () => {
+  const manualOrder = {
+    ...order,
+    status: "paid",
+    manualApproval: {
+      by: "Head Admin",
+      at: "2026-11-10T20:00:00Z",
+      reason: "Confirmed via bank branch statement",
+    },
+  };
+  mocks.fetch.mockImplementation(async () => ({
+    ok: true,
+    json: async () => ({ ...base, items: [manualOrder], total: 1 }),
+  }));
+
+  render(<UpiPaymentsPanel />);
+  expect(await screen.findByText("Manual")).toBeInTheDocument();
+  expect(screen.getByText(/Approved by Head Admin/)).toBeInTheDocument();
+  expect(screen.getByText(/Confirmed via bank branch statement/)).toBeInTheDocument();
+  // No approve button for paid orders
+  expect(screen.queryByRole("button", { name: "Approve manually" })).not.toBeInTheDocument();
 });
 it("shows delayed sync and fetch failures without claiming a clear bank queue", async () => {
   mocks.fetch.mockResolvedValue({ ok: true, json: async () => ({ ...base, syncedAt: null }) });
