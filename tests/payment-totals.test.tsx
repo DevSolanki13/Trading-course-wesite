@@ -39,7 +39,7 @@ it.each([
   const { container } = render(<PaymentTotals {...quote} tax={0} />);
   expect(screen.getByText("GST (18%, reference)").nextElementSibling).toHaveTextContent(quote.gst);
   expect(screen.getByText("Early bird offer").nextElementSibling).toHaveTextContent(quote.offer);
-  expect(screen.getByText(/GST charged: ₹0.00/)).toBeVisible();
+  expect(screen.queryByText(/GST charged: ₹0.00/)).toBeNull();
   const amounts = [...container.querySelectorAll("dd")].map((dd) => {
     const value = dd.textContent!.replace(/[₹,]/g, "").replace("−", "-");
     return Math.round(Number(value) * 100);
