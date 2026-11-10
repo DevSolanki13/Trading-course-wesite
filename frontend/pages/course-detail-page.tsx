@@ -348,7 +348,13 @@ export default function CourseDetailPage({
       </div>
       <div className="mobile-purchase-bar">
         <div>
-          <small>{course.provisional === false ? (course.price === 0 ? "Free course" : "Course price") : "Illustrative price"}</small>
+          <small>
+            {course.provisional === false
+              ? course.price === 0
+                ? "Free course"
+                : "Course price"
+              : "Illustrative price"}
+          </small>
           <strong>{course.price === 0 ? "Free" : formatPrice(course.price)}</strong>
         </div>
         <CourseAccessAction
