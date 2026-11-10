@@ -305,6 +305,15 @@ export function UpiPaymentsPanel() {
                                   <td>{money(row.amount)}</td>
                                   <td>
                                     <Reference value={row.utr} />
+                                    {row.submittedReference && (
+                                      <div className="upi-cell-sub">
+                                        <small>Student reference · unverified</small>
+                                        <Reference value={row.submittedReference} />
+                                        {row.referenceSubmittedAt && (
+                                          <small>{when(row.referenceSubmittedAt)}</small>
+                                        )}
+                                      </div>
+                                    )}
                                   </td>
                                   <td>{when(row.createdAt)}</td>
                                   <td>

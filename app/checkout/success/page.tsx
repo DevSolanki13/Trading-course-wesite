@@ -1,7 +1,7 @@
 import { sendPurchaseReceipt } from "@/backend/purchase/mail";
 import { sharedUpiGateway } from "@/backend/payments/indianxtrade";
 import { reconcileGatewayPurchase } from "@/backend/purchase/upi-gateway";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { requirePurchaseUser } from "@/backend/purchase/pages";
 import { purchaseConfirmation } from "@/backend/purchase/repository";
@@ -18,6 +18,7 @@ export default async function Success({
   const user = await requirePurchaseUser(`/checkout/success?orderId=${q.orderId}`);
   let { order, expired } = await purchaseConfirmation(String(q.orderId), user.id);
   if (!order) notFound();
+  if (order.provider === "upi") redirect(`/indianxtrade-gateway/${order.id}`);
   if (sharedUpiGateway()) {
     await reconcileGatewayPurchase(order, user.id);
     ({ order, expired } = await purchaseConfirmation(String(q.orderId), user.id));

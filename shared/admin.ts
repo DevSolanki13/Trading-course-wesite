@@ -202,6 +202,8 @@ export type AdminUpiPayment = {
   createdAt: string;
   paidAt: string | null;
   utr: string | null;
+  submittedReference?: string | null;
+  referenceSubmittedAt?: string | null;
   gatewayStatus: string | null;
   gatewayBound: boolean;
   reviewReason: string | null;

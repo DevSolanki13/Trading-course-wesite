@@ -20,9 +20,5 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
     available = false;
   }
   const tax = await purchaseRpc<number>("purchase_tax", { p_base: course.price });
-  return (
-    <main id="main-content" className="checkout-page container">
-      <PurchaseCheckout course={course} provider="upi" available={available} tax={tax} />
-    </main>
-  );
+  return <PurchaseCheckout course={course} provider="upi" available={available} tax={tax} />;
 }
