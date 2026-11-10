@@ -51,10 +51,28 @@
 }
 @media (min-width: 1600px) {
   .hero-annotation-chart {
-    right: calc(50% + clamp(360px, 24vw, 500px));
+    left: clamp(80px, 8vw, 220px);
+    right: auto;
   }
   .hero-teacher-notes {
-    left: calc(50% + clamp(360px, 24vw, 500px));
+    right: clamp(80px, 8vw, 240px);
+    left: auto;
+  }
+}
+@media (min-width: 1920px) {
+  .hero-annotation-chart {
+    left: clamp(120px, 9vw, 280px);
+  }
+  .hero-teacher-notes {
+    right: clamp(120px, 9vw, 300px);
+  }
+}
+@media (min-width: 2560px) {
+  .hero-annotation-chart {
+    left: clamp(180px, 10vw, 380px);
+  }
+  .hero-teacher-notes {
+    right: clamp(180px, 10vw, 400px);
   }
 }
 .hero-annotations svg {

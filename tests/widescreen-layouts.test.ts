@@ -118,16 +118,26 @@ test("Wide-screen layouts (Batch C) tokens, media queries and width caps", () =>
     "Site header logo sits at the leftmost on screens >= 1600px",
   );
 
-  // 8. Hero annotations (chart & teacher notes) come closer to center for >= 1600px
+  // 8. Hero annotations (chart & teacher notes) responsive positioning for >= 1600px
   const diwaliCss = fs.readFileSync(path.join(root, "frontend/styles/diwali.css"), "utf8");
   assert.match(
     diwaliCss,
-    /@media\s*\(min-width:\s*1600px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-annotation-chart\s*\{[\s\S]*?right:\s*calc\(50%\s*\+/,
-    "Hero annotated chart comes closer to center on screens >= 1600px",
+    /@media\s*\(min-width:\s*1600px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-annotation-chart\s*\{[\s\S]*?left:\s*clamp\(80px,\s*8vw,/,
+    "Hero annotated chart positions responsively inward on screens >= 1600px",
   );
   assert.match(
     diwaliCss,
-    /@media\s*\(min-width:\s*1600px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-teacher-notes\s*\{[\s\S]*?left:\s*calc\(50%\s*\+/,
-    "Hero teacher notes drawing comes closer to center on screens >= 1600px",
+    /@media\s*\(min-width:\s*1600px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-teacher-notes\s*\{[\s\S]*?right:\s*clamp\(80px,\s*8vw,/,
+    "Hero teacher notes drawing positions responsively inward on screens >= 1600px",
+  );
+  assert.match(
+    diwaliCss,
+    /@media\s*\(min-width:\s*1920px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-annotation-chart\s*\{[\s\S]*?left:\s*clamp\(120px,\s*9vw,/,
+    "Hero annotated chart scales smoothly at 1920px",
+  );
+  assert.match(
+    diwaliCss,
+    /@media\s*\(min-width:\s*2560px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-annotation-chart\s*\{[\s\S]*?left:\s*clamp\(180px,\s*10vw,/,
+    "Hero annotated chart scales smoothly at 2560px",
   );
 });
