@@ -261,24 +261,35 @@ export default function CourseDetailPage({
             ) : (
               <>
                 <span className="preview-price-label">
-                  {course.provisional === false ? "Course price" : "Illustrative course price"}
+                  {course.provisional === false
+                    ? course.price === 0
+                      ? "Free course"
+                      : "Course price"
+                    : "Illustrative course price"}
                 </span>
-                <div className="detail-price">{formatPrice(course.price)}</div>
-                <p className="purchase-tax-note">
-                  Final price and applicable GST will be confirmed before checkout.
-                </p>
+                <div className="detail-price">
+                  {course.price === 0 ? "Free" : formatPrice(course.price)}
+                </div>
+                {course.price > 0 && (
+                  <p className="purchase-tax-note">
+                    Final price and applicable GST will be confirmed before checkout.
+                  </p>
+                )}
                 <CourseAccessAction
                   slug={course.slug}
                   previewId={course.previewLessonId}
                   demoEnabled={demoEnabled}
                   courseId={course.id}
+                  price={course.price}
                   paymentsUnavailable={paymentsUnavailable}
                 />
-                <span className="purchase-status">
-                  {demoEnabled
-                    ? "Complete checkout to add this course to your dashboard."
-                    : "Purchases are disabled in this preview."}
-                </span>
+                {course.price > 0 && (
+                  <span className="purchase-status">
+                    {demoEnabled
+                      ? "Complete checkout to add this course to your dashboard."
+                      : "Purchases are disabled in this preview."}
+                  </span>
+                )}
                 <ul className="purchase-includes">
                   <li>
                     <Check size={17} />
@@ -294,7 +305,7 @@ export default function CourseDetailPage({
                       : course.accessPeriod === 1
                         ? "day"
                         : "days"}{" "}
-                    of online access from payment
+                    of online access
                   </li>
                   <li>
                     <Check size={17} />
@@ -305,13 +316,15 @@ export default function CourseDetailPage({
                     Student mentorship &amp; community discussion
                   </li>
                 </ul>
-                <div className="purchase-refund">
-                  <ShieldCheck size={22} />
-                  <p>
-                    Eligible for refund according to our published policy before course completion
-                    threshold. <Link href="/refund-policy">Read the full policy.</Link>
-                  </p>
-                </div>
+                {course.price > 0 && (
+                  <div className="purchase-refund">
+                    <ShieldCheck size={22} />
+                    <p>
+                      Eligible for refund according to our published policy before course completion
+                      threshold. <Link href="/refund-policy">Read the full policy.</Link>
+                    </p>
+                  </div>
+                )}
                 <p className="purchase-risk">
                   Educational content. No investment advice or guaranteed returns.
                 </p>
@@ -335,14 +348,15 @@ export default function CourseDetailPage({
       </div>
       <div className="mobile-purchase-bar">
         <div>
-          <small>{course.provisional === false ? "Course price" : "Illustrative price"}</small>
-          <strong>{formatPrice(course.price)}</strong>
+          <small>{course.provisional === false ? (course.price === 0 ? "Free course" : "Course price") : "Illustrative price"}</small>
+          <strong>{course.price === 0 ? "Free" : formatPrice(course.price)}</strong>
         </div>
         <CourseAccessAction
           slug={course.slug}
           courseId={course.id}
           mobile
           demoEnabled={demoEnabled}
+          price={course.price}
           paymentsUnavailable={paymentsUnavailable}
         />
       </div>
