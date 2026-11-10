@@ -35,6 +35,7 @@ import type {
 import type { Announcement } from "../../shared/announcements";
 import { accessExpiryLabel } from "../../shared/course-access";
 import { useBillingOrders } from "../lib/use-billing-orders";
+import { useHydrated } from "../lib/use-hydrated";
 
 interface StudentDashboardProps {
   user: PurchaseUser;
@@ -62,6 +63,7 @@ export function StudentDashboard({
   initialLessonId,
 }: StudentDashboardProps) {
   const router = useRouter();
+  const interactive = useHydrated();
   const [view, setView] = useState<"courses" | "explore" | "billing" | "account">(
     ordersOnly ? "billing" : initialView,
   );
@@ -368,7 +370,7 @@ export function StudentDashboard({
   }, [currentActiveLessonId, lessonFetchTrigger]);
 
   return (
-    <main id="main-content" className="admin-page student-dashboard-page">
+    <main id="main-content" className="admin-page student-dashboard-page" inert={!interactive}>
       {/* =========================================================================
           LEFT SIDEBAR (Identical to Admin Workspace)
           ========================================================================= */}

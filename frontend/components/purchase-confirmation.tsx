@@ -64,7 +64,17 @@ export function PurchaseConfirmation({
           {order.provider === "upi" && order.upi ? (
             <UpiPaymentPanel order={order} />
           ) : (
-            <p>Check this saved order again shortly. Avoid paying twice.</p>
+            <>
+              <p>Check this saved order again shortly. Avoid paying twice.</p>
+              {order.provider === "upi" && (
+                <Link
+                  className="button button-secondary"
+                  href={`/checkout/${order.slug || order.courseId}`}
+                >
+                  Resume payment setup
+                </Link>
+              )}
+            </>
           )}
           <button className="button button-secondary" onClick={() => router.refresh()}>
             Check again

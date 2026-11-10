@@ -36,6 +36,7 @@ export type PurchaseOrder = {
   paymentStatus?: "pending" | "failed" | "cancelled";
   provider: "mock" | "razorpay" | "cashfree" | "demo" | "upi";
   providerOrderId: string | null;
+  couponCode?: string | null;
   upi?: {
     vpa: string;
     payeeName: string;

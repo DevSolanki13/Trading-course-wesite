@@ -29,6 +29,7 @@ export async function createPurchase(
       if (reconciled.status === "paid") return reconciled;
       if (reconciled.status === "pending" && existing.providerOrderId)
         return (await purchaseOrder(existing.id, user.id))!;
+      if (reconciled.status === "pending") return bindGatewayPurchase(existing.id, user.id);
     }
   }
   if (sharedUpiGateway()) {

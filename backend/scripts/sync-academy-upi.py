@@ -9,6 +9,7 @@ import argparse
 import fcntl
 import json
 import pathlib
+import re
 import subprocess
 import sys
 import urllib.error
@@ -29,17 +30,27 @@ select jsonb_build_object(
  'credits',coalesce((select jsonb_agg(jsonb_build_object(
    'id',c.id,'utr',c.utr,'amount',c."amountInr",'receivedAt',c."receivedAt") order by c.id)
    from "BankCredit" c where not c.consumed and c."amountInr">0
-   and lower(:'vpa')=any(regexp_split_to_array(lower(c.vpa),'\s*,\s*'))),'[]'::jsonb)
+   and string_to_array(:'vpas',',') && regexp_split_to_array(lower(trim(c.vpa)),'\s*,\s*')),'[]'::jsonb)
 );
 rollback;
 """
 
 
+def collection_vpas(config):
+    entries = config.get("vpas", [config.get("vpa", "")])
+    if not isinstance(entries, list) or not 1 <= len(entries) <= 32:
+        raise ValueError("invalid collection accounts")
+    if any(not isinstance(vpa, str) or not re.fullmatch(r"[a-z0-9._-]{1,256}@[a-z0-9._-]{1,64}", vpa.strip().lower()) for vpa in entries):
+        raise ValueError("invalid collection accounts")
+    return list(dict.fromkeys(vpa.strip().lower() for vpa in entries))
+
+
 def snapshot(config):
+    vpas = collection_vpas(config)
     result = subprocess.run(
         ["docker", "exec", "-i", config["container"], "psql", "-XqAt",
          "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", config["database"],
-         "-v", "collector=" + config["collector"], "-v", "vpa=" + config["vpa"]],
+         "-v", "collector=" + config["collector"], "-v", "vpas=" + ",".join(vpas)],
         input=SQL, text=True, capture_output=True, timeout=25, check=True,
     )
     if len(result.stdout) > 10_000_000:

@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useHydrated } from "../lib/use-hydrated";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -46,6 +46,25 @@ export function PurchaseCheckout({
     null,
   );
   const [couponBusy, setCouponBusy] = useState(false);
+  const paying = useRef(false);
+  const [retryAt, setRetryAt] = useState<number | null>(null);
+  const [setupBlocked, setSetupBlocked] = useState(false);
+  useEffect(() => {
+    if (!retryAt) return;
+    const timer = setTimeout(() => setRetryAt(null), Math.max(0, retryAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [retryAt]);
+  function saveOrder(saved: PurchaseOrder) {
+    setOrder(saved);
+    if (saved.couponCode !== undefined) {
+      setCoupon(saved.couponCode ?? "");
+      setCouponApplied(
+        saved.couponCode
+          ? { code: saved.couponCode, discount: saved.base + saved.tax - saved.amount }
+          : null,
+      );
+    }
+  }
   async function api(action: string, payload: unknown) {
     const r = await fetch(`/api/purchase/${action}`, {
       method: "POST",
@@ -61,8 +80,18 @@ export function PurchaseCheckout({
       router.push(`/learn/${course.slug}`);
       throw new Error("You already own this course.");
     }
-    if (!r.ok)
-      throw new Error(data.error ?? "Payment could not be confirmed. Check your saved order.");
+    if (!r.ok) {
+      if (action === "create" && data.order) {
+        saveOrder(data.order);
+        setSetupBlocked(data.retryable === false);
+        if (Number.isFinite(data.retryAfter) && data.retryAfter > 0)
+          setRetryAt(Date.now() + data.retryAfter * 1000);
+      }
+      throw new Error(
+        (data.error ?? "Payment could not be confirmed. Check your saved order.") +
+          (data.reference ? ` Support reference: ${data.reference}` : ""),
+      );
+    }
     return data;
   }
   async function verify(saved: PurchaseOrder, payment: RazorpayResult) {
@@ -79,13 +108,14 @@ export function PurchaseCheckout({
     }
   }
   async function pay(outcome: "paid" | "failed" | "cancelled") {
-    if (busy) return;
+    if (busy || paying.current || retryAt || setupBlocked) return;
+    paying.current = true;
     setBusy(true);
     setError("");
     try {
       let saved = order;
       let activeKeyId = razorpayKeyId;
-      if (!saved || saved.status !== "pending") {
+      if (!saved || saved.status !== "pending" || (provider === "upi" && !saved.upi)) {
         const data = await api("create", {
           courseId: course.id,
           terms: true,
@@ -93,7 +123,7 @@ export function PurchaseCheckout({
         });
         saved = data.order as PurchaseOrder;
         activeKeyId = data.keyId;
-        setOrder(saved);
+        saveOrder(saved);
         if (data.keyId) setRazorpayKeyId(data.keyId);
       }
       if (provider === "upi") {
@@ -151,6 +181,7 @@ export function PurchaseCheckout({
       toast.error(message);
       setBusy(false);
     } finally {
+      paying.current = false;
       if (provider === "mock") setBusy(false);
     }
   }
@@ -241,7 +272,7 @@ export function PurchaseCheckout({
       <p className="checkout-section-description">
         Review the total and accept the policies to continue.
       </p>
-      {provider === "upi" && order ? <UpiPaymentPanel order={order} /> : null}
+      {provider === "upi" && order?.upi ? <UpiPaymentPanel order={order} /> : null}
       <div className="checkout-provider">
         <LockSimple size={22} aria-hidden="true" />
         <div>
@@ -296,7 +327,9 @@ export function PurchaseCheckout({
             !terms ||
             busy ||
             !available ||
-            (provider === "upi" && !!order) ||
+            !!retryAt ||
+            setupBlocked ||
+            (provider === "upi" && !!order?.upi && order.status === "pending") ||
             (provider === "razorpay" && !ready)
           }
         >
@@ -307,7 +340,11 @@ export function PurchaseCheckout({
                 ? "Retry test payment"
                 : "Pay successfully"
               : provider === "upi"
-                ? "Generate UPI QR"
+                ? retryAt
+                  ? "Payment setup pending…"
+                  : order && !order.upi && order.status === "pending"
+                    ? "Resume payment setup"
+                    : "Generate UPI QR"
                 : "Pay with Razorpay"}
         </button>
         {provider === "mock" && (
