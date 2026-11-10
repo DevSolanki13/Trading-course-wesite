@@ -113,6 +113,20 @@
   }
 }
 
+@media (min-width: 1600px) {
+  .hero-modern--diwali .hero-annotation-chart {
+    left: auto;
+    right: calc(50% + clamp(360px, 24vw, 500px));
+    width: clamp(300px, 20vw, 420px);
+  }
+
+  .hero-modern--diwali .hero-teacher-notes {
+    right: auto;
+    left: calc(50% + clamp(360px, 24vw, 500px));
+    width: clamp(240px, 16vw, 320px);
+  }
+}
+
 @media (min-width: 1024px) and (max-width: 1279px) {
   .hero-modern--diwali .hero-annotations {
     display: none;

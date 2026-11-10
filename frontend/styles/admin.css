@@ -2436,6 +2436,10 @@ body:has(.admin-page) .site-footer {
    Principle: Nothing changes at 1440px and below.
    ========================================================================== */
 @media (min-width: 1600px) {
+  .admin-sidebar > a.admin-brand {
+    justify-content: flex-start;
+    padding-left: 20px;
+  }
   .admin-main {
     max-width: 1600px;
     margin-inline: auto;

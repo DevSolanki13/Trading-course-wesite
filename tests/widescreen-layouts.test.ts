@@ -110,4 +110,24 @@ test("Wide-screen layouts (Batch C) tokens, media queries and width caps", () =>
     /@media\s*\(min-width:\s*2560px\)\s*\{[\s\S]*?\.student-main-content[\s\S]*?max-width:\s*2100px;/,
     "Student dashboard main content expands to 2100px at 2560px",
   );
+
+  // 7. Logo at leftmost for >= 1600px
+  assert.match(
+    globalsCss,
+    /@media\s*\(min-width:\s*1600px\)\s*\{[\s\S]*?\.site-header\s+\.container\s*\{[\s\S]*?max-width:\s*none;[\s\S]*?width:\s*100%;/,
+    "Site header logo sits at the leftmost on screens >= 1600px",
+  );
+
+  // 8. Hero annotations (chart & teacher notes) come closer to center for >= 1600px
+  const diwaliCss = fs.readFileSync(path.join(root, "frontend/styles/diwali.css"), "utf8");
+  assert.match(
+    diwaliCss,
+    /@media\s*\(min-width:\s*1600px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-annotation-chart\s*\{[\s\S]*?right:\s*calc\(50%\s*\+/,
+    "Hero annotated chart comes closer to center on screens >= 1600px",
+  );
+  assert.match(
+    diwaliCss,
+    /@media\s*\(min-width:\s*1600px\)\s*\{[\s\S]*?\.hero-modern--diwali\s+\.hero-teacher-notes\s*\{[\s\S]*?left:\s*calc\(50%\s*\+/,
+    "Hero teacher notes drawing comes closer to center on screens >= 1600px",
+  );
 });
