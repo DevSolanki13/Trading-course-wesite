@@ -36,6 +36,14 @@ test("the dedicated charcoal gateway saves private references without confirming
   await expect(page.getByText("ASM Trade", { exact: true })).toHaveCount(0);
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });
+    if (width === 390) await page.getByText("Details", { exact: true }).click();
+    await expect(
+      page.getByText("Early bird offer", { exact: true }).filter({ visible: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("GST (18%, reference)", { exact: true }).filter({ visible: true }),
+    ).toBeVisible();
+    await expect(page.getByText("Gateway savings", { exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

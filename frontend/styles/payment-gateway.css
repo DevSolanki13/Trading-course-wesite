@@ -348,6 +348,12 @@ body:has(.ix-checkout) .app-main-viewport {
 .ix-price-list .ix-savings dd {
   color: #85ddae;
 }
+.ix-offer-note {
+  margin-top: 16px;
+  color: var(--ix-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
 .ix-price-list .ix-total {
   margin-top: 6px;
   padding-top: 24px;
@@ -572,18 +578,6 @@ body:has(.ix-checkout) .app-main-viewport {
   margin: 24px 0 32px;
   font-size: 13px;
   color: var(--ix-muted);
-}
-.ix-rail-note {
-  margin: 24px 0 !important;
-  padding: 14px;
-  border-radius: 10px;
-  background: #232323;
-  font-size: 12px !important;
-  line-height: 20px !important;
-}
-.ix-rail-note strong {
-  color: #c5d8cb;
-  font-weight: 500;
 }
 .ix-order-reference {
   margin-top: 24px !important;

@@ -196,9 +196,13 @@ it("continues to the separate gateway using the saved order without showing a QR
   fireEvent.click(screen.getByRole("checkbox"));
   fireEvent.click(screen.getByRole("button", { name: "Continue to gateway" }));
   await waitFor(() => expect(push).toHaveBeenCalledWith("/indianxtrade-gateway/bound-order"));
-  expect(screen.getByText("Gateway savings")).toBeVisible();
+  expect(screen.queryByText("Gateway savings")).toBeNull();
+  expect(screen.getByText("GST (18%, reference)")).toBeVisible();
+  expect(screen.getByText("₹269.82")).toBeVisible();
+  expect(screen.getByText("Early bird offer")).toBeVisible();
   expect(screen.getByText("−₹500.00")).toBeVisible();
-  expect(screen.getByText("−₹19.86")).toBeVisible();
+  expect(screen.getByText("−₹289.68")).toBeVisible();
+  expect(screen.getByText(/GST charged: ₹0.00/)).toBeVisible();
   expect(screen.queryByRole("img", { name: /Scan to pay/ })).toBeNull();
   expect(request).toHaveBeenCalledTimes(1);
 });
