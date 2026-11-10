@@ -904,25 +904,6 @@
   .admin-refund-list .admin-panel {
     padding: 20px;
   }
-  .admin-course-horizontal-card {
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .admin-course-card-main {
-    grid-column: 1 / -1;
-  }
-  .admin-course-card-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-    padding-top: 10px;
-    border-top: 1px solid var(--line);
-  }
-}
-@media (max-width: 600px) {
-  .admin-course-horizontal-card {
-    grid-template-columns: 1fr;
-    padding: 14px;
-  }
 }
 
 /* Horizontal course layout */
@@ -1080,6 +1061,180 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.admin-course-card-meta-group {
+  display: contents;
+}
+
+@media (max-width: 900px) {
+  .admin-course-horizontal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+
+  .admin-course-card-main-with-thumb {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .admin-course-thumb-wrap {
+    width: 90px;
+    height: 60px;
+    min-width: 90px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    background: var(--raised, #1b1e26);
+  }
+
+  .admin-course-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .admin-course-card-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .admin-course-card-title-link {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-course-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--foreground);
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .admin-course-card-slug {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    word-break: break-all;
+    white-space: normal;
+  }
+
+  .admin-course-card-meta-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 10px 14px;
+    background: color-mix(in srgb, var(--surface) 60%, var(--background));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  .admin-course-card-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .admin-course-col-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .admin-course-col-val {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-course-price .price-sale {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--brand, #00df8f);
+  }
+
+  .admin-course-price .price-original {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .admin-course-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .admin-course-card-actions button {
+    flex: 1;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-course-horizontal-card {
+    padding: 13px;
+    gap: 12px;
+  }
+
+  .admin-course-thumb-wrap {
+    width: 76px;
+    height: 52px;
+    min-width: 76px;
+  }
+
+  .admin-course-card-meta-group {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .admin-course-col-val {
+    font-size: 11px;
+  }
+
+  .admin-course-card-actions button {
+    padding: 8px 4px;
+    font-size: 12px;
+    gap: 4px;
+  }
 }
 
 .button-sm {

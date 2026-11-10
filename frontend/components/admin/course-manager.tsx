@@ -183,8 +183,6 @@ export function CourseManager() {
                         aria-label={`Edit ${c.title}`}
                         style={{
                           cursor: "pointer",
-                          border: "none",
-                          background: "none",
                           padding: 0,
                           textAlign: "left",
                           display: "block",
@@ -242,33 +240,35 @@ export function CourseManager() {
                       </div>
                     </div>
 
-                    <div className="admin-course-card-col">
-                      <span className="admin-course-col-label">
-                        <CalendarBlank size={14} /> Date
-                      </span>
-                      <span className="admin-course-col-val">{formattedDate}</span>
-                    </div>
+                    <div className="admin-course-card-meta-group">
+                      <div className="admin-course-card-col">
+                        <span className="admin-course-col-label">
+                          <CalendarBlank size={14} /> Date
+                        </span>
+                        <span className="admin-course-col-val">{formattedDate}</span>
+                      </div>
 
-                    <div className="admin-course-card-col">
-                      <span className="admin-course-col-label">
-                        <Clock size={14} /> Validity
-                      </span>
-                      <span className="admin-course-col-val">{validity}</span>
-                    </div>
+                      <div className="admin-course-card-col">
+                        <span className="admin-course-col-label">
+                          <Clock size={14} /> Validity
+                        </span>
+                        <span className="admin-course-col-val">{validity}</span>
+                      </div>
 
-                    <div className="admin-course-card-col">
-                      <span className="admin-course-col-label">
-                        <CurrencyInr size={14} /> Price
-                      </span>
-                      <div className="admin-course-col-val admin-course-price">
-                        {c.sale_price_paise && c.sale_price_paise < c.price_paise ? (
-                          <>
-                            <span className="price-sale">{money(c.sale_price_paise)}</span>
-                            <s className="price-original">{money(c.price_paise)}</s>
-                          </>
-                        ) : (
-                          <span>{money(c.price_paise)}</span>
-                        )}
+                      <div className="admin-course-card-col">
+                        <span className="admin-course-col-label">
+                          <CurrencyInr size={14} /> Price
+                        </span>
+                        <div className="admin-course-col-val admin-course-price">
+                          {c.sale_price_paise && c.sale_price_paise < c.price_paise ? (
+                            <>
+                              <span className="price-sale">{money(c.sale_price_paise)}</span>
+                              <s className="price-original">{money(c.price_paise)}</s>
+                            </>
+                          ) : (
+                            <span>{money(c.price_paise)}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
