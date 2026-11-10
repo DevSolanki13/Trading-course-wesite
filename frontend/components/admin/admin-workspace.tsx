@@ -291,8 +291,9 @@ export function AdminWorkspace() {
     ["orders", "payments", "refunds", "coupons"].includes(item.id),
   );
   const manageItems = views.filter((item) =>
-    ["announcements", "content", "operations", "team", "settings"].includes(item.id),
+    ["announcements", "team", "settings"].includes(item.id),
   );
+  const drawerManageItems = views.filter((item) => ["announcements", "settings"].includes(item.id));
   const renderNavItems = (items: typeof views, onSelect?: () => void) =>
     items.map(({ id, label, Icon }) => (
       <button
@@ -367,7 +368,7 @@ export function AdminWorkspace() {
           </div>
           <div className="admin-nav-group" aria-label="Manage navigation">
             <span className="admin-nav-label">Manage</span>
-            {renderNavItems(manageItems, () => setDrawerOpen(false))}
+            {renderNavItems(drawerManageItems, () => setDrawerOpen(false))}
           </div>
 
           <div className="admin-drawer-storefront">
@@ -390,41 +391,6 @@ export function AdminWorkspace() {
                 <strong>{user.name || "Admin"}</strong>
                 <small>{user.email}</small>
               </div>
-            </div>
-
-            <div className="admin-drawer-account-links">
-              <button
-                type="button"
-                className={`admin-popover-item ${view === "profile" ? "is-active" : ""}`}
-                onClick={() => {
-                  handleSelectView("profile");
-                  setDrawerOpen(false);
-                }}
-              >
-                <UserCircle size={16} />
-                <span>Edit profile & credentials</span>
-              </button>
-
-              <button
-                type="button"
-                className={`admin-popover-item ${view === "settings" ? "is-active" : ""}`}
-                onClick={() => {
-                  handleSelectView("settings");
-                  setDrawerOpen(false);
-                }}
-              >
-                <Gear size={16} />
-                <span>Platform settings</span>
-              </button>
-
-              <Link
-                href="/admin/security"
-                className="admin-popover-item"
-                onClick={() => setDrawerOpen(false)}
-              >
-                <ShieldCheck size={16} />
-                <span>Team security & 2FA</span>
-              </Link>
             </div>
           </div>
         </div>

@@ -698,32 +698,6 @@ body:has(.admin-page) .site-footer {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .admin-drawer-account-links {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .admin-drawer-account-links .admin-popover-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    padding: 10px 12px;
-    width: 100%;
-    border-radius: 8px;
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    font-size: 13px;
-    text-decoration: none;
-    cursor: pointer;
-    text-align: left;
-  }
-  .admin-drawer-account-links .admin-popover-item:hover,
-  .admin-drawer-account-links .admin-popover-item.is-active {
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
-  }
   .admin-drawer-footer {
     padding: 14px 16px;
     border-top: 1px solid var(--line);

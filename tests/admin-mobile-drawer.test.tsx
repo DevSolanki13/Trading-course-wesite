@@ -119,23 +119,25 @@ describe("Admin mobile drawer & sign-out", () => {
     expect(drawerEl.querySelector('[aria-label="Commerce navigation"]')).toBeInTheDocument();
     expect(drawerEl.querySelector('[aria-label="Manage navigation"]')).toBeInTheDocument();
 
-    // Verify Site content and Operations are in Manage navigation
+    // Verify Manage navigation has only Announcements and Settings on mobile drawer
     const manageNav = drawerEl.querySelector('[aria-label="Manage navigation"]')!;
-    expect(manageNav).toHaveTextContent("Site content");
-    expect(manageNav).toHaveTextContent("Operations & audit");
     expect(manageNav).toHaveTextContent("Announcements");
-    expect(manageNav).toHaveTextContent("Admins & Team");
     expect(manageNav).toHaveTextContent("Settings");
+    expect(manageNav).not.toHaveTextContent("Site content");
+    expect(manageNav).not.toHaveTextContent("Operations & audit");
+    expect(manageNav).not.toHaveTextContent("Admins & Team");
 
-    // Drawer contains storefront link and account info
+    // Drawer contains storefront link and user info
     expect(drawerEl).toHaveTextContent("View storefront");
     expect(drawerEl).toHaveTextContent("Dev Admin");
     expect(drawerEl).toHaveTextContent("admin@example.com");
-    expect(drawerEl).toHaveTextContent("Edit profile & credentials");
-    expect(drawerEl).toHaveTextContent("Platform settings");
-    expect(drawerEl).toHaveTextContent("Team security & 2FA");
 
-    // Sign out button is present in the drawer
+    // Red-marked account links are removed from the mobile drawer
+    expect(drawerEl).not.toHaveTextContent("Edit profile & credentials");
+    expect(drawerEl).not.toHaveTextContent("Platform settings");
+    expect(drawerEl).not.toHaveTextContent("Team security & 2FA");
+
+    // Sign out button is present in the drawer footer
     const drawerSignOut = drawerEl.querySelector(".admin-drawer-footer .admin-signout");
     expect(drawerSignOut).toBeInTheDocument();
     expect(drawerSignOut).toHaveTextContent("Sign out");
