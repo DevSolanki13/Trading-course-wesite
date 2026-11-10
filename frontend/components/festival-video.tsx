@@ -93,6 +93,7 @@ export function FestivalVideoProvider({ children }: { children: ReactNode }) {
   const previousFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    if (document.querySelector(".ix-checkout")) return;
     try {
       if (window.localStorage.getItem(FESTIVAL_VIDEO_SEEN_KEY) === "1") return;
     } catch {

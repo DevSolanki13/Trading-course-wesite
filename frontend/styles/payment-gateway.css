@@ -1,0 +1,1388 @@
+/* The payment journey keeps a neutral charcoal palette in either site theme. */
+body:has(.ix-checkout) {
+  background: #141414;
+}
+body:has(.ix-checkout) .app-shell > .site-header,
+body:has(.ix-checkout) .header-lights,
+body:has(.ix-checkout) .site-header-spacer,
+body:has(.ix-checkout) .site-footer {
+  display: none;
+}
+body:has(.ix-checkout) .app-main-viewport {
+  padding: 0;
+}
+.ix-checkout {
+  --ix-bg: #141414;
+  --ix-card: #1e1e1e;
+  --ix-raised: #262626;
+  --ix-line: #383838;
+  --ix-text: #f3f5f7;
+  --ix-muted: #b1b7b4;
+  --ix-subtle: #a0aaa4;
+  --ix-accent: #35dca0;
+  background: var(--ix-bg);
+  color: var(--ix-text);
+  min-height: 100dvh;
+  font-family: var(--body), sans-serif;
+  color-scheme: dark;
+}
+.ix-checkout *,
+.ix-checkout *::before,
+.ix-checkout *::after {
+  box-sizing: border-box;
+}
+.ix-checkout h1,
+.ix-checkout h2,
+.ix-checkout h3,
+.ix-checkout p,
+.ix-checkout dl,
+.ix-checkout dd {
+  margin: 0;
+}
+.ix-checkout h1,
+.ix-checkout h2,
+.ix-checkout h3 {
+  font-family: inherit;
+  font-weight: 600;
+}
+.ix-checkout a {
+  color: inherit;
+  text-decoration: underline;
+}
+.ix-checkout .ix-identity,
+.ix-checkout .ix-back,
+.ix-checkout .ix-button {
+  text-decoration: none;
+}
+.ix-checkout button,
+.ix-checkout input {
+  font: inherit;
+}
+.ix-checkout button {
+  cursor: pointer;
+}
+.ix-checkout button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ix-checkout :is(a, button, input, summary):focus-visible {
+  outline: 2px solid var(--ix-accent);
+  outline-offset: 5px;
+}
+.ix-payment-header {
+  min-height: 88px;
+  padding: 22px clamp(22px, 4.5vw, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid #303030;
+}
+.ix-identity {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 22px;
+  text-decoration: none;
+}
+.ix-identity img {
+  width: 184px;
+  height: 38px;
+  object-fit: contain;
+}
+.ix-identity > span {
+  border-left: 1px solid var(--ix-line);
+  padding-left: 20px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.ix-steps ol {
+  list-style: none;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+.ix-steps li {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--ix-subtle);
+  white-space: nowrap;
+}
+.ix-steps li:not(:last-child)::after {
+  content: "";
+  height: 1px;
+  width: 32px;
+  background: var(--ix-line);
+  margin-left: 8px;
+}
+.ix-steps li > span {
+  display: grid;
+  place-items: center;
+  height: 24px;
+  width: 24px;
+  border: 1px solid #515a55;
+  border-radius: 50%;
+  font-size: 11px;
+}
+.ix-steps li[aria-current] {
+  color: var(--ix-text);
+}
+.ix-steps li[aria-current] > span,
+.ix-steps li.is-complete > span {
+  color: var(--ix-accent);
+  border-color: #426d56;
+  background: #1a2b23;
+}
+.ix-secure {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ix-muted);
+  white-space: nowrap;
+}
+.ix-payment-main {
+  padding: 0 24px 72px;
+}
+.ix-review-container {
+  max-width: 1120px;
+  margin: 48px auto 0;
+}
+.ix-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ix-muted) !important;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.ix-back:hover {
+  color: var(--ix-text) !important;
+}
+.ix-eyebrow {
+  color: var(--ix-subtle);
+  font-size: 11px;
+  line-height: 18px;
+  letter-spacing: 1.8px;
+  font-weight: 650;
+}
+.ix-review-heading {
+  margin: 30px 0 32px;
+}
+.ix-review-heading h1 {
+  font-size: 40px;
+  line-height: 1.2;
+  letter-spacing: -1.6px;
+  margin: 10px 0 12px;
+}
+.ix-review-heading p {
+  font-size: 16px;
+  color: var(--ix-muted);
+}
+.ix-review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 624px) minmax(0, 448px);
+  gap: 48px;
+  align-items: start;
+}
+.ix-course-review {
+  border: 1px solid var(--ix-line);
+  background: var(--ix-card);
+  border-radius: 24px;
+  overflow: hidden;
+}
+.ix-course-cover {
+  height: 210px;
+  background: #182920;
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+.ix-cover-copy {
+  position: relative;
+  z-index: 2;
+  padding: 25px 30px;
+}
+.ix-cover-copy > span {
+  font-size: 9px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #b2cebe;
+}
+.ix-cover-copy strong {
+  display: block;
+  font-size: 38px;
+  line-height: 1.08;
+  letter-spacing: -1.4px;
+  margin: 20px 0 12px;
+  max-width: 220px;
+  font-weight: 600;
+}
+.ix-cover-copy p {
+  color: #bbccbf;
+  font-size: 12px;
+}
+.ix-cover-chart {
+  position: absolute;
+  width: 560px;
+  height: 210px;
+  right: -25px;
+  bottom: 0;
+  opacity: 0.7;
+  z-index: 1;
+  max-width: none;
+}
+.ix-cover-number {
+  position: absolute;
+  bottom: 20px;
+  right: 25px;
+  font:
+    9px "IBM Plex Mono",
+    monospace;
+  letter-spacing: 1.3px;
+  color: #b2cebe;
+}
+.ix-cover-photo {
+  object-fit: cover;
+}
+.ix-course-info {
+  padding: 26px 30px 24px;
+}
+.ix-course-info h2 {
+  font-size: 25px;
+  letter-spacing: -0.6px;
+  margin: 7px 0 9px;
+}
+.ix-course-info p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ix-muted);
+}
+.ix-course-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  color: #c2cdc5;
+  font-size: 12px;
+  margin-top: 22px;
+}
+.ix-course-meta span,
+.ix-rail-meta span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ix-benefits {
+  border-top: 1px solid var(--ix-line);
+  margin: 0 30px;
+  padding: 24px 0 28px;
+  display: grid;
+  gap: 15px;
+}
+.ix-benefits p {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #c5cec8;
+}
+.ix-benefits svg {
+  color: #a3c7b2;
+  flex-shrink: 0;
+}
+.ix-review-summary {
+  padding: 30px;
+  border: 1px solid #434343;
+  border-radius: 24px;
+  background: var(--ix-card);
+}
+.ix-review-summary > h2 {
+  font-size: 20px;
+  letter-spacing: -0.3px;
+  margin-bottom: 24px;
+}
+.ix-coupon-applied {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 15px;
+  background: #1a3024;
+  border: 1px solid #315c42;
+  border-radius: 10px;
+  color: #bde8cf;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+.ix-coupon-applied > svg:last-child {
+  margin-left: auto;
+  color: var(--ix-accent);
+}
+.ix-price-list {
+  display: grid;
+  gap: 15px;
+}
+.ix-price-list > div,
+.ix-submitted-receipt dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--ix-muted);
+}
+.ix-price-list dd {
+  font-variant-numeric: tabular-nums;
+  color: var(--ix-text);
+  text-align: right;
+  white-space: nowrap;
+}
+.ix-price-list .ix-savings,
+.ix-price-list .ix-savings dd {
+  color: #85ddae;
+}
+.ix-offer-note {
+  margin-top: 16px;
+  color: var(--ix-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+.ix-price-list .ix-total {
+  margin-top: 6px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ix-line);
+  color: var(--ix-text);
+}
+.ix-total dt {
+  font-weight: 600;
+  font-size: 13px;
+}
+.ix-total small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ix-subtle);
+  margin-top: 5px;
+}
+.ix-total dd {
+  font-size: 29px;
+  line-height: 38px;
+  font-weight: 600;
+  letter-spacing: -1px;
+}
+.ix-coupon-form {
+  margin-top: 26px;
+}
+.ix-coupon-form > label {
+  display: block;
+  font-size: 13px;
+  color: var(--ix-muted);
+  margin-bottom: 10px;
+}
+.ix-coupon-form > div {
+  display: flex;
+  gap: 10px;
+}
+.ix-coupon-form input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #4b4b4b;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  color: var(--ix-text);
+  background: #171717;
+}
+.ix-coupon-form .ix-button {
+  width: auto;
+  height: 46px;
+  padding: 0 16px;
+}
+.ix-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 28px 0 20px;
+  font-size: 13px;
+  line-height: 21px;
+  color: var(--ix-muted);
+}
+.ix-terms input {
+  accent-color: var(--ix-accent);
+  height: 18px;
+  width: 18px;
+  margin: 2px 0 0;
+  flex-shrink: 0;
+}
+.ix-terms a {
+  text-underline-offset: 3px;
+  color: #e0e7e2;
+}
+.ix-button {
+  width: 100%;
+  height: 52px;
+  padding: 12px 18px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px !important;
+  line-height: 20px;
+  font-weight: 700 !important;
+  text-align: center;
+  text-decoration: none;
+}
+.ix-button svg {
+  flex-shrink: 0;
+}
+.ix-primary {
+  background: var(--ix-accent);
+  color: #061b12 !important;
+}
+.ix-primary:not(:disabled):hover {
+  background: #65e7b8;
+}
+.ix-secondary {
+  background: transparent;
+  color: var(--ix-text);
+  border-color: #525252;
+}
+.ix-secondary:not(:disabled):hover {
+  background: #292929;
+}
+.ix-button + .ix-button {
+  margin-top: 12px;
+}
+.ix-gateway-explainer {
+  font-size: 12px;
+  line-height: 19px;
+  color: var(--ix-muted);
+  text-align: center;
+  margin: 14px 2px 0 !important;
+}
+.ix-gateway-explainer strong {
+  color: #d1dbd5;
+  font-weight: 500;
+}
+.ix-secure-caption {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ix-subtle);
+  margin-top: 22px !important;
+}
+.ix-review-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 32px !important;
+  color: var(--ix-subtle);
+  font-size: 13px;
+  line-height: 22px;
+}
+.ix-gateway-container {
+  max-width: 1044px;
+  margin: 32px auto 0;
+}
+.ix-gateway-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 34px;
+}
+.ix-gateway-top > span {
+  font:
+    11px "IBM Plex Mono",
+    monospace;
+  color: var(--ix-subtle);
+}
+.ix-gateway-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 360px) minmax(0, 620px);
+  gap: 64px;
+  align-items: start;
+}
+.ix-order-rail {
+  padding-top: 18px;
+}
+.ix-desktop-order > h2 {
+  font-size: 26px;
+  line-height: 36px;
+  letter-spacing: -0.8px;
+  margin: 9px 0;
+}
+.ix-desktop-order > p {
+  font-size: 14px;
+  line-height: 23px;
+  color: var(--ix-muted);
+}
+.ix-course-cover.is-compact {
+  height: 164px;
+  border: 1px solid #3c5043;
+  border-radius: 14px;
+  margin-top: 26px;
+}
+.is-compact .ix-cover-copy {
+  padding: 24px;
+}
+.is-compact .ix-cover-copy > span {
+  font-size: 7px;
+  letter-spacing: 1.4px;
+}
+.is-compact .ix-cover-copy strong {
+  font-size: 29px;
+  margin: 18px 0 10px;
+  max-width: 170px;
+  letter-spacing: -1px;
+}
+.is-compact.ix-long-title .ix-cover-copy strong {
+  font-size: 24px;
+  letter-spacing: -0.7px;
+}
+.is-compact.ix-long-title {
+  height: 196px;
+}
+.is-compact .ix-cover-copy p {
+  font-size: 11px;
+}
+.is-compact .ix-cover-chart {
+  right: -30px;
+  bottom: -17px;
+  width: 560px;
+  height: 210px;
+  transform: scale(0.8);
+  transform-origin: right bottom;
+  opacity: 0.4;
+}
+.is-compact .ix-cover-number {
+  font-size: 7px;
+  bottom: 17px;
+  right: 18px;
+}
+.ix-rail-meta {
+  display: grid;
+  gap: 13px;
+  margin: 24px 0 32px;
+  font-size: 13px;
+  color: var(--ix-muted);
+}
+.ix-order-reference {
+  margin-top: 24px !important;
+  border-top: 1px solid var(--ix-line);
+  padding-top: 20px;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--ix-subtle);
+  overflow-wrap: anywhere;
+}
+.ix-order-reference strong {
+  font:
+    11px/20px "IBM Plex Mono",
+    monospace;
+  display: block;
+  margin-top: 8px;
+  color: var(--ix-muted);
+  font-weight: 400;
+}
+.ix-gateway-heading {
+  margin-bottom: 24px;
+}
+.ix-gateway-heading h1 {
+  font-size: 30px;
+  line-height: 39px;
+  letter-spacing: -1px;
+}
+.ix-gateway-heading p {
+  font-size: 14px;
+  line-height: 23px;
+  color: var(--ix-muted);
+  margin-top: 9px;
+}
+.ix-payment-card,
+.ix-status-card {
+  padding: 28px 34px;
+  border: 1px solid #424242;
+  border-radius: 24px;
+  background: var(--ix-card);
+}
+.ix-payment-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.ix-status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 50px;
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 18px;
+  background: #292d2a;
+  color: #c6d3ca;
+  border: 1px solid #434d46;
+}
+.ix-status-chip::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ix-status-chip.is-amber {
+  color: #edc58b;
+  background: #302a20;
+  border-color: #665130;
+}
+.ix-status-chip.is-success {
+  color: #ade8c5;
+  background: #1d3528;
+  border-color: #41694e;
+}
+.ix-expires {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ix-muted);
+  font:
+    12px "IBM Plex Mono",
+    monospace;
+}
+.ix-amount {
+  text-align: center;
+  margin: 28px 0 22px;
+}
+.ix-amount > span {
+  color: var(--ix-muted);
+  font-size: 13px;
+}
+.ix-amount strong {
+  display: block;
+  font-size: 52px;
+  line-height: 66px;
+  letter-spacing: -2px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 3px;
+}
+.ix-amount p {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--ix-muted);
+}
+.ix-qr-frame {
+  width: 244px;
+  height: 244px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  color: #222;
+  font-size: 14px;
+}
+.ix-qr-frame img {
+  display: block;
+  width: 244px;
+  height: 244px;
+}
+.ix-scan-caption {
+  font-size: 12px;
+  text-align: center;
+  margin-top: 12px !important;
+  color: var(--ix-muted);
+}
+.ix-payee {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  margin-top: 22px !important;
+  color: var(--ix-muted);
+}
+.ix-payee svg {
+  color: #9bd3b3;
+}
+.ix-payee strong {
+  font-weight: 600;
+  color: #e0e9e3;
+}
+.ix-upi-id {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font:
+    12px "IBM Plex Mono",
+    monospace;
+  color: var(--ix-muted);
+  margin: 8px 0 24px;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+.ix-upi-id button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+}
+.ix-confirmation-note {
+  text-align: center;
+  font-size: 12px;
+  line-height: 21px;
+  color: var(--ix-muted);
+  margin: 20px 0 0 !important;
+}
+.ix-manual-shortcut {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  text-align: left;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid #444;
+  border-radius: 14px;
+  margin-top: 18px;
+  background: #191919;
+  color: #c8d3cc;
+}
+.ix-manual-shortcut:hover {
+  border-color: #83b99a;
+}
+.ix-manual-shortcut > span {
+  flex: 1;
+}
+.ix-manual-shortcut strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 22px;
+}
+.ix-manual-shortcut small {
+  display: block;
+  font-size: 13px;
+  line-height: 21px;
+  color: var(--ix-muted);
+  margin-top: 2px;
+}
+.ix-help {
+  text-align: center;
+  color: var(--ix-subtle);
+  font-size: 12px;
+  margin-top: 28px;
+  line-height: 22px;
+}
+.ix-help > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.ix-help a {
+  text-underline-offset: 3px;
+}
+.ix-help small {
+  display: block;
+  font:
+    10px/18px "IBM Plex Mono",
+    monospace;
+  overflow-wrap: anywhere;
+  margin-top: 10px;
+}
+.ix-mobile-order {
+  display: none;
+}
+.ix-status-card {
+  text-align: center;
+  padding-top: 34px;
+}
+.ix-state-icon {
+  height: 64px;
+  width: 64px;
+  border-radius: 19px;
+  background: #243b2d;
+  color: #9cdbb6;
+  border: 1px solid #476851;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+}
+.ix-state-icon.is-amber {
+  background: #342d20;
+  color: #edc58b;
+  border-color: #655333;
+}
+.ix-status-card h2 {
+  font-size: 30px;
+  line-height: 39px;
+  letter-spacing: -1px;
+  margin: 22px 0 12px;
+}
+.ix-status-card > p {
+  color: var(--ix-muted);
+  font-size: 14px;
+  line-height: 25px;
+}
+.ix-status-card > .ix-button {
+  margin-top: 26px;
+}
+.ix-manual > .ix-back {
+  display: flex;
+  margin-bottom: 20px;
+}
+.ix-do-not-pay {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  text-align: left;
+  color: #e3cda6 !important;
+  background: #2b281f;
+  padding: 13px 15px;
+  border-radius: 10px;
+  font-size: 12px !important;
+  line-height: 21px !important;
+  margin: 24px 0 !important;
+}
+.ix-do-not-pay svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ix-reference-form {
+  text-align: left;
+  border-top: 1px solid var(--ix-line);
+  padding-top: 26px;
+  margin-top: 26px;
+}
+.ix-reference-form > label {
+  display: block;
+  font-size: 14px;
+  color: #e2e8e4;
+}
+.ix-reference-form > label span {
+  color: var(--ix-subtle);
+}
+.ix-reference-input {
+  position: relative;
+  margin-top: 10px;
+}
+.ix-reference-input input {
+  width: 100%;
+  background: #171717;
+  border: 1px solid #67766d;
+  border-radius: 11px;
+  height: 54px;
+  color: var(--ix-text);
+  padding: 0 42px 0 15px;
+  font-size: 16px;
+}
+.ix-reference-input input::placeholder {
+  color: #a3afa8;
+}
+.ix-reference-input > svg {
+  position: absolute;
+  right: 15px;
+  top: 17px;
+  color: var(--ix-subtle);
+}
+.ix-input-help {
+  font-size: 12px;
+  line-height: 21px;
+  margin-top: 9px !important;
+  color: var(--ix-muted);
+}
+.ix-reference-example {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 16px;
+  margin: 22px 0;
+  background: var(--ix-raised);
+  border-radius: 12px;
+  color: var(--ix-muted);
+}
+.ix-reference-example > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ix-reference-example strong {
+  font-size: 13px;
+  color: #d8e5dd;
+  font-weight: 500;
+}
+.ix-reference-example p {
+  font-size: 12px;
+  line-height: 21px;
+  margin-top: 5px;
+}
+.ix-caption {
+  color: var(--ix-muted);
+  font-size: 12px !important;
+  line-height: 21px !important;
+  text-align: center;
+  margin-top: 18px !important;
+}
+.ix-error {
+  color: #ffb4ab !important;
+  background: #3a2020;
+  border: 1px solid #70443f;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 22px;
+  margin: 16px 0 !important;
+  overflow-wrap: anywhere;
+}
+.ix-submitted-receipt {
+  text-align: left;
+  padding: 20px;
+  border: 1px solid #454b46;
+  border-radius: 14px;
+  margin: 26px 0;
+  background: #191919;
+}
+.ix-submitted-receipt > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ix-muted);
+}
+.ix-submitted-receipt > span small {
+  background: #29362e;
+  color: #c5e0cd;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+.ix-submitted-receipt > strong {
+  display: block;
+  font:
+    22px/32px "IBM Plex Mono",
+    monospace;
+  margin: 18px 0 24px;
+  overflow-wrap: anywhere;
+}
+.ix-submitted-receipt dl {
+  display: grid;
+  gap: 12px;
+}
+.ix-submitted-receipt dl > div {
+  font-size: 12px;
+  align-items: flex-start;
+}
+.ix-submitted-receipt dd {
+  max-width: 65%;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.ix-verification-steps {
+  text-align: left;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 19px;
+  margin: 28px 0;
+  font-size: 13px;
+  color: #c1d0c5;
+}
+.ix-verification-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.ix-verification-steps svg {
+  flex-shrink: 0;
+}
+.ix-text-button {
+  border: 0;
+  background: transparent;
+  color: #c9ddd0;
+  font-size: 12px !important;
+  padding: 10px;
+  margin-top: 8px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ix-success .ix-state-icon {
+  border-radius: 50%;
+  background: var(--ix-accent);
+  color: #062f1b;
+  height: 78px;
+  width: 78px;
+  margin-top: 10px;
+}
+.ix-success h2 {
+  font-size: 36px;
+  line-height: 44px;
+}
+.ix-success-course {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  text-align: left;
+  background: #202f25;
+  border: 1px solid #45634f;
+  padding: 20px 17px;
+  border-radius: 14px;
+  margin: 30px 0;
+}
+.ix-success-course > div {
+  flex: 1;
+}
+.ix-success-course strong {
+  font-size: 14px;
+  display: block;
+  font-weight: 600;
+}
+.ix-success-course small {
+  display: block;
+  font-size: 12px;
+  line-height: 20px;
+  color: #b4cdbd;
+  margin-top: 5px;
+}
+.ix-success-course svg {
+  flex-shrink: 0;
+  color: #a0d3b4;
+}
+.ix-receipt-link {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  margin-top: 24px;
+  text-underline-offset: 4px;
+}
+@media (max-width: 1100px) {
+  .ix-steps li:not(:last-child)::after {
+    width: 16px;
+    margin-left: 0;
+  }
+  .ix-steps ol {
+    gap: 12px;
+  }
+  .ix-secure > span {
+    display: none;
+  }
+  .ix-review-grid {
+    grid-template-columns: 1.25fr 1fr;
+    gap: 28px;
+  }
+  .ix-gateway-grid {
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    gap: 32px;
+  }
+}
+@media (max-width: 800px) {
+  .ix-payment-header {
+    min-height: 74px;
+    padding: 20px 22px;
+    gap: 12px;
+  }
+  .ix-identity {
+    gap: 12px;
+  }
+  .ix-identity img {
+    width: 142px;
+    height: 30px;
+  }
+  .ix-identity > span {
+    padding-left: 12px;
+    font-size: 12px;
+  }
+  .ix-steps {
+    display: none;
+  }
+  .ix-payment-main {
+    padding: 0 22px 48px;
+  }
+  .ix-review-container {
+    max-width: 560px;
+    margin-top: 26px;
+  }
+  .ix-review-heading {
+    margin: 24px 0;
+  }
+  .ix-review-heading h1 {
+    font-size: 32px;
+    letter-spacing: -1.2px;
+  }
+  .ix-review-heading p {
+    font-size: 14px;
+  }
+  .ix-review-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .ix-course-review,
+  .ix-review-summary {
+    width: 100%;
+    border-radius: 18px;
+  }
+  .ix-review-summary {
+    padding: 24px 22px;
+  }
+  .ix-course-cover {
+    height: 170px;
+  }
+  .ix-cover-copy {
+    padding: 22px;
+  }
+  .ix-cover-copy strong {
+    font-size: 30px;
+    max-width: 185px;
+    margin: 16px 0 10px;
+  }
+  .ix-cover-copy > span {
+    font-size: 8px;
+    letter-spacing: 1.3px;
+  }
+  .ix-cover-chart {
+    right: -50px;
+    bottom: -16px;
+    width: 560px;
+    height: 210px;
+    transform: scale(0.8);
+    transform-origin: right bottom;
+    opacity: 0.45;
+  }
+  .ix-cover-number {
+    right: 16px;
+    bottom: 14px;
+    font-size: 7px;
+  }
+  .ix-course-info {
+    padding: 20px 22px;
+  }
+  .ix-course-info > .ix-eyebrow {
+    display: none;
+  }
+  .ix-course-info h2 {
+    font-size: 21px;
+    margin-top: 0;
+  }
+  .ix-course-meta {
+    gap: 12px;
+    font-size: 11px;
+    margin-top: 16px;
+  }
+  .ix-benefits {
+    display: none;
+  }
+  .ix-price-list {
+    gap: 13px;
+  }
+  .ix-total dd {
+    font-size: 27px;
+  }
+  .ix-total dt {
+    font-size: 12px;
+  }
+  .ix-total small {
+    font-size: 11px;
+  }
+  .ix-review-footer {
+    align-items: flex-start;
+    font-size: 12px;
+    gap: 8px;
+  }
+  .ix-review-footer svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .ix-gateway-container {
+    max-width: 560px;
+    margin-top: 24px;
+  }
+  .ix-gateway-top {
+    margin-bottom: 22px;
+  }
+  .ix-gateway-top > span {
+    font:
+      10px/18px var(--body),
+      sans-serif;
+  }
+  .ix-gateway-grid {
+    display: block;
+  }
+  .ix-order-rail {
+    padding-top: 0;
+    margin-bottom: 26px;
+  }
+  .ix-desktop-order {
+    display: none;
+  }
+  .ix-mobile-order {
+    display: block;
+    border: 1px solid #454b46;
+    background: #222;
+    border-radius: 12px;
+  }
+  .ix-mobile-order summary {
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .ix-mobile-order summary::-webkit-details-marker {
+    display: none;
+  }
+  .ix-mobile-order summary > span:first-of-type {
+    flex: 1;
+    min-width: 0;
+  }
+  .ix-mobile-order strong {
+    display: block;
+    font-size: 14px;
+    line-height: 22px;
+    font-weight: 600;
+  }
+  .ix-mobile-order small {
+    display: block;
+    font-size: 12px;
+    color: var(--ix-muted);
+    margin-top: 3px;
+  }
+  .ix-mobile-order > div {
+    padding: 8px 14px 18px;
+  }
+  .ix-summary-toggle {
+    font-size: 11px;
+    color: #c8d6ce;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .ix-gateway-heading h1 {
+    font-size: 27px;
+    line-height: 35px;
+    letter-spacing: -0.9px;
+  }
+  .ix-gateway-heading {
+    margin-bottom: 22px;
+  }
+  .ix-payment-card,
+  .ix-status-card {
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+  .ix-amount {
+    margin: 24px 0 20px;
+  }
+  .ix-amount strong {
+    font-size: 44px;
+    line-height: 58px;
+    letter-spacing: -1.6px;
+  }
+  .ix-amount p {
+    font-size: 12px;
+    line-height: 20px;
+  }
+  .ix-qr-frame,
+  .ix-qr-frame img {
+    width: 226px;
+    height: 226px;
+  }
+  .ix-status-chip {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+  .ix-expires {
+    font-size: 11px;
+    gap: 5px;
+  }
+  .ix-payment-top {
+    gap: 7px;
+  }
+  .ix-manual-shortcut {
+    padding: 16px 14px;
+    gap: 10px;
+  }
+  .ix-manual-shortcut > svg {
+    flex-shrink: 0;
+  }
+  .ix-manual-shortcut strong {
+    font-size: 14px;
+  }
+  .ix-manual-shortcut small {
+    font-size: 12px;
+  }
+  .ix-status-card h2 {
+    font-size: 26px;
+    line-height: 34px;
+  }
+  .ix-status-card > p {
+    font-size: 14px;
+    line-height: 24px;
+  }
+  .ix-state-icon {
+    height: 54px;
+    width: 54px;
+    border-radius: 16px;
+  }
+  .ix-submitted-receipt {
+    padding: 17px;
+  }
+  .ix-submitted-receipt > strong {
+    font-size: 18px;
+    line-height: 29px;
+  }
+  .ix-success h2 {
+    font-size: 30px;
+    line-height: 39px;
+  }
+  .ix-success-course {
+    padding: 16px 13px;
+    gap: 9px;
+  }
+  .ix-success-course strong {
+    font-size: 13px;
+  }
+  .ix-success-course small {
+    font-size: 11px;
+  }
+}
+@media (max-width: 360px) {
+  .ix-payment-main {
+    padding-inline: 14px;
+  }
+  .ix-payment-header {
+    padding-inline: 14px;
+  }
+  .ix-payment-card,
+  .ix-status-card {
+    padding-inline: 16px;
+  }
+  .ix-qr-frame,
+  .ix-qr-frame img {
+    width: 212px;
+    height: 212px;
+  }
+  .ix-total dd {
+    font-size: 24px;
+  }
+}

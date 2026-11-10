@@ -52,11 +52,11 @@ it("shows the saved coupon, total and support reference when QR validation is bl
   vi.stubGlobal("fetch", request);
   render(<PurchaseCheckout course={courseFixture} provider="upi" tax={0} />);
   fireEvent.click(screen.getByRole("checkbox"));
-  fireEvent.click(screen.getByRole("button", { name: "Generate UPI QR" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continue to gateway" }));
   await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("support-reference"));
   expect(screen.getByRole("link", { name: "Check order status" })).toHaveAttribute(
     "href",
-    "/checkout/success?orderId=saved-order",
+    "/indianxtrade-gateway/saved-order",
   );
   expect(screen.getByText("Coupon NIKHIL applied.")).toBeVisible();
   expect(screen.getByRole("textbox", { name: "Coupon code" })).toHaveValue("NIKHIL");
@@ -90,7 +90,7 @@ it("honors setup retry timing, then resumes the same saved checkout without chan
   render(<PurchaseCheckout course={courseFixture} provider="upi" tax={0} />);
   fireEvent.click(screen.getByRole("checkbox"));
   await act(async () => {
-    const generate = screen.getByRole("button", { name: "Generate UPI QR" });
+    const generate = screen.getByRole("button", { name: "Continue to gateway" });
     fireEvent.click(generate);
     fireEvent.click(generate);
   });
@@ -171,4 +171,38 @@ it("creates a new order when retrying a failed mock payment", async () => {
     outcome: "paid",
   });
   expect(push).toHaveBeenCalledWith("/checkout/success?orderId=retry-order");
+});
+
+it("continues to the separate gateway using the saved order without showing a QR on checkout", async () => {
+  const request = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({
+      order: {
+        id: "bound-order",
+        provider: "upi",
+        status: "pending",
+        base: 199900,
+        tax: 0,
+        amount: 147914,
+        couponCode: "NIKHIL",
+        couponDiscount: 50000,
+        gatewaySavings: 1986,
+        upi: { amount: 147914 },
+      },
+    }),
+  });
+  vi.stubGlobal("fetch", request);
+  render(<PurchaseCheckout course={courseFixture} provider="upi" tax={0} />);
+  fireEvent.click(screen.getByRole("checkbox"));
+  fireEvent.click(screen.getByRole("button", { name: "Continue to gateway" }));
+  await waitFor(() => expect(push).toHaveBeenCalledWith("/indianxtrade-gateway/bound-order"));
+  expect(screen.queryByText("Gateway savings")).toBeNull();
+  expect(screen.getByText("GST (18%, reference)")).toBeVisible();
+  expect(screen.getByText("₹269.82")).toBeVisible();
+  expect(screen.getByText("Early bird offer")).toBeVisible();
+  expect(screen.getByText("−₹500.00")).toBeVisible();
+  expect(screen.getByText("−₹289.68")).toBeVisible();
+  expect(screen.getByText(/GST charged: ₹0.00/)).toBeVisible();
+  expect(screen.queryByRole("img", { name: /Scan to pay/ })).toBeNull();
+  expect(request).toHaveBeenCalledTimes(1);
 });

@@ -14,11 +14,14 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: "npm run dev:demo -- --port 3102",
+    command:
+      "node --experimental-strip-types tests/purchase-browser/seed-gateway.ts && npm run dev:demo -- --port 3102",
     url: "http://127.0.0.1:3102/courses/basic-to-advance",
     timeout: 180000,
     reuseExistingServer: false,
     env: {
+      LOCAL_DEMO: "true",
+      PAYMENT_PROVIDER: "",
       LOCAL_DATA_NAME: `purchase-e2e-${Date.now()}`,
       // A developer's saved gateway/DRM credentials must never activate providers in this fixture.
       UPI_GATEWAY: "",

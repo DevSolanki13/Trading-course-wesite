@@ -75,6 +75,30 @@ export async function purchaseRequest(request: Request) {
     const user = (await purchaseUser())!;
     if (localDemoEnabled()) await localRateLimit(`purchase:${user.id}:${action}`);
     else await limit(request, `purchase:${action}`, user.id, 30, 60);
+    if (action === "reference") {
+      const input = z
+        .object({
+          orderId: z.string().uuid(),
+          reference: z
+            .string()
+            .trim()
+            .toUpperCase()
+            .regex(/^[A-Z0-9]{6,32}$/),
+        })
+        .strict()
+        .parse(await body(request));
+      const order = await purchaseOrder(input.orderId, user.id);
+      if (!order || order.provider !== "upi") throw new AuthError(404, "UPI order not found.");
+      if (order.status === "paid") return json({ order });
+      if (!["pending", "cancelled"].includes(order.status) || !order.upi)
+        throw new AuthError(409, "This order cannot accept a payment reference. Contact support.");
+      await purchaseRpc("purchase_upi_reference", {
+        p_user: user.id,
+        p_order: order.id,
+        p_reference: input.reference,
+      });
+      return json({ order: await purchaseOrder(order.id, user.id) });
+    }
     if (action === "create") {
       const input = z
         .object({
