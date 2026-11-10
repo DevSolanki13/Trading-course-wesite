@@ -647,26 +647,6 @@ body:has(.admin-page) .site-footer {
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 30%, transparent);
   }
-  .admin-drawer-storefront {
-    padding-top: 4px;
-  }
-  .admin-drawer-storefront a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    padding: 10px 14px;
-    color: var(--muted);
-    font-size: 14px;
-    text-decoration: none;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-  }
-  .admin-drawer-storefront a:hover {
-    color: var(--foreground);
-    border-color: var(--foreground-muted, #555);
-  }
   .admin-drawer-account {
     border-top: 1px solid var(--line);
     padding-top: 14px;

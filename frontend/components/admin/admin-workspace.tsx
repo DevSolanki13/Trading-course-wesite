@@ -371,12 +371,6 @@ export function AdminWorkspace() {
             {renderNavItems(drawerManageItems, () => setDrawerOpen(false))}
           </div>
 
-          <div className="admin-drawer-storefront">
-            <Link href="/" onClick={() => setDrawerOpen(false)}>
-              <ArrowUUpLeft size={18} /> View storefront
-            </Link>
-          </div>
-
           <div className="admin-drawer-account">
             <div className="admin-drawer-user-info">
               <span className="admin-avatar">

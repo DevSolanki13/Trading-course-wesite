@@ -127,12 +127,12 @@ describe("Admin mobile drawer & sign-out", () => {
     expect(manageNav).not.toHaveTextContent("Operations & audit");
     expect(manageNav).not.toHaveTextContent("Admins & Team");
 
-    // Drawer contains storefront link and user info
-    expect(drawerEl).toHaveTextContent("View storefront");
+    // Drawer contains user info
     expect(drawerEl).toHaveTextContent("Dev Admin");
     expect(drawerEl).toHaveTextContent("admin@example.com");
 
-    // Red-marked account links are removed from the mobile drawer
+    // View storefront and red-marked account links are removed from the mobile drawer
+    expect(drawerEl).not.toHaveTextContent("View storefront");
     expect(drawerEl).not.toHaveTextContent("Edit profile & credentials");
     expect(drawerEl).not.toHaveTextContent("Platform settings");
     expect(drawerEl).not.toHaveTextContent("Team security & 2FA");
