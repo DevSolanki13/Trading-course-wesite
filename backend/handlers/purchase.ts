@@ -1,4 +1,6 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
+import { GatewayError } from "../payments/gateway-error";
 import { sharedUpiGateway } from "../payments/indianxtrade";
 import { reconcileGatewayPurchase } from "../purchase/upi-gateway";
 import { z } from "zod";
@@ -152,6 +154,29 @@ export async function purchaseRequest(request: Request) {
     }
     return json({ error: "Not found" }, 404);
   } catch (error) {
+    if (error instanceof GatewayError) {
+      const reference = randomUUID();
+      console.error("Purchase gateway failure", {
+        reference,
+        deployment: process.env.VERCEL_GIT_COMMIT_SHA,
+        orderId: error.orderId,
+        code: error.code,
+        ...error.details,
+      });
+      const response = json(
+        {
+          error: error.message,
+          code: error.code,
+          reference,
+          order: error.order,
+          retryable: error.retryable,
+          retryAfter: error.retryAfter,
+        },
+        error.status,
+      );
+      if (error.retryAfter) response.headers.set("Retry-After", String(error.retryAfter));
+      return response;
+    }
     if (error instanceof InvalidPaymentSignatureError)
       return json({ error: "Invalid payment signature." }, 400);
     if (error instanceof PaymentsUnavailableError) return json({ error: error.message }, 503);

@@ -4,7 +4,7 @@ This is a separate Academy job, not an IndianXtrade gateway change. It reads
 existing gateway tables in a read-only transaction and updates only Academy's
 admin display tables. It never changes deposits, credits, balances, orders or
 course access. Only Academy's dedicated collector UPI deposits are exported;
-unconsumed credits are limited to the collection VPA, including gateway bank
+unconsumed credits are limited to the approved collection VPAs, including gateway bank
 alerts that list multiple possible VPAs. No trading-user information or USDT
 records are exported.
 
@@ -16,9 +16,12 @@ records are exported.
    ingestion; it cannot settle a purchase or read any payment tables.
 3. Install `backend/scripts/sync-academy-upi.py` beside the gateway database.
    It requires Python 3 and access to `docker exec`, with no added packages.
-4. Configure private JSON keys: `container`, `database`, `collector`, `vpa`,
+4. Configure private JSON keys: `container`, `database`, `collector`, `vpas`,
    `supabaseUrl`, `publishableKey`, `syncSecret`. Use Academy's public Supabase
-   key, never its service-role key or a gateway administrator cookie.
+   key, never its service-role key or a gateway administrator cookie. `vpas` is
+   an array of the same approved receiving UPI IDs configured in IndianXtrade's
+   and Academy's `UPI_COLLECTION_VPAS`. The old `vpa` string remains a fallback
+   when `vpas` is absent. Invalid or empty arrays fail before querying or publishing.
 5. Run once with `--config /private/path/config.json --dry-run`, then without
    `--dry-run`. Schedule every minute using cron and `--config`.
 

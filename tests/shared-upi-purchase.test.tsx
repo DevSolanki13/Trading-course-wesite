@@ -66,3 +66,22 @@ it("reconciles an already completed gateway payment before a retry can create an
   expect(rpc).not.toHaveBeenCalled();
   expect(bind).not.toHaveBeenCalled();
 });
+
+it("resumes the saved unbound quote instead of applying a changed coupon or creating another order", async () => {
+  const existing = {
+    id: "saved-order",
+    courseId: "course",
+    status: "pending",
+    provider: "upi",
+    providerOrderId: null,
+  };
+  orders.mockResolvedValue([existing]);
+  reconcile.mockResolvedValue(existing);
+  bind.mockResolvedValue(existing);
+  expect(await createPurchase(user, "course", "https://academy.example", "CHANGED")).toEqual(
+    existing,
+  );
+  expect(bind).toHaveBeenCalledWith("saved-order", "student");
+  expect(quote).not.toHaveBeenCalled();
+  expect(rpc).not.toHaveBeenCalled();
+});

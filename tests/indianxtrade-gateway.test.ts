@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { IndianxtradeGateway, sharedUpiConfigured } from "../backend/payments/indianxtrade.ts";
+import {
+  IndianxtradeGateway,
+  sharedUpiConfigured,
+  sharedCollectionVpas,
+} from "../backend/payments/indianxtrade.ts";
+import { GatewayError } from "../backend/payments/gateway-error.ts";
 import { upiConfig } from "../backend/payments/upi-config.ts";
 import { getCheckoutProvider, PaymentsUnavailableError } from "../backend/payments/providers.ts";
 
@@ -36,7 +41,14 @@ test("shared gateway reserves through the existing allocator and binds only its 
           '<a href="upi://pay?pa=shared%40bank&amp;pn=IndianXtrade&amp;am=1990.50&amp;cu=INR">Pay</a>',
         );
   });
-  const result = await client.create(199900);
+  const savedToken = await client.create(199900);
+  assert.equal(savedToken, token);
+  assert.equal(
+    calls.length,
+    1,
+    "creation returns its reference before fetching or validating a QR",
+  );
+  const result = await client.checkoutIntent(savedToken, 199900, Date.now());
   assert.equal(result.amount, 199050);
   assert.equal(result.vpa, "shared@bank");
   assert.equal(result.token, token);
@@ -62,12 +74,117 @@ test("shared gateway refuses overcharges, changed collection accounts, malformed
         ? Response.json({ checkoutToken: token })
         : new Response(`<a href="${link}">Pay</a>`),
     );
-    await assert.rejects(client.create(199900));
+    await assert.rejects(client.checkoutIntent(await client.create(199900), 199900, Date.now()));
   }
   const noNetwork = new IndianxtradeGateway(env, async () => {
     throw new Error("must not call");
   });
   await assert.rejects(noNetwork.create(100), /between INR 510/);
+});
+
+test("only explicitly approved collection accounts are accepted, with compatible single-account configuration", async () => {
+  const config = { ...env, UPI_COLLECTION_VPAS: " Shared@Bank, SECOND@bank,shared@bank " };
+  assert.deepEqual(sharedCollectionVpas(config), ["shared@bank", "second@bank"]);
+  assert.equal(sharedUpiConfigured({ ...env, UPI_COLLECTION_VPA: "  SHARED@BANK " }), true);
+  for (const value of ["shared@bank,", "shared@bank,bad", ",", "upi://pay?pa=shared@bank"])
+    assert.equal(sharedUpiConfigured({ ...config, UPI_COLLECTION_VPAS: value }), false);
+  for (const vpa of ["shared@bank", "SECOND@BANK"]) {
+    const client = new IndianxtradeGateway(
+      config,
+      async () =>
+        new Response(`<a href="upi://pay?pa=${encodeURIComponent(vpa)}&am=1490.50&cu=INR">Pay</a>`),
+    );
+    assert.equal((await client.checkoutIntent(token, 149900, Date.now())).amount, 149050);
+  }
+  const client = new IndianxtradeGateway(
+    config,
+    async () => new Response('<a href="upi://pay?pa=unknown%40bank&am=1490.50&cu=INR">Pay</a>'),
+  );
+  await assert.rejects(client.checkoutIntent(token, 149900, Date.now()), (error: unknown) => {
+    assert.ok(error instanceof GatewayError);
+    assert.equal(error.code, "ACCOUNT_MISMATCH");
+    assert.equal(JSON.stringify(error).includes("unknown@bank"), false);
+    return true;
+  });
+});
+
+test("coupon and minimum totals accept exactly the allocator range and reject malformed payment instructions", async () => {
+  for (const [total, raw] of [
+    [149900, "1479.01"],
+    [149900, "1499.00"],
+    [51000, "490.01"],
+    [51000, "510.00"],
+  ] as const) {
+    const client = new IndianxtradeGateway(
+      env,
+      async () => new Response(`<a href="upi://pay?pa=shared%40bank&am=${raw}&cu=INR">Pay</a>`),
+    );
+    assert.equal(
+      (await client.checkoutIntent(token, total, Date.now())).amount,
+      Math.round(Number(raw) * 100),
+    );
+  }
+  for (const [params, code] of [
+    ["pa=shared%40bank&am=1479.00&cu=INR", "AMOUNT_MISMATCH"],
+    ["pa=shared%40bank&am=1499.01&cu=INR", "AMOUNT_MISMATCH"],
+    ["pa=shared%40bank&am=1490.5&cu=INR", "AMOUNT_FORMAT"],
+    ["pa=shared%40bank&am=1490.50", "CURRENCY_MISMATCH"],
+    ["pa=shared%40bank&am=1490.50&cu=USD", "CURRENCY_MISMATCH"],
+    ["pa=shared%40bank&am=1490.50&am=1490.50&cu=INR", "UPI_PARAMETERS"],
+    ["pa=shared%40bank&pa=other%40bank&am=1490.50&cu=INR", "UPI_PARAMETERS"],
+  ]) {
+    const client = new IndianxtradeGateway(
+      env,
+      async () => new Response(`<a href="upi://pay?${params}">Pay</a>`),
+    );
+    await assert.rejects(client.checkoutIntent(token, 149900, Date.now()), { code });
+  }
+});
+
+test("retrying a QR uses its original deadline and refuses an expired reservation", async () => {
+  const client = new IndianxtradeGateway(
+    env,
+    async () => new Response('<a href="upi://pay?pa=shared%40bank&am=1490.50&cu=INR">Pay</a>'),
+  );
+  const started = Date.now() - 20 * 60000;
+  assert.equal(
+    (await client.checkoutIntent(token, 149900, started)).expiresAt,
+    new Date(started + 50 * 60000).toISOString(),
+  );
+  await assert.rejects(client.checkoutIntent(token, 149900, Date.now() - 51 * 60000), {
+    code: "SETUP_EXPIRED",
+  });
+});
+
+test("creation distinguishes definitive rejection from an ambiguous remote result and redacts transport errors", async () => {
+  for (const [response, safe] of [
+    [400, true],
+    [429, true],
+    [500, false],
+    [408, false],
+  ] as const) {
+    const client = new IndianxtradeGateway(
+      env,
+      async () => new Response("upstream private data", { status: response }),
+    );
+    await assert.rejects(client.create(149900), {
+      code: "GATEWAY_UNAVAILABLE",
+      safeToRetryCreation: safe,
+    });
+  }
+  const client = new IndianxtradeGateway(env, async () => {
+    throw new Error(`secret ${token}`);
+  });
+  await assert.rejects(client.create(149900), (error: unknown) => {
+    assert.ok(error instanceof GatewayError);
+    assert.equal(error.safeToRetryCreation, false);
+    assert.equal(JSON.stringify(error).includes(token), false);
+    return true;
+  });
+  await assert.rejects(
+    new IndianxtradeGateway(env, async () => new Response("malformed")).create(149900),
+    { code: "GATEWAY_RESPONSE", safeToRetryCreation: false },
+  );
 });
 test("only a completed owner-authenticated gateway deposit can count as paid; session expiry refreshes through the existing sign-in API", async () => {
   let calls = 0;
@@ -91,12 +208,14 @@ test("only a completed owner-authenticated gateway deposit can count as paid; se
 test("reads the existing gateway's PNG QR without requiring a payment link in its HTML", async () => {
   const { default: QRCode } = await import("qrcode");
   const qr = await QRCode.toDataURL(
-    "upi://pay?pa=shared%40bank&pn=IndianXtrade&am=1990.50&cu=INR",
+    "upi://pay?pa=second%40bank&pn=IndianXtrade&am=1990.50&cu=INR",
     { width: 260 },
   );
   const client = new IndianxtradeGateway(
-    env,
+    { ...env, UPI_COLLECTION_VPAS: "shared@bank,second@bank" },
     async () => new Response(`<img src="${qr}"/><script>${qr}</script>`),
   );
-  assert.equal((await client.checkoutIntent(token, 199900, Date.now())).amount, 199050);
+  const intent = await client.checkoutIntent(token, 199900, Date.now());
+  assert.equal(intent.amount, 199050);
+  assert.equal(intent.vpa, "second@bank");
 });
