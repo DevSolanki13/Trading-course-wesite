@@ -192,11 +192,9 @@ export function PaymentTotals({
           <dd>{checkoutMoney(total)}</dd>
         </div>
       </dl>
-      {referenceGst > 0 && (
+      {referenceGst > 0 && gatewaySavings > 0 && (
         <p className="ix-offer-note">
-          GST charged: ₹0.00. The 18% reference amount is fully offset by the early bird offer.
-          {gatewaySavings > 0 &&
-            ` The offer also includes the ${checkoutMoney(gatewaySavings)} payment amount adjustment.`}
+          The offer includes the {checkoutMoney(gatewaySavings)} payment amount adjustment.
         </p>
       )}
     </>

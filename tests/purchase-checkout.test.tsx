@@ -202,7 +202,7 @@ it("continues to the separate gateway using the saved order without showing a QR
   expect(screen.getByText("Early bird offer")).toBeVisible();
   expect(screen.getByText("−₹500.00")).toBeVisible();
   expect(screen.getByText("−₹289.68")).toBeVisible();
-  expect(screen.getByText(/GST charged: ₹0.00/)).toBeVisible();
+  expect(screen.queryByText(/GST charged: ₹0.00/)).toBeNull();
   expect(screen.queryByRole("img", { name: /Scan to pay/ })).toBeNull();
   expect(request).toHaveBeenCalledTimes(1);
 });
