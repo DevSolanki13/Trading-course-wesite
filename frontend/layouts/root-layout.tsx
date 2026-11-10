@@ -9,6 +9,7 @@ import { PurchaseToaster } from "../components/purchase-toaster";
 import { AuthProvider } from "../components/auth-provider";
 import { FestivalVideoProvider } from "../components/festival-video";
 import "../styles/purchase.css";
+import "../styles/payment-gateway.css";
 import "../styles/brand.css";
 import "../styles/header-lights.css";
 import "../styles/festival-video.css";

@@ -1,5 +1,4 @@
 "use client";
-import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useHydrated } from "../lib/use-hydrated";
 import { useRouter } from "next/navigation";
@@ -7,9 +6,15 @@ import Link from "next/link";
 import Script from "next/script";
 import { toast } from "sonner";
 import type { PurchaseCourse, PurchaseOrder } from "../../shared/purchase";
-import { LockSimple } from "@phosphor-icons/react";
+import { ArrowRight, CheckCircle, Clock, LockSimple, Tag } from "@phosphor-icons/react";
+import {
+  CourseReview,
+  PaymentBack,
+  PaymentShell,
+  PaymentTotals,
+  accessLabel,
+} from "./payment-layout";
 import { CheckoutLayout, checkoutMoney } from "./checkout-layout";
-const UpiPaymentPanel = dynamic(() => import("./upi-payment-panel").then((m) => m.UpiPaymentPanel));
 type RazorpayResult = {
   razorpay_order_id: string;
   razorpay_payment_id: string;
@@ -60,7 +65,12 @@ export function PurchaseCheckout({
       setCoupon(saved.couponCode ?? "");
       setCouponApplied(
         saved.couponCode
-          ? { code: saved.couponCode, discount: saved.base + saved.tax - saved.amount }
+          ? {
+              code: saved.couponCode,
+              discount:
+                saved.couponDiscount ??
+                saved.base + saved.tax - saved.amount - (saved.gatewaySavings ?? 0),
+            }
           : null,
       );
     }
@@ -108,7 +118,7 @@ export function PurchaseCheckout({
     }
   }
   async function pay(outcome: "paid" | "failed" | "cancelled") {
-    if (busy || paying.current || retryAt || setupBlocked) return;
+    if (!terms || busy || paying.current || retryAt || setupBlocked) return;
     paying.current = true;
     setBusy(true);
     setError("");
@@ -127,7 +137,7 @@ export function PurchaseCheckout({
         if (data.keyId) setRazorpayKeyId(data.keyId);
       }
       if (provider === "upi") {
-        if (saved.status === "paid") router.push(`/checkout/success?orderId=${saved.id}`);
+        router.push(`/indianxtrade-gateway/${saved.id}`);
         setBusy(false);
         return;
       }
@@ -185,6 +195,151 @@ export function PurchaseCheckout({
       if (provider === "mock") setBusy(false);
     }
   }
+  async function applyCoupon() {
+    setCouponBusy(true);
+    setError("");
+    try {
+      const quote = await api("quote", { courseId: course.id, coupon: coupon.trim() });
+      setCouponApplied({ code: coupon.trim(), discount: quote.discount });
+    } catch (reason) {
+      setCouponApplied(null);
+      setError(reason instanceof Error ? reason.message : "Coupon could not be applied.");
+    } finally {
+      setCouponBusy(false);
+    }
+  }
+  if (provider === "upi")
+    return (
+      <PaymentShell>
+        <div className="ix-review-container">
+          <PaymentBack href={`/courses/${course.slug}`}>Back to course</PaymentBack>
+          <header className="ix-review-heading">
+            <span className="ix-eyebrow">YOUR NEXT CHAPTER</span>
+            <h1>Review your course.</h1>
+            <p>One payment. {accessLabel(course)}.</p>
+          </header>
+          <div className="ix-review-grid">
+            <CourseReview course={course} />
+            <section className="ix-review-summary" aria-labelledby="ix-order-title">
+              <h2 id="ix-order-title">Order summary</h2>
+              {couponApplied && (
+                <div className="ix-coupon-applied">
+                  <Tag size={20} aria-hidden="true" />
+                  <span>
+                    <strong>{couponApplied.code}</strong> applied
+                  </span>
+                  <CheckCircle size={18} aria-hidden="true" />
+                </div>
+              )}
+              <PaymentTotals
+                base={order?.base ?? course.price}
+                tax={order?.tax ?? tax}
+                total={order?.amount ?? course.price - (couponApplied?.discount ?? 0) + tax}
+                couponDiscount={couponApplied?.discount}
+                couponCode={couponApplied?.code}
+                gatewaySavings={order?.gatewaySavings}
+              />
+              <form
+                className="ix-coupon-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (coupon.trim() && !couponBusy && !order) void applyCoupon();
+                }}
+              >
+                <label htmlFor="ix-coupon">Have a coupon?</label>
+                <div>
+                  <input
+                    id="ix-coupon"
+                    value={coupon}
+                    maxLength={32}
+                    onChange={(event) => {
+                      setCoupon(event.target.value.toUpperCase());
+                      setCouponApplied(null);
+                    }}
+                    placeholder="Enter coupon code"
+                    aria-label="Coupon code"
+                    disabled={busy || couponBusy || !!order}
+                  />
+                  <button
+                    className="ix-button ix-secondary"
+                    type="submit"
+                    disabled={!coupon.trim() || busy || couponBusy || !!order}
+                  >
+                    {couponBusy ? "Checking…" : "Apply"}
+                  </button>
+                </div>
+                {couponApplied && (
+                  <p className="ix-input-help">Coupon {couponApplied.code} applied.</p>
+                )}
+              </form>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void pay("paid");
+                }}
+                aria-busy={busy}
+              >
+                <label className="ix-terms">
+                  <input
+                    type="checkbox"
+                    disabled={!interactive || busy}
+                    checked={terms}
+                    onChange={(event) => setTerms(event.target.checked)}
+                  />
+                  <span>
+                    I agree to the <Link href="/terms">terms</Link> and{" "}
+                    <Link href="/refund-policy">refund policy</Link>.
+                  </span>
+                </label>
+                {!available && (
+                  <p className="ix-error" role="alert">
+                    Payments temporarily unavailable
+                  </p>
+                )}
+                {error && (
+                  <p className="ix-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                <button
+                  className="ix-button ix-primary"
+                  disabled={
+                    !interactive || !terms || busy || !available || !!retryAt || setupBlocked
+                  }
+                >
+                  {busy
+                    ? "Preparing your gateway…"
+                    : retryAt
+                      ? "Payment setup pending…"
+                      : order && !order.upi && order.status === "pending"
+                        ? "Resume payment setup"
+                        : "Continue to gateway"}
+                  <ArrowRight size={20} aria-hidden="true" />
+                </button>
+                <p className="ix-gateway-explainer">
+                  You’ll continue to <strong>IndianXTrade Gateway</strong> to see your exact UPI
+                  amount and pay.
+                </p>
+                <p className="ix-secure-caption">
+                  <LockSimple size={15} aria-hidden="true" />
+                  Pay with UPI · Receipt included
+                </p>
+              </form>
+              {order && (
+                <p className="ix-order-reference">
+                  Order reference: {order.id} ·{" "}
+                  <Link href={`/indianxtrade-gateway/${order.id}`}>Check order status</Link>
+                </p>
+              )}
+            </section>
+          </div>
+          <p className="ix-review-footer">
+            <Clock size={17} aria-hidden="true" />
+            Your {accessLabel(course)} begins after payment is confirmed.
+          </p>
+        </div>
+      </PaymentShell>
+    );
   return (
     <CheckoutLayout
       course={course}
@@ -272,23 +427,14 @@ export function PurchaseCheckout({
       <p className="checkout-section-description">
         Review the total and accept the policies to continue.
       </p>
-      {provider === "upi" && order?.upi ? <UpiPaymentPanel order={order} /> : null}
       <div className="checkout-provider">
         <LockSimple size={22} aria-hidden="true" />
         <div>
-          <strong>
-            {provider === "mock"
-              ? "Demo payment"
-              : provider === "upi"
-                ? "Pay with UPI"
-                : "Pay with Razorpay"}
-          </strong>
+          <strong>{provider === "mock" ? "Demo payment" : "Pay with Razorpay"}</strong>
           <p>
             {provider === "mock"
               ? "Try the checkout with a simulated payment."
-              : provider === "upi"
-                ? "Scan a QR code or open your UPI app. Your bank confirms the payment automatically."
-                : "Choose your payment method in the payment window."}
+              : "Choose your payment method in the payment window."}
           </p>
         </div>
       </div>
@@ -329,7 +475,6 @@ export function PurchaseCheckout({
             !available ||
             !!retryAt ||
             setupBlocked ||
-            (provider === "upi" && !!order?.upi && order.status === "pending") ||
             (provider === "razorpay" && !ready)
           }
         >
@@ -339,13 +484,7 @@ export function PurchaseCheckout({
               ? failed
                 ? "Retry test payment"
                 : "Pay successfully"
-              : provider === "upi"
-                ? retryAt
-                  ? "Payment setup pending…"
-                  : order && !order.upi && order.status === "pending"
-                    ? "Resume payment setup"
-                    : "Generate UPI QR"
-                : "Pay with Razorpay"}
+              : "Pay with Razorpay"}
         </button>
         {provider === "mock" && (
           <>

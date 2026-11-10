@@ -148,6 +148,67 @@ test("gateway setup survives failures without duplicate creation, quote changes,
       "binding alone cannot grant access",
     );
 
+    // A student-supplied reference is private review data, never bank confirmation.
+    const reference = "123456789012";
+    const submitReference = (owner = user, value = reference) =>
+      db.query("select purchase_upi_reference($1,$2,$3)", [owner, order, value]);
+    await assert.rejects(submitReference(other), /Order not found/);
+    await assert.rejects(submitReference(user, "<invalid>"), /Invalid payment reference/);
+    await submitReference();
+    const paymentDetails = async () =>
+      (
+        await db.query<{
+          value: {
+            status: string;
+            couponDiscount: number;
+            gatewaySavings: number;
+            paymentReference: { reference: string; submittedAt: string };
+          };
+        }>("select purchase_read('order',$1,$2)as value", [user, order])
+      ).rows[0].value;
+    const submitted = await paymentDetails();
+    assert.equal(submitted.status, "pending");
+    assert.equal(submitted.gatewaySavings, 850);
+    assert.equal(submitted.couponDiscount, 0);
+    assert.equal(submitted.paymentReference.reference, reference);
+    await submitReference();
+    assert.equal(
+      (await paymentDetails()).paymentReference.submittedAt,
+      submitted.paymentReference.submittedAt,
+    );
+    await submitReference(user, "ABC123456789");
+    assert.equal((await paymentDetails()).paymentReference.reference, "ABC123456789");
+    assert.equal((await db.query("select * from purchase_access")).rows.length, 0);
+    const review = (
+      await db.query<{
+        value: {
+          items: {
+            id: string;
+            utr: string | null;
+            submittedReference: string;
+            reviewReason: string;
+          }[];
+        };
+      }>("select academy_upi_payment_read('review','ABC123456789',0)as value")
+    ).rows[0].value;
+    assert.equal(review.items[0].id, order);
+    assert.equal(review.items[0].utr, null);
+    assert.equal(review.items[0].submittedReference, "ABC123456789");
+    assert.match(review.items[0].reviewReason, /awaiting bank verification/);
+    assert.equal(
+      (
+        await db.query<{ value: unknown }>("select purchase_read('order',$1,$2)as value", [
+          other,
+          order,
+        ])
+      ).rows[0].value,
+      null,
+    );
+    await db.exec("set role authenticated");
+    await assert.rejects(submitReference(), /permission denied/);
+    await assert.rejects(db.exec("select * from purchase_payment_references"), /permission denied/);
+    await db.exec("reset role");
+
     const unknownOrder = await create(other);
     assert.equal((await prepare(other, unknownOrder)).state, "create");
     await release(false, unknownOrder, other);

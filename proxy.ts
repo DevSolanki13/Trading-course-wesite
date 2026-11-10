@@ -27,7 +27,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(callbackUrl, 303);
   }
 
-  const protectedPage = /^\/(dashboard|checkout)(\/|$)/.test(request.nextUrl.pathname);
+  const protectedPage = /^\/(dashboard|checkout|indianxtrade-gateway)(\/|$)/.test(
+    request.nextUrl.pathname,
+  );
   const hasSession = localDemoEnabled()
     ? !!request.cookies.get("mm_local_session")
     : request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-"));

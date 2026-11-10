@@ -18,9 +18,11 @@ test("Academy offers only UPI and refuses fallback payments without a configured
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/checkout\//);
   await dismissOpeningVideo(page);
-  await expect(page.getByText("Pay with UPI", { exact: true })).toBeVisible();
+  await expect(page.getByText("Pay with UPI · Receipt included", { exact: true })).toBeVisible();
   await page.getByRole("checkbox").check();
-  await expect(page.getByRole("button", { name: "Generate UPI QR", exact: true })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Continue to gateway", exact: true }),
+  ).toBeDisabled();
   await expect(page.getByRole("button", { name: "Pay successfully" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Simulate failure" })).toHaveCount(0);
   await expect(

@@ -37,6 +37,9 @@ export type PurchaseOrder = {
   provider: "mock" | "razorpay" | "cashfree" | "demo" | "upi";
   providerOrderId: string | null;
   couponCode?: string | null;
+  couponDiscount?: number;
+  gatewaySavings?: number;
+  paymentReference?: { reference: string; submittedAt: string } | null;
   upi?: {
     vpa: string;
     payeeName: string;
