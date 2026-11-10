@@ -152,7 +152,7 @@ export function StudentsPanel({ role }: { role: "admin" | "support" }) {
         <TableSkeleton columns={["34%", "32%", "12%", "12%", "10%"]} rows={6} />
       ) : (
         <>
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-cards">
             <table>
               <caption className="sr-only">Student accounts</caption>
               <colgroup>
@@ -174,7 +174,7 @@ export function StudentsPanel({ role }: { role: "admin" | "support" }) {
               <tbody>
                 {students.map((s) => (
                   <tr key={s.id}>
-                    <td>
+                    <td data-label="Learner">
                       <div className="student-name-group">
                         <span className="student-name">{s.full_name || "Unnamed learner"}</span>
                         {typeof s.active_devices === "number" && s.active_devices > 0 && (
@@ -192,11 +192,13 @@ export function StudentsPanel({ role }: { role: "admin" | "support" }) {
                         )}
                       </div>
                     </td>
-                    <td className="admin-break">{s.email}</td>
-                    <td>
+                    <td data-label="Email" className="admin-break">
+                      {s.email}
+                    </td>
+                    <td data-label="Role">
                       <span className="admin-role-tag">{s.role}</span>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <span
                         className={`admin-status-pill ${s.blocked ? "is-danger" : "is-success"}`}
                       >
@@ -204,7 +206,7 @@ export function StudentsPanel({ role }: { role: "admin" | "support" }) {
                         {s.blocked ? "Blocked" : "Active"}
                       </span>
                     </td>
-                    <td className="admin-col-action">
+                    <td data-label="Action" className="admin-col-action">
                       <button className="text-link" onClick={() => open(s.id)}>
                         View
                       </button>

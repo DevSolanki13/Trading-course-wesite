@@ -237,7 +237,7 @@ export function UpiPaymentsPanel() {
           ) : (
             data && (
               <>
-                <div className="admin-table-wrap">
+                <div className="admin-table-wrap admin-table-cards">
                   <table>
                     <caption className="sr-only">
                       {tabs.find((item) => item.id === tab)?.label} — UPI only
@@ -270,12 +270,12 @@ export function UpiPaymentsPanel() {
                               const row = item as AdminUpiCredit;
                               return (
                                 <tr key={row.id}>
-                                  <td>{when(row.receivedAt)}</td>
-                                  <td>{money(row.amount)}</td>
-                                  <td>
+                                  <td data-label="Received">{when(row.receivedAt)}</td>
+                                  <td data-label="Amount">{money(row.amount)}</td>
+                                  <td data-label="UTR">
                                     <Reference value={row.utr} />
                                   </td>
-                                  <td>
+                                  <td data-label="Action" className="admin-col-action">
                                     <button
                                       type="button"
                                       className="text-link"
@@ -296,14 +296,14 @@ export function UpiPaymentsPanel() {
                               const row = item as AdminUpiPayment;
                               return (
                                 <tr key={row.id}>
-                                  <td>
+                                  <td data-label="Student / course">
                                     <strong>{row.studentName || row.email}</strong>
                                     <small className="upi-cell-sub">{row.email}</small>
                                     <span className="upi-cell-sub">{row.course}</span>
                                     <small className="upi-cell-sub">Order {row.id}</small>
                                   </td>
-                                  <td>{money(row.amount)}</td>
-                                  <td>
+                                  <td data-label="Amount">{money(row.amount)}</td>
+                                  <td data-label="UTR">
                                     <Reference value={row.utr} />
                                     {row.submittedReference && (
                                       <div className="upi-cell-sub">
@@ -315,14 +315,14 @@ export function UpiPaymentsPanel() {
                                       </div>
                                     )}
                                   </td>
-                                  <td>{when(row.createdAt)}</td>
-                                  <td>
+                                  <td data-label="Created">{when(row.createdAt)}</td>
+                                  <td data-label="Payment status">
                                     <span className="admin-badge">{paymentState(row)}</span>
                                     <span className="upi-cell-sub">
                                       {row.reviewReason || `Course order: ${row.status}`}
                                     </span>
                                   </td>
-                                  <td>
+                                  <td data-label="Action" className="admin-col-action">
                                     {row.status === "pending" && row.gatewayBound ? (
                                       <button
                                         type="button"

@@ -279,7 +279,7 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
       </div>
       {data ? (
         <>
-          <div className="admin-table-wrap">
+          <div className="admin-table-wrap admin-table-cards">
             <table>
               <caption className="sr-only">All orders</caption>
               <colgroup>
@@ -301,13 +301,13 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
               <tbody>
                 {data.items.map((o) => (
                   <tr key={o.id}>
-                    <td>{o.course_snapshot?.title || o.course_id}</td>
-                    <td>{money(o.total_paise)}</td>
-                    <td>
+                    <td data-label="Course">{o.course_snapshot?.title || o.course_id}</td>
+                    <td data-label="Amount">{money(o.total_paise)}</td>
+                    <td data-label="State">
                       <span className="admin-badge">{o.status}</span>
                     </td>
-                    <td>{when(o.created_at)}</td>
-                    <td className="admin-col-action">
+                    <td data-label="Date">{when(o.created_at)}</td>
+                    <td data-label="Action" className="admin-col-action">
                       <button
                         className="button button-secondary button-sm"
                         onClick={() => open(o.id)}

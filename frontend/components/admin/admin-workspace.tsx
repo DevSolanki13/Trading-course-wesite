@@ -52,6 +52,8 @@ import {
   MegaphoneSimple,
   Article,
   Pulse,
+  List,
+  X,
 } from "@phosphor-icons/react";
 import { AdminWorkspaceSkeleton } from "./admin-skeletons";
 
@@ -90,7 +92,11 @@ export function AdminWorkspace() {
   });
   const [error, setError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleSelectView = (nextView: string) => {
     setView(nextView);
@@ -111,6 +117,56 @@ export function AdminWorkspace() {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
+
+  // Trap focus, close on Escape, lock body scroll, restore focus
+  useEffect(() => {
+    if (!drawerOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setDrawerOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+      if (e.key === "Tab" && drawerRef.current) {
+        const focusables = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    // Initial focus on first interactive element inside drawer
+    const timer = setTimeout(() => {
+      const focusables = drawerRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables && focusables.length > 0) {
+        focusables[0].focus();
+      }
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [drawerOpen]);
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return (
@@ -148,20 +204,26 @@ export function AdminWorkspace() {
       return () => document.removeEventListener("mousedown", onDocClick);
     }
   }, [profileMenuOpen]);
+
   async function logout() {
     if (loggingOut) return;
     setLoggingOut(true);
+    setLogoutError("");
     try {
-      await fetch("/api/auth/logout", {
+      const res = await fetch("/api/auth/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "{}",
       });
+      if (!res.ok) {
+        setLogoutError("Sign out failed. Please retry.");
+        setLoggingOut(false);
+        return;
+      }
       router.push("/login");
       router.refresh();
     } catch {
-      router.push("/login");
-    } finally {
+      setLogoutError("Sign out failed. Please retry.");
       setLoggingOut(false);
     }
   }
@@ -229,9 +291,9 @@ export function AdminWorkspace() {
     ["orders", "payments", "refunds", "coupons"].includes(item.id),
   );
   const manageItems = views.filter((item) =>
-    ["announcements", "team", "settings"].includes(item.id),
+    ["announcements", "content", "operations", "team", "settings"].includes(item.id),
   );
-  const renderNavItems = (items: typeof views) =>
+  const renderNavItems = (items: typeof views, onSelect?: () => void) =>
     items.map(({ id, label, Icon }) => (
       <button
         key={id}
@@ -240,6 +302,7 @@ export function AdminWorkspace() {
         aria-current={view === id ? "page" : undefined}
         onClick={(e) => {
           handleSelectView(id);
+          onSelect?.();
           e.currentTarget.focus();
         }}
       >
@@ -249,6 +312,142 @@ export function AdminWorkspace() {
     ));
   return (
     <main id="main-content" className="admin-page">
+      {/* Mobile drawer backdrop */}
+      <div
+        className={`admin-drawer-overlay ${drawerOpen ? "is-open" : ""}`}
+        aria-hidden={!drawerOpen}
+        onClick={() => setDrawerOpen(false)}
+      />
+
+      {/* Mobile drawer sheet */}
+      <aside
+        id="admin-drawer"
+        className={`admin-drawer ${drawerOpen ? "is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Admin navigation"
+        ref={drawerRef}
+      >
+        <div className="admin-drawer-header">
+          <div
+            className="student-workspace-switcher"
+            role="status"
+            aria-label="Current workspace: Admin"
+          >
+            <div className="student-workspace-info">
+              <ShieldCheck size={17} weight="duotone" color="var(--accent, #00df8f)" />
+              <span>Staff workspace</span>
+            </div>
+            <span className="student-workspace-status">
+              <i />
+              Active
+            </span>
+          </div>
+          <button
+            type="button"
+            className="admin-drawer-close"
+            aria-label="Close navigation menu"
+            onClick={() => {
+              setDrawerOpen(false);
+              menuButtonRef.current?.focus();
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="admin-drawer-content">
+          <div className="admin-nav-group" aria-label="Workspace navigation">
+            <span className="admin-nav-label">Workspace</span>
+            {renderNavItems(workspaceItems, () => setDrawerOpen(false))}
+          </div>
+          <div className="admin-nav-group" aria-label="Commerce navigation">
+            <span className="admin-nav-label">Commerce</span>
+            {renderNavItems(commerceItems, () => setDrawerOpen(false))}
+          </div>
+          <div className="admin-nav-group" aria-label="Manage navigation">
+            <span className="admin-nav-label">Manage</span>
+            {renderNavItems(manageItems, () => setDrawerOpen(false))}
+          </div>
+
+          <div className="admin-drawer-storefront">
+            <Link href="/" onClick={() => setDrawerOpen(false)}>
+              <ArrowUUpLeft size={18} /> View storefront
+            </Link>
+          </div>
+
+          <div className="admin-drawer-account">
+            <div className="admin-drawer-user-info">
+              <span className="admin-avatar">
+                {avatarUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={avatarUrl} alt="Avatar" />
+                ) : (
+                  (user.name?.trim().charAt(0) || user.email.slice(0, 1)).toUpperCase()
+                )}
+              </span>
+              <div className="admin-drawer-user-details">
+                <strong>{user.name || "Admin"}</strong>
+                <small>{user.email}</small>
+              </div>
+            </div>
+
+            <div className="admin-drawer-account-links">
+              <button
+                type="button"
+                className={`admin-popover-item ${view === "profile" ? "is-active" : ""}`}
+                onClick={() => {
+                  handleSelectView("profile");
+                  setDrawerOpen(false);
+                }}
+              >
+                <UserCircle size={16} />
+                <span>Edit profile & credentials</span>
+              </button>
+
+              <button
+                type="button"
+                className={`admin-popover-item ${view === "settings" ? "is-active" : ""}`}
+                onClick={() => {
+                  handleSelectView("settings");
+                  setDrawerOpen(false);
+                }}
+              >
+                <Gear size={16} />
+                <span>Platform settings</span>
+              </button>
+
+              <Link
+                href="/admin/security"
+                className="admin-popover-item"
+                onClick={() => setDrawerOpen(false)}
+              >
+                <ShieldCheck size={16} />
+                <span>Team security & 2FA</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="admin-drawer-footer">
+          {logoutError && (
+            <p role="alert" className="auth-error admin-logout-error">
+              {logoutError}
+            </p>
+          )}
+          <button
+            type="button"
+            className="admin-signout"
+            disabled={loggingOut}
+            onClick={() => void logout()}
+          >
+            <SignOut size={16} />
+            <span>{loggingOut ? "Signing out…" : "Sign out"}</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Desktop sidebar */}
       <aside className="admin-sidebar" aria-label="Admin sections">
         <Link href="/" className="admin-brand" aria-label="indianXtrade storefront">
           <BullMark className="admin-brand-mark" height={54} />
@@ -267,20 +466,6 @@ export function AdminWorkspace() {
             Active
           </span>
         </div>
-        <nav className="admin-mobile-tabs" aria-label="Admin mobile navigation">
-          {views.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              type="button"
-              className={view === id ? "is-active" : ""}
-              aria-current={view === id ? "page" : undefined}
-              onClick={() => handleSelectView(id)}
-            >
-              <Icon size={15} weight={view === id ? "fill" : "regular"} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
         <div className="admin-nav-group" aria-label="Workspace navigation">
           <span className="admin-nav-label">Workspace</span>
           {renderNavItems(workspaceItems)}
@@ -378,6 +563,12 @@ export function AdminWorkspace() {
 
                 <div className="admin-popover-divider" />
 
+                {logoutError && (
+                  <p role="alert" className="auth-error admin-logout-error">
+                    {logoutError}
+                  </p>
+                )}
+
                 <button
                   type="button"
                   className="admin-popover-item"
@@ -391,6 +582,11 @@ export function AdminWorkspace() {
               </div>
             )}
           </div>
+          {logoutError && (
+            <p role="alert" className="auth-error admin-logout-error">
+              {logoutError}
+            </p>
+          )}
           <button
             type="button"
             className="admin-signout"
@@ -403,10 +599,26 @@ export function AdminWorkspace() {
       </aside>
       <div className="admin-content">
         <header className="admin-top">
-          <div className="admin-breadcrumb">
-            <span>Admin</span>
-            <span>/</span>
-            <strong>{views.find((v) => v.id === view)?.label ?? "Workspace"}</strong>
+          <div className="admin-top-left">
+            <button
+              type="button"
+              className="admin-menu-toggle"
+              aria-label="Open navigation menu"
+              aria-expanded={drawerOpen}
+              aria-controls="admin-drawer"
+              onClick={() => setDrawerOpen(true)}
+              ref={menuButtonRef}
+            >
+              <List size={22} weight="bold" />
+            </button>
+            <Link href="/" className="admin-brand-mobile" aria-label="indianXtrade storefront">
+              <BullMark className="admin-brand-mark" height={32} />
+            </Link>
+            <div className="admin-breadcrumb">
+              <span>Admin</span>
+              <span>/</span>
+              <strong>{views.find((v) => v.id === view)?.label ?? "Workspace"}</strong>
+            </div>
           </div>
           <div className="admin-top-actions">
             <ThemeToggle />
