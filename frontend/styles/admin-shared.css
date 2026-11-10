@@ -277,15 +277,29 @@
   min-width: min(100%, 18rem);
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--line);
+  border-radius: 8px;
   background: var(--surface);
   color: var(--muted);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.admin-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .admin-search input {
   min-width: 0;
+  flex: 1;
   border: 0;
   outline: 0;
   background: transparent;
-  color: inherit;
+  color: var(--foreground);
+  font: 13px/1.5 var(--body);
+}
+.admin-search input::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
 }
 .admin-progress {
   width: 7rem;
@@ -421,19 +435,27 @@
   width: 100%;
   min-height: 40px;
   padding: 8px 32px 8px 36px;
-  background: #111111;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--line);
   border-radius: 8px;
   font: 13px/1.5 var(--body);
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+.admin-search-input-wrap input::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+.admin-search-input-wrap input:hover {
+  border-color: color-mix(in srgb, var(--line) 60%, var(--foreground));
 }
 .admin-search-input-wrap input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .admin-search-clear {
   position: absolute;
@@ -446,13 +468,13 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
   color: var(--muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .admin-search-clear:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--foreground) 20%, transparent);
   color: var(--foreground);
 }
 .admin-search-btn {
@@ -579,12 +601,100 @@
   width: 100%;
   min-width: 0;
   min-height: 44px;
-  background: #111111;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px 14px;
   font: 14px/1.5 var(--body);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+.admin-range select:hover,
+.admin-filter-row input:hover,
+.admin-filter-row select:hover,
+.admin-inline-form input:hover,
+.admin-form input:hover,
+.admin-form select:hover,
+.admin-form textarea:hover {
+  border-color: color-mix(in srgb, var(--line) 60%, var(--foreground));
+}
+.admin-range select:focus,
+.admin-filter-row input:focus,
+.admin-filter-row select:focus,
+.admin-inline-form input:focus,
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.admin-filter-row input::placeholder,
+.admin-inline-form input::placeholder,
+.admin-form input::placeholder,
+.admin-form textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+.admin-range select,
+.admin-filter-row select,
+.admin-form select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+.admin-range select option,
+.admin-filter-row select option,
+.admin-form select option {
+  background: var(--surface);
+  color: var(--foreground);
+}
+:root[data-theme="light"] .admin-range select,
+:root[data-theme="light"] .admin-filter-row select,
+:root[data-theme="light"] .admin-form select,
+[data-theme="light"] .admin-range select,
+[data-theme="light"] .admin-filter-row select,
+[data-theme="light"] .admin-form select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23535b6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] .admin-search-input-wrap input,
+:root[data-theme="light"] .admin-search,
+:root[data-theme="light"] .admin-range select,
+:root[data-theme="light"] .admin-filter-row input,
+:root[data-theme="light"] .admin-filter-row select,
+:root[data-theme="light"] .admin-inline-form input,
+:root[data-theme="light"] .admin-form input:not([type="checkbox"]):not([type="file"]),
+:root[data-theme="light"] .admin-form select,
+:root[data-theme="light"] .admin-form textarea,
+[data-theme="light"] .admin-search-input-wrap input,
+[data-theme="light"] .admin-search,
+[data-theme="light"] .admin-range select,
+[data-theme="light"] .admin-filter-row input,
+[data-theme="light"] .admin-filter-row select,
+[data-theme="light"] .admin-inline-form input,
+[data-theme="light"] .admin-form input:not([type="checkbox"]):not([type="file"]),
+[data-theme="light"] .admin-form select,
+[data-theme="light"] .admin-form textarea {
+  background-color: #ffffff;
+  color: var(--foreground);
+  border-color: var(--line);
+}
+:root[data-theme="light"] .admin-range select option,
+:root[data-theme="light"] .admin-filter-row select option,
+:root[data-theme="light"] .admin-form select option,
+[data-theme="light"] .admin-range select option,
+[data-theme="light"] .admin-filter-row select option,
+[data-theme="light"] .admin-form select option {
+  background-color: #ffffff;
+  color: #131722;
 }
 .admin-form textarea {
   resize: vertical;

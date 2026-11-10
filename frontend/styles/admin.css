@@ -1088,7 +1088,7 @@ body:has(.admin-page) .site-footer {
   gap: 8px !important;
   font-size: 13px !important;
   font-weight: 550 !important;
-  color: #f0f3f6 !important;
+  color: var(--foreground) !important;
   min-width: 0 !important;
 }
 
@@ -1105,9 +1105,9 @@ body:has(.admin-page) .site-footer {
   width: 100% !important;
   min-width: 0 !important;
   min-height: 44px !important;
-  background: #111111 !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--line) !important;
   border-radius: 8px !important;
   padding: 10px 14px !important;
   font-size: 14px !important;
@@ -1119,14 +1119,24 @@ body:has(.admin-page) .site-footer {
     background-color 0.15s ease !important;
 }
 
+.admin-editor-card input::placeholder,
+.admin-editor-card textarea::placeholder,
+.admin-form input::placeholder,
+.admin-form textarea::placeholder,
+.admin-lesson-editor input::placeholder,
+.admin-lesson-editor textarea::placeholder {
+  color: var(--muted) !important;
+  opacity: 0.8 !important;
+}
+
 .admin-editor-card input:hover,
 .admin-editor-card select:hover,
 .admin-editor-card textarea:hover,
 .admin-form input:hover,
 .admin-form select:hover,
 .admin-form textarea:hover {
-  border-color: rgba(255, 255, 255, 0.28) !important;
-  background: #111111 !important;
+  border-color: color-mix(in srgb, var(--line) 60%, var(--foreground)) !important;
+  background: var(--surface) !important;
 }
 
 .admin-editor-card input:focus,
@@ -1136,13 +1146,14 @@ body:has(.admin-page) .site-footer {
 .admin-form select:focus,
 .admin-form textarea:focus {
   outline: none !important;
-  background: #111111 !important;
-  border-color: var(--accent, #00df8f) !important;
-  box-shadow: 0 0 0 3px rgba(0, 223, 143, 0.18) !important;
+  background: var(--surface) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent) !important;
 }
 
 .admin-editor-card select,
-.admin-form select {
+.admin-form select,
+.admin-lesson-editor select {
   appearance: none !important;
   -webkit-appearance: none !important;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
@@ -1153,10 +1164,53 @@ body:has(.admin-page) .site-footer {
   cursor: pointer !important;
 }
 
+:root[data-theme="light"] .admin-editor-card select,
+:root[data-theme="light"] .admin-form select,
+:root[data-theme="light"] .admin-lesson-editor select,
+[data-theme="light"] .admin-editor-card select,
+[data-theme="light"] .admin-form select,
+[data-theme="light"] .admin-lesson-editor select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23535b6d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+}
+
 .admin-editor-card select option,
-.admin-form select option {
-  background: #111111 !important;
-  color: #ffffff !important;
+.admin-form select option,
+.admin-lesson-editor select option {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+}
+
+:root[data-theme="light"] .admin-editor-card input:not([type="checkbox"]):not([type="file"]),
+:root[data-theme="light"] .admin-editor-card select,
+:root[data-theme="light"] .admin-editor-card textarea,
+:root[data-theme="light"] .admin-form input:not([type="checkbox"]):not([type="file"]),
+:root[data-theme="light"] .admin-form select,
+:root[data-theme="light"] .admin-form textarea,
+:root[data-theme="light"] .admin-lesson-editor input,
+:root[data-theme="light"] .admin-lesson-editor select,
+:root[data-theme="light"] .admin-lesson-editor textarea,
+[data-theme="light"] .admin-editor-card input:not([type="checkbox"]):not([type="file"]),
+[data-theme="light"] .admin-editor-card select,
+[data-theme="light"] .admin-editor-card textarea,
+[data-theme="light"] .admin-form input:not([type="checkbox"]):not([type="file"]),
+[data-theme="light"] .admin-form select,
+[data-theme="light"] .admin-form textarea,
+[data-theme="light"] .admin-lesson-editor input,
+[data-theme="light"] .admin-lesson-editor select,
+[data-theme="light"] .admin-lesson-editor textarea {
+  background-color: #ffffff !important;
+  color: var(--foreground) !important;
+  border-color: var(--line) !important;
+}
+
+:root[data-theme="light"] .admin-editor-card select option,
+:root[data-theme="light"] .admin-form select option,
+:root[data-theme="light"] .admin-lesson-editor select option,
+[data-theme="light"] .admin-editor-card select option,
+[data-theme="light"] .admin-form select option,
+[data-theme="light"] .admin-lesson-editor select option {
+  background-color: #ffffff !important;
+  color: #131722 !important;
 }
 
 .admin-editor-card textarea,
@@ -1183,7 +1237,13 @@ body:has(.admin-page) .site-footer {
 }
 .admin-outcome-row input {
   flex: 1;
-  background: #111111 !important;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--line) !important;
+}
+:root[data-theme="light"] .admin-outcome-row input,
+[data-theme="light"] .admin-outcome-row input {
+  background-color: #ffffff !important;
 }
 .admin-outcome-trash-btn {
   display: grid;
@@ -1191,15 +1251,21 @@ body:has(.admin-page) .site-footer {
   width: 44px;
   height: 44px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: #111111;
-  color: #8b949e;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
   cursor: pointer;
   transition:
     color 0.15s,
     background-color 0.15s,
     border-color 0.15s;
   flex-shrink: 0;
+}
+:root[data-theme="light"] .admin-outcome-trash-btn,
+[data-theme="light"] .admin-outcome-trash-btn {
+  background: #ffffff;
+  border-color: var(--line);
+  color: var(--muted);
 }
 .admin-outcome-trash-btn:hover {
   color: #ef4444;
@@ -1233,7 +1299,7 @@ body:has(.admin-page) .site-footer {
   position: absolute;
   left: 14px;
   font-size: 14px;
-  color: #8b949e;
+  color: var(--muted);
   pointer-events: none;
   z-index: 2;
 }
@@ -1246,11 +1312,11 @@ body:has(.admin-page) .site-footer {
   right: 10px;
   font-size: 11px;
   font-weight: 500;
-  color: #8b949e;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--line);
   pointer-events: none;
   z-index: 2;
 }
@@ -1848,6 +1914,9 @@ body:has(.admin-page) .site-footer {
 }
 :root[data-theme="light"]
   .admin-announcement-form
+  :is(input:not([type="checkbox"]), select, textarea, select option),
+[data-theme="light"]
+  .admin-announcement-form
   :is(input:not([type="checkbox"]), select, textarea, select option) {
   background-color: var(--surface) !important;
   color: var(--foreground) !important;
@@ -1857,7 +1926,8 @@ body:has(.admin-page) .site-footer {
   color: var(--muted);
   opacity: 1;
 }
-:root[data-theme="light"] .admin-announcement-form :is(input, select, textarea):focus {
+:root[data-theme="light"] .admin-announcement-form :is(input, select, textarea):focus,
+[data-theme="light"] .admin-announcement-form :is(input, select, textarea):focus {
   border-color: var(--accent) !important;
 }
 @media (max-width: 900px) {
