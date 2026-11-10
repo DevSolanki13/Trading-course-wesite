@@ -1567,3 +1567,39 @@ body:has(.video-learning-page) .site-header-spacer {
 :root[data-theme="light"] .vlp-dropdown-item:hover {
   background: rgba(0, 0, 0, 0.05);
 }
+
+/* ==========================================================================
+   WIDE SCREEN LEARNING PORTAL (>= 1600px, >= 1920px, >= 2560px)
+   Principle: Nothing changes at 1440px and below.
+   ========================================================================== */
+@media (min-width: 1600px) {
+  .vlp-main {
+    max-width: 1440px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .vlp-portal-body {
+    grid-template-columns: 380px minmax(0, 1fr);
+  }
+  .vlp-main {
+    max-width: 1680px;
+    padding: 36px 56px 80px 56px;
+  }
+  .vlp-player-container {
+    max-width: 1680px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .vlp-portal-body {
+    grid-template-columns: 420px minmax(0, 1fr);
+  }
+  .vlp-main {
+    max-width: 1840px;
+    padding: 44px 72px 100px 72px;
+  }
+  .vlp-player-container {
+    max-width: 1680px;
+  }
+}

@@ -2355,3 +2355,19 @@ body:has(.student-dashboard-page) .site-footer {
   .student-nav-badge {
   color: #065f46;
 }
+
+/* ==========================================================================
+   WIDE SCREEN STUDENT DASHBOARD (>= 2560px)
+   Principle: Nothing changes at 1440px and below.
+   ========================================================================== */
+@media (min-width: 2560px) {
+  .student-main-content,
+  .student-main-content:has(.student-active-player-wrap) {
+    max-width: 2100px;
+    padding: 40px 60px 100px;
+  }
+  .student-course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 28px;
+  }
+}

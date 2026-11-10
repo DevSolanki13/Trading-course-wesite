@@ -256,6 +256,8 @@
   --body: "Manrope Variable", sans-serif;
   --display: "Fraunces Variable", Georgia, "Times New Roman", serif;
   --mono: "IBM Plex Mono", monospace;
+  --container-max: 1280px;
+  --gutter: 96px;
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -368,8 +370,8 @@ main {
   min-height: 50vh;
 }
 .container {
-  width: calc(100% - 96px);
-  max-width: 1280px;
+  width: calc(100% - var(--gutter, 96px));
+  max-width: var(--container-max, 1280px);
   margin: auto;
 }
 .section {
@@ -3473,5 +3475,54 @@ body:has(.landing-page) .site-header.is-scrolled .header-inner {
 @media (max-width: 800px) {
   .app-shell {
     flex-direction: column;
+  }
+}
+
+/* ==========================================================================
+   WIDE SCREEN LAYOUTS (>= 1600px, >= 1920px, >= 2560px)
+   Principle: Nothing changes at 1440px and below.
+   ========================================================================== */
+@media (min-width: 1600px) {
+  :root {
+    --container-max: 1440px;
+    --gutter: 112px;
+  }
+  .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 28px;
+  }
+  .course-detail-hero h1 {
+    max-width: 820px;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --container-max: 1680px;
+    --gutter: 128px;
+  }
+  .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 32px;
+  }
+  .course-detail-hero {
+    gap: 90px;
+  }
+  .course-detail-hero h1 {
+    max-width: 900px;
+  }
+}
+
+@media (min-width: 2560px) {
+  :root {
+    --container-max: 1840px;
+    --gutter: 160px;
+  }
+  .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 36px;
+  }
+  .course-detail-hero h1 {
+    max-width: 980px;
   }
 }

@@ -52,7 +52,7 @@ body:has(.landing-page) {
   display: none;
 }
 .landing-page .container {
-  max-width: 1240px;
+  max-width: min(var(--container-max, 1280px), 1240px);
 }
 .ticker-strip {
   position: relative;
@@ -914,5 +914,73 @@ body:has(.landing-page) {
   }
   .stats-grid .stat-large {
     padding-bottom: 212px;
+  }
+}
+
+/* ==========================================================================
+   WIDE SCREEN LANDING PAGE (>= 1600px, >= 1920px, >= 2560px)
+   Principle: Nothing changes at 1440px and below.
+   ========================================================================== */
+@media (min-width: 1600px) {
+  .landing-page .container {
+    max-width: var(--container-max);
+  }
+  .landing-page .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 28px;
+  }
+  .hero-modern h1 {
+    max-width: 1040px;
+    font-size: clamp(3.2rem, 5.5vw, 6.4rem);
+  }
+  .hero-lede {
+    max-width: 660px;
+    font-size: 17px;
+  }
+  .about-heading h2,
+  .section-heading h2,
+  .why-section h2,
+  .risk-modern h2,
+  .testimonials-modern h2,
+  .landing-faq h2,
+  .landing-close h2 {
+    font-size: clamp(2.6rem, 4.2vw, 5.2rem);
+  }
+  .stats-grid {
+    grid-template-rows: minmax(300px, auto) minmax(250px, auto);
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .landing-page .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 32px;
+  }
+  .hero-modern h1 {
+    max-width: 1180px;
+    font-size: clamp(3.4rem, 5.2vw, 7rem);
+  }
+  .hero-lede {
+    max-width: 720px;
+    font-size: 18px;
+  }
+  .stats-grid {
+    grid-template-rows: minmax(320px, auto) minmax(270px, auto);
+    gap: 24px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .landing-page .course-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 36px;
+  }
+  .hero-modern h1 {
+    max-width: 1320px;
+    font-size: clamp(3.6rem, 5vw, 7.6rem);
+  }
+  .hero-lede {
+    max-width: 780px;
   }
 }

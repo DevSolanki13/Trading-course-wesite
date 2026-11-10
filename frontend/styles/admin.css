@@ -2430,3 +2430,35 @@ body:has(.admin-page) .site-footer {
     min-width: 180px;
   }
 }
+
+/* ==========================================================================
+   WIDE SCREEN ADMIN LAYOUT (>= 1600px, >= 1920px, >= 2560px)
+   Principle: Nothing changes at 1440px and below.
+   ========================================================================== */
+@media (min-width: 1600px) {
+  .admin-main {
+    max-width: 1600px;
+    margin-inline: auto;
+    width: 100%;
+    padding: 36px 52px 96px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .admin-page.admin-page {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+  .admin-main {
+    max-width: 1800px;
+    margin-inline: auto;
+    width: 100%;
+    padding: 40px 64px 100px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .admin-main {
+    max-width: 2200px;
+    padding: 48px 80px 120px;
+  }
+}
