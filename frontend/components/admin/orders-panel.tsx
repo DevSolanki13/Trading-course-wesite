@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { ArrowLeft } from "@phosphor-icons/react";
 import { adminApi, money, when } from "../../lib/admin-api";
 import type { AdminOrder, RefundEvidence } from "../../../shared/admin";
 import { TableSkeleton } from "./admin-skeletons";
@@ -28,6 +29,7 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
   const [page, setPage] = useState(0);
   const [data, setData] = useState<{ items: AdminOrder[]; total: number } | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [providerBusy, setProviderBusy] = useState(false);
   async function reconcile() {
@@ -73,11 +75,102 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
     };
   }, [page, status, search, from, to, courseId, studentId]);
   async function open(id: string) {
+    setLoadingId(id);
+    setError("");
     try {
       setDetail(await adminApi<Detail>(`order?id=${id}`));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Order detail is unavailable.");
+    } finally {
+      setLoadingId(null);
     }
+  }
+
+  if (detail) {
+    return (
+      <section>
+        <button
+          type="button"
+          className="text-link"
+          onClick={() => {
+            setDetail(null);
+            setError("");
+          }}
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "16px" }}
+        >
+          <ArrowLeft size={16} /> Back to orders
+        </button>
+
+        <div className="admin-section-head">
+          <div>
+            <h2>Order detail</h2>
+            <p className="admin-break">{detail.order.id}</p>
+          </div>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => {
+              setDetail(null);
+              setError("");
+            }}
+          >
+            <ArrowLeft size={16} /> Back to orders
+          </button>
+        </div>
+
+        {error && (
+          <p className="auth-error" role="alert">
+            {error}
+          </p>
+        )}
+
+        <div className="admin-panel admin-detail" style={{ marginTop: 0 }}>
+          <dl className="admin-facts">
+            <dt>Student</dt>
+            <dd className="admin-break">{detail.order.user_id}</dd>
+            <dt>Course</dt>
+            <dd>{detail.order.course_snapshot?.title || detail.order.course_id}</dd>
+            <dt>Status</dt>
+            <dd>
+              <span className="admin-badge">{detail.order.status}</span>
+            </dd>
+            <dt>Provider order</dt>
+            <dd className="admin-break">{detail.order.provider_order_id || "Not created"}</dd>
+            <dt>Base</dt>
+            <dd>{money(detail.order.base_paise)}</dd>
+            <dt>Discount</dt>
+            <dd>{money(detail.order.discount_paise)}</dd>
+            <dt>Tax</dt>
+            <dd>{money(detail.order.tax_paise)}</dd>
+            <dt>Total</dt>
+            <dd>{money(detail.order.total_paise)}</dd>
+            <dt>Confirmed at</dt>
+            <dd>{when(detail.order.paid_at)}</dd>
+          </dl>
+          <h4>Payment attempts</h4>
+          {detail.payments.length ? (
+            detail.payments.map((p) => (
+              <p key={p.id}>
+                {p.status} · {money(p.amount_paise)} · {p.provider_payment_id}
+              </p>
+            ))
+          ) : (
+            <p>No payment attempts recorded.</p>
+          )}
+          <h4>Refund eligibility</h4>
+          <p>{detail.evidence.reason}</p>
+          {detail.providerActionsAvailable && role === "admin" && (
+            <button className="button button-secondary" onClick={reconcile} disabled={providerBusy}>
+              {providerBusy ? "Checking provider…" : "Reconcile sandbox payment"}
+            </button>
+          )}
+          <p className="admin-help">
+            Billing documents are generated with confirmed payment. Provider actions require sandbox
+            configuration and verified Admin MFA.
+          </p>
+        </div>
+      </section>
+    );
   }
   return (
     <section>
@@ -218,8 +311,9 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
                       <button
                         className="button button-secondary button-sm"
                         onClick={() => open(o.id)}
+                        disabled={loadingId === o.id}
                       >
-                        Details
+                        {loadingId === o.id ? "Loading…" : "Details"}
                       </button>
                     </td>
                   </tr>
@@ -239,60 +333,6 @@ export function OrdersPanel({ role }: { role: "admin" | "support" }) {
         </>
       ) : (
         <TableSkeleton columns={["36%", "16%", "14%", "22%", "12%"]} rows={6} />
-      )}
-      {detail && (
-        <div className="admin-panel admin-detail">
-          <div className="admin-section-head">
-            <div>
-              <h3>Order detail</h3>
-              <p className="admin-break">{detail.order.id}</p>
-            </div>
-            <button className="text-link" onClick={() => setDetail(null)}>
-              Close
-            </button>
-          </div>
-          <dl className="admin-facts">
-            <dt>Student</dt>
-            <dd className="admin-break">{detail.order.user_id}</dd>
-            <dt>Course</dt>
-            <dd>{detail.order.course_snapshot?.title || detail.order.course_id}</dd>
-            <dt>Status</dt>
-            <dd>{detail.order.status}</dd>
-            <dt>Provider order</dt>
-            <dd className="admin-break">{detail.order.provider_order_id || "Not created"}</dd>
-            <dt>Base</dt>
-            <dd>{money(detail.order.base_paise)}</dd>
-            <dt>Discount</dt>
-            <dd>{money(detail.order.discount_paise)}</dd>
-            <dt>Tax</dt>
-            <dd>{money(detail.order.tax_paise)}</dd>
-            <dt>Total</dt>
-            <dd>{money(detail.order.total_paise)}</dd>
-            <dt>Confirmed at</dt>
-            <dd>{when(detail.order.paid_at)}</dd>
-          </dl>
-          <h4>Payment attempts</h4>
-          {detail.payments.length ? (
-            detail.payments.map((p) => (
-              <p key={p.id}>
-                {p.status} · {money(p.amount_paise)} · {p.provider_payment_id}
-              </p>
-            ))
-          ) : (
-            <p>No payment attempts recorded.</p>
-          )}
-          <h4>Refund eligibility</h4>
-          <p>{detail.evidence.reason}</p>
-          {detail.providerActionsAvailable && role === "admin" && (
-            <button className="button button-secondary" onClick={reconcile} disabled={providerBusy}>
-              {providerBusy ? "Checking provider…" : "Reconcile sandbox payment"}
-            </button>
-          )}
-          <p className="admin-help">
-            Billing documents are generated with confirmed payment. Provider actions require sandbox
-            configuration and verified Admin MFA.
-          </p>
-        </div>
       )}
     </section>
   );
