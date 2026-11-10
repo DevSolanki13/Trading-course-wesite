@@ -3,18 +3,16 @@ import { expect, type Page } from "@playwright/test";
 /** Dismiss the real opening dialog as a visitor would; never disable it in the app. */
 export async function dismissOpeningVideo(page: Page) {
   const intro = page.getByRole("dialog", { name: "Happy Diwali from indianXtrade" });
-  await page.waitForFunction(
-    () =>
+  // Keep the frame wait inside the navigation-aware poll: /courses can redirect while rendering.
+  await page.waitForFunction(async () => {
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    return (
       document.querySelector(".festival-video-dialog") ||
-      localStorage.getItem("indianxtrade-diwali-video-seen") === "1",
-  );
-  // The seen flag and dialog render share a frame; navigation can also replace that first dialog.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      ),
-  );
+      localStorage.getItem("indianxtrade-diwali-video-seen") === "1"
+    );
+  });
   if (await intro.isVisible()) await page.keyboard.press("Escape");
   await expect(intro).toHaveCount(0);
 }
