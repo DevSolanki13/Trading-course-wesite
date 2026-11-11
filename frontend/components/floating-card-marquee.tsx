@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Play } from "./icons";
+import { useEffect, useId, useRef, useState } from "react";
+import { TradingCardVisual, type TradingTopic } from "./trading-card-visual";
 
 // Desktop radius controls the width of the curved path.
 export const RADIUS = 760;
@@ -16,159 +16,120 @@ export const CARD_WIDTH = 232;
 // Depth perspective for the concave carousel.
 export const PERSPECTIVE = 1200;
 
-const marqueeCards = [
+const marqueeCards: { type: TradingTopic; label: string; value: string; change: string }[] = [
   {
-    type: "chart",
-    label: "Illustration",
-    value: "Sample chart",
-    change: "not live data",
-    tone: "gold",
-  },
-  { type: "line", label: "Learning progress", value: "Review", change: "each session", tone: "up" },
-  {
-    type: "dark",
-    label: "The market rewards",
-    value: "process",
-    change: "not prediction",
-    tone: "gold",
+    type: "hindi",
+    label: "Lesson language",
+    value: "Lessons in Hindi",
+    change: "Concepts explained clearly",
   },
   {
-    type: "portfolio",
-    label: "Checklist",
-    value: "Plan -> Review",
-    change: "every trade",
-    tone: "gold",
+    type: "candles",
+    label: "Trading basics",
+    value: "Read the candles",
+    change: "Understand price movement",
   },
   {
-    type: "stat",
-    label: "Course format",
-    value: "Hindi lessons",
-    change: "at your pace",
-    tone: "gold",
+    type: "pace",
+    label: "Your own pace",
+    value: "Learn at your pace",
+    change: "Pause, replay, revisit",
   },
   {
-    type: "live",
-    label: "Learning format",
-    value: "Guided study",
-    change: "with context",
-    tone: "gold",
+    type: "structure",
+    label: "Market direction",
+    value: "Follow the trend",
+    change: "See the market direction",
   },
   {
-    type: "risk",
-    label: "Risk first",
-    value: "Define it",
-    change: "before you enter",
-    tone: "gold",
+    type: "path",
+    label: "Structured lessons",
+    value: "A clear learning path",
+    change: "Learn one concept at a time",
   },
   {
-    type: "order",
-    label: "Market context",
-    value: "Sample only",
-    change: "for education",
-    tone: "gold",
+    type: "levels",
+    label: "Key levels",
+    value: "Support & resistance",
+    change: "Find the key zones",
+  },
+  {
+    type: "context",
+    label: "Chart examples",
+    value: "Charts in context",
+    change: "See concepts through examples",
+  },
+  {
+    type: "sizing",
+    label: "Risk awareness",
+    value: "Know your risk",
+    change: "Plan before you trade",
+  },
+  {
+    type: "education",
+    label: "Our approach",
+    value: "Learning, not signals",
+    change: "Build understanding, not dependency",
+  },
+  {
+    type: "journal",
+    label: "Trading habits",
+    value: "Review every trade",
+    change: "Learn from your decisions",
   },
 ];
 const cards = [...marqueeCards, ...marqueeCards];
-
-function MiniVisual({ type }: { type: string }) {
-  if (type === "chart")
-    return (
-      <div className="mini-candles" aria-hidden="true">
-        {[1, 3, 2, 5, 4, 7, 6, 8].map((height, index) => (
-          <i
-            key={index}
-            className={index === 2 || index === 5 ? "down" : "up"}
-            style={{ height: `${height * 8 + 12}px` }}
-          />
-        ))}
-      </div>
-    );
-  if (type === "line")
-    return (
-      <svg className="mini-line" viewBox="0 0 220 80" aria-hidden="true">
-        <defs>
-          <linearGradient id="area" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="#16c784" stopOpacity=".35" />
-            <stop offset="1" stopColor="#16c784" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path
-          d="M0 66 C28 62 28 39 56 48 S92 30 118 42 S151 14 174 26 S194 10 220 4 V80 H0Z"
-          fill="url(#area)"
-        />
-        <path
-          d="M0 66 C28 62 28 39 56 48 S92 30 118 42 S151 14 174 26 S194 10 220 4"
-          fill="none"
-          stroke="#16c784"
-          strokeWidth="2.5"
-        />
-      </svg>
-    );
-  if (type === "portfolio")
-    return (
-      <div className="watchlist">
-        <span>
-          PLAN <b>DEFINE</b>
-        </span>
-        <span>
-          REVIEW <em>LEARN</em>
-        </span>
-        <span>
-          PROCESS <b>REPEAT</b>
-        </span>
-      </div>
-    );
-  if (type === "live")
-    return (
-      <div className="live-mark">
-        <span>
-          <Play size={15} weight="fill" />
-        </span>
-        <small>LIVE</small>
-      </div>
-    );
-  if (type === "risk")
-    return (
-      <div className="risk-ratio">
-        <span>RISK</span>
-        <strong>1:3</strong>
-        <span>REWARD</span>
-      </div>
-    );
-  if (type === "order")
-    return (
-      <div className="order-book">
-        <span>
-          <i style={{ width: "78%" }} />
-          BUY 78%
-        </span>
-        <span>
-          <i style={{ width: "42%" }} />
-          SELL 42%
-        </span>
-      </div>
-    );
-  return null;
-}
+const explanations: Record<TradingTopic, string> = {
+  hindi: "Learn trading concepts in Hindi, with clear explanations and familiar language.",
+  candles: "Each candle shows the open, high, low and close for one period of time.",
+  pace: "Pause a lesson, replay an example and return whenever you need a refresher.",
+  structure: "Look at the sequence of highs and lows to understand market direction.",
+  path: "Work through connected lessons, building on one concept before the next.",
+  levels: "Mark areas where price has previously found buying or selling interest.",
+  context: "Connect the concept to a chart and look at the price action around it.",
+  sizing: "Decide how much you can risk before choosing the size of a trade.",
+  education: "Understand the reasoning behind a decision instead of copying a trade signal.",
+  journal: "Note your setup, your decision and one lesson to carry into the next review.",
+};
 
 export function FloatingCardMarquee() {
+  const id = useId();
+  const [activeCard, setActiveCard] = useState<number | null>(null);
+  const activeRef = useRef<number | null>(null);
+  const hovered = useRef(false);
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
   const section = useRef<HTMLElement>(null);
   const cardsRef = useRef<(HTMLElement | null)[]>([]);
   const phase = useRef(0);
   const speed = useRef(SPEED);
   const targetSpeed = useRef(SPEED);
   const reducedMotion = useRef(false);
-
   useEffect(() => {
     const root = section.current;
     if (!root) return;
+    const mask = root.querySelector<HTMLElement>(".marquee-mask");
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     reducedMotion.current = media.matches;
     const onMotionChange = () => {
       reducedMotion.current = media.matches;
+
       updateAnimation();
     };
     media.addEventListener("change", onMotionChange);
+    const dismiss = () => {
+      activeRef.current = null;
+      setActiveCard(null);
+      targetSpeed.current = pausedRef.current || hovered.current ? 0 : SPEED;
+    };
+    const onOutsidePress = (event: PointerEvent) => {
+      if (!root.contains(event.target as Node)) dismiss();
+    };
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") dismiss();
+    };
+    document.addEventListener("pointerdown", onOutsidePress);
+    document.addEventListener("keydown", onEscape);
     let visible = false;
     let frame: number | null = null;
     let previous = performance.now();
@@ -176,9 +137,17 @@ export function FloatingCardMarquee() {
     const shown: boolean[] = [];
 
     function renderCards() {
-      const radius = width <= 540 ? 420 : width <= 1024 ? 570 : RADIUS;
-      const scaleFactor = width <= 540 ? 0.78 : width <= 1024 ? 0.9 : 1;
+      // Focusing a transformed card can scroll an overflow-hidden container.
+      // Keep the curved viewport fixed; reduced motion uses native scrolling.
+      if (mask && !reducedMotion.current) {
+        mask.scrollTop = 0;
+        mask.scrollLeft = 0;
+      }
       const count = cards.length;
+      const cardWidth = width <= 600 ? 210 : CARD_WIDTH;
+      // Maintain a real gap between cards as the topic count grows.
+      const radius = Math.max(RADIUS, (cardWidth + 28) / (2 * Math.sin(Math.PI / count)));
+      const scaleFactor = width <= 540 ? 0.94 : 1;
       cardsRef.current.forEach((card, index) => {
         if (!card) return;
         const rawAngle = (index / count) * 360 + DIRECTION * phase.current;
@@ -201,8 +170,10 @@ export function FloatingCardMarquee() {
         const scale = (1 - normalized * 0.25) * scaleFactor;
         const opacity = 1 - normalized * normalized * 0.7;
         card.style.transform = `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${z}px) rotateY(${rotateY}deg) scale(${scale})`;
-        card.style.opacity = String(opacity);
-        const zIndex = String(Math.round((1 - normalized) * 100));
+        card.style.opacity = String(activeRef.current === index ? 1 : opacity);
+        const zIndex = String(
+          activeRef.current === index ? 200 : Math.round((1 - normalized) * 100),
+        );
         if (card.style.zIndex !== zIndex) card.style.zIndex = zIndex;
         if (shown[index] !== true) card.style.pointerEvents = "auto";
         shown[index] = true;
@@ -224,7 +195,7 @@ export function FloatingCardMarquee() {
       const delta = Math.min(now - previous, 100) / 1000;
       previous = now;
       speed.current += (targetSpeed.current - speed.current) * Math.min(delta * 6, 1);
-      phase.current = (phase.current + speed.current * delta) % 360;
+      if (activeRef.current === null) phase.current = (phase.current + speed.current * delta) % 360;
       renderCards();
       frame = requestAnimationFrame(tick);
     };
@@ -250,6 +221,8 @@ export function FloatingCardMarquee() {
       if (frame !== null) cancelAnimationFrame(frame);
       observer.disconnect();
       media.removeEventListener("change", onMotionChange);
+      document.removeEventListener("pointerdown", onOutsidePress);
+      document.removeEventListener("keydown", onEscape);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", updateAnimation);
     };
@@ -259,15 +232,37 @@ export function FloatingCardMarquee() {
     <section
       ref={section}
       className="marquee-wrap"
-      aria-label="Sample market visuals"
-      onMouseEnter={() => {
-        targetSpeed.current = 0;
+      aria-label="Explore our learning experience and trading basics"
+      onPointerEnter={(event) => {
+        if (event.pointerType !== "mouse" || !window.matchMedia("(hover: hover)").matches) return;
+        hovered.current = true;
+        speed.current = targetSpeed.current = 0;
       }}
-      onMouseLeave={() => {
-        targetSpeed.current = SPEED;
+      onPointerLeave={(event) => {
+        if (event.pointerType !== "mouse") return;
+        hovered.current = false;
+        activeRef.current = null;
+        setActiveCard(null);
+        targetSpeed.current = pausedRef.current ? 0 : SPEED;
       }}
     >
-      <div className="sample-label">SAMPLE MARKET DATA · FOR EDUCATION ONLY</div>
+      <div className="marquee-toolbar">
+        <div className="sample-label">YOUR LEARNING, AT A GLANCE</div>
+        <button
+          type="button"
+          className="marquee-pause"
+          aria-pressed={paused}
+          onClick={() => {
+            const next = !paused;
+            pausedRef.current = next;
+            targetSpeed.current = next ? 0 : SPEED;
+            setPaused(next);
+          }}
+        >
+          <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>
+          {paused ? "Resume motion" : "Pause motion"}
+        </button>
+      </div>
       <div className="marquee-mask">
         <div className="marquee-track" style={{ perspective: `${PERSPECTIVE}px` }}>
           {cards.map((card, index) => (
@@ -276,22 +271,73 @@ export function FloatingCardMarquee() {
               ref={(element) => {
                 cardsRef.current[index] = element;
               }}
-              className={`marquee-card marquee-${card.type}`}
+              className={`marquee-card marquee-${card.type}${activeCard === index ? " is-active" : ""}`}
               aria-hidden={index >= marqueeCards.length}
+              onPointerEnter={(event) => {
+                if (event.pointerType !== "mouse" || !window.matchMedia("(hover: hover)").matches)
+                  return;
+                activeRef.current = index;
+                setActiveCard(index);
+              }}
+              onPointerLeave={(event) => {
+                if (event.pointerType !== "mouse") return;
+                activeRef.current = null;
+                setActiveCard(null);
+              }}
             >
-              <div className="marquee-card-top">
-                <span>{card.label}</span>
-                <span className={card.tone === "up" ? "positive" : "gold-dot"}>
-                  {card.tone === "up" ? "●" : "✦"}
+              <button
+                type="button"
+                className="marquee-card-face"
+                tabIndex={index >= marqueeCards.length ? -1 : 0}
+                aria-expanded={activeCard === index}
+                aria-controls={`${id}-info-${index}`}
+                aria-describedby={activeCard === index ? `${id}-info-${index}` : undefined}
+                aria-label={`About ${card.value}`}
+                onFocus={(event) => {
+                  if (!event.currentTarget.matches(":focus-visible")) return;
+                  phase.current = (index / cards.length) * 360;
+                  speed.current = targetSpeed.current = 0;
+                  activeRef.current = index;
+                  setActiveCard(index);
+                }}
+                onBlur={() => {
+                  activeRef.current = null;
+                  setActiveCard(null);
+                  targetSpeed.current = pausedRef.current || hovered.current ? 0 : SPEED;
+                }}
+                onClick={(event) => {
+                  const canHover = window.matchMedia("(hover: hover)").matches;
+                  const next =
+                    event.detail === 0 || !canHover
+                      ? activeRef.current === index
+                        ? null
+                        : index
+                      : index;
+                  activeRef.current = next;
+                  if (next !== null && !canHover && !reducedMotion.current)
+                    phase.current = (index / cards.length) * 360;
+                  setActiveCard(next);
+                  targetSpeed.current =
+                    next !== null || pausedRef.current || hovered.current ? 0 : SPEED;
+                }}
+              >
+                <span className="marquee-card-top">{card.label}</span>
+                <TradingCardVisual topic={card.type} active={activeCard === index} />
+                <strong>{card.value}</strong>
+                <small>{card.change}</small>
+                <span
+                  id={`${id}-info-${index}`}
+                  className="marquee-card-info"
+                  aria-hidden={activeCard !== index}
+                >
+                  {explanations[card.type]}
                 </span>
-              </div>
-              <MiniVisual type={card.type} />
-              <strong>{card.value}</strong>
-              <small>{card.change}</small>
+              </button>
             </article>
           ))}
         </div>
       </div>
+      <p className="marquee-note">Trading education · Concepts, not trade signals</p>
     </section>
   );
 }

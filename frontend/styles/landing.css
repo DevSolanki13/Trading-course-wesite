@@ -209,8 +209,48 @@ body:has(.landing-page) {
   color: var(--lp-gold);
 }
 .marquee-wrap {
+  --card-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
   margin: 68px -20px 0;
+}
+.marquee-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 22px;
+  padding-inline: 20px;
+}
+.marquee-toolbar .sample-label {
+  margin: 0;
+  font-size: 10px;
+}
+.marquee-pause {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: 11px var(--mono);
+  cursor: pointer;
+}
+.marquee-pause:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.marquee-pause[aria-pressed="true"] {
+  color: var(--foreground);
+}
+.marquee-note {
+  margin: 4px 20px 0;
+  color: var(--muted);
+  font: 10px/1.6 var(--mono);
+  text-align: center;
 }
 .sample-label {
   margin-bottom: 11px;
@@ -221,46 +261,125 @@ body:has(.landing-page) {
 .marquee-mask {
   perspective: 1200px;
   perspective-origin: center;
-  min-height: 238px;
+  min-height: 310px;
   overflow: hidden;
   mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
 .marquee-track {
   position: relative;
-  height: 238px;
+  height: 310px;
   transform-style: preserve-3d;
+  pointer-events: none;
 }
 .marquee-card {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 232px;
-  height: 200px;
+  height: 238px;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+.marquee-card-face {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
   padding: 17px;
   text-align: left;
   border: 1px solid var(--lp-border);
   border-radius: 24px;
-  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  background: var(--lp-card);
+  color: var(--foreground);
+  cursor: pointer;
   box-shadow:
     var(--lp-shadow),
     inset 0 1px #fff3;
-  backdrop-filter: blur(12px);
-  transition:
-    box-shadow 0.25s,
-    transform 0.25s;
-  transform-style: preserve-3d;
-  will-change: transform, opacity;
+  transition: transform 200ms var(--card-ease-out);
 }
-.marquee-card:hover {
-  box-shadow:
-    0 22px 50px #0002,
-    inset 0 1px #fff4;
+.marquee-card-face:focus-visible {
+  outline: 2px solid var(--lp-gold);
+  outline-offset: 3px;
+}
+.marquee-card-face:focus-visible,
+.marquee-card-face:focus-visible * {
+  transition-duration: 0s !important;
+}
+.marquee-card.is-active .marquee-card-face {
+  border-color: color-mix(in srgb, var(--lp-gold) 45%, var(--lp-border));
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .marquee-wrap .marquee-mask,
+  .marquee-wrap .marquee-track {
+    min-height: 380px;
+    height: 380px;
+  }
+  .marquee-card.is-active .marquee-card-face {
+    transform: translateY(-24px) scale(1.28);
+  }
+}
+.marquee-card-info {
+  position: absolute;
+  inset: auto 17px 16px;
+  color: var(--muted);
+  font: 12px/1.45 var(--body, sans-serif);
+  opacity: 0;
+  transform: translateY(5px);
+  transition:
+    opacity 180ms var(--card-ease-out),
+    transform 180ms var(--card-ease-out);
+  pointer-events: none;
+}
+.marquee-card.is-active .marquee-card-info {
+  opacity: 1;
+  transform: translateY(0);
+}
+.marquee-card.is-active strong {
+  transform: translateY(-32px);
+}
+.marquee-card.is-active small {
+  opacity: 0;
+}
+.marquee-card.is-active .trading-card-visual {
+  transform: translateY(-9px) scale(0.8);
+}
+.marquee-card strong,
+.marquee-card small,
+.trading-card-visual {
+  transition:
+    transform 200ms var(--card-ease-out),
+    opacity 150ms var(--card-ease-out);
+}
+.trading-card-visual
+  :is(.trade-candle, .trade-lesson, .trade-unit, .trade-unit-risk, .trade-ring, .trade-paper) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.trading-card-visual .trade-candle {
+  transform-origin: bottom;
+}
+.trading-card-visual .trade-video-progress {
+  transform-box: fill-box;
+  transform-origin: left;
+  transform: scaleX(0);
+  fill: var(--trade-green);
+  stroke: none;
+}
+.trading-card-visual :is(.trade-player-hidden, .trade-lesson-check) {
+  opacity: 0;
+}
+.trading-card-visual .trade-player-pause {
+  stroke: var(--trade-gold);
+  stroke-width: 3;
+}
+.trading-card-visual .trade-player-check {
+  stroke-width: 2.5;
 }
 .marquee-card-top {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font: 9px var(--mono);
+  font: 10px var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -269,136 +388,127 @@ body:has(.landing-page) {
 }
 .marquee-card strong {
   display: block;
-  margin-top: 12px;
-  font: 22px var(--mono);
-  letter-spacing: -0.07em;
+  margin-top: 13px;
+  color: var(--foreground);
+  font: 600 18px/1.3 var(--body, sans-serif);
+  letter-spacing: -0.035em;
 }
 .marquee-card small {
-  color: var(--muted);
-  font: 10px var(--mono);
-}
-.marquee-dark {
-  background: var(--lp-card);
-  color: #f5f7fa;
-  border-color: var(--lp-border);
-}
-.marquee-dark .marquee-card-top,
-.marquee-dark small {
-  color: #8b95a1;
-}
-.marquee-dark strong {
-  color: var(--lp-green);
-}
-.marquee-line strong {
-  color: var(--lp-green);
-}
-.mini-candles {
-  height: 65px;
-  display: flex;
-  gap: 9px;
-  align-items: end;
-  margin-top: 10px;
-  border-bottom: 1px solid var(--lp-border);
-}
-.mini-candles i {
-  position: relative;
   display: block;
-  width: 7px;
-  background: var(--lp-green);
+  margin-top: 6px;
+  color: var(--muted);
+  font: 11px/1.5 var(--mono);
 }
-.mini-candles i:before {
-  content: "";
-  position: absolute;
-  top: -9px;
-  bottom: -5px;
-  left: 3px;
-  width: 1px;
-  background: currentColor;
-}
-.mini-candles .down {
-  background: #ea3943;
-}
-.mini-line {
+.trading-card-visual {
+  --trade-green: #27bd8b;
+  --trade-red: #e67f82;
+  --trade-gold: #c9a74f;
   display: block;
   width: 100%;
-  height: 64px;
-  margin-top: 2px;
+  height: 116px;
+  margin-top: 12px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.watchlist {
-  display: grid;
-  gap: 5px;
-  margin-top: 15px;
-  font: 10px var(--mono);
+:root[data-theme="light"] .trading-card-visual {
+  --trade-green: #167c5b;
+  --trade-red: #b34553;
+  --trade-gold: #926d20;
 }
-.watchlist span {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted);
+.trading-card-visual text {
+  fill: var(--muted);
+  stroke: none;
+  font: 8px var(--mono);
+  letter-spacing: 0.02em;
 }
-.watchlist b,
-.watchlist em {
-  font-style: normal;
-  color: var(--lp-green);
+.trading-card-visual .trade-grid {
+  stroke: var(--lp-border);
+  stroke-width: 0.6;
 }
-.watchlist em {
-  color: #ea3943;
+.trading-card-visual .trade-guide {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  opacity: 0.55;
 }
-.live-mark {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  height: 70px;
-  margin-top: 8px;
+.trading-card-visual .trade-price {
+  stroke: var(--trade-green);
+  stroke-width: 2.5;
 }
-.live-mark span {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  color: #03110b;
-  background: var(--lp-green);
+.trading-card-visual .trade-projection {
+  stroke: var(--trade-green);
+  stroke-width: 2;
+  stroke-dasharray: 4 5;
 }
-.live-mark small {
-  color: var(--lp-green);
-  font: 10px var(--mono);
+.trading-card-visual .trade-gain {
+  color: var(--trade-green);
+  stroke: currentColor;
 }
-.risk-ratio {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-top: 25px;
-  color: var(--muted);
-  font: 9px var(--mono);
+.trading-card-visual .trade-loss {
+  color: var(--trade-red);
+  stroke: currentColor;
 }
-.risk-ratio strong {
-  color: var(--lp-green);
-  font: 30px var(--mono);
+.trading-card-visual text.trade-gain {
+  fill: var(--trade-green);
+  stroke: none;
 }
-.order-book {
-  display: grid;
-  gap: 9px;
-  margin-top: 24px;
-  color: var(--muted);
-  font: 9px var(--mono);
+.trading-card-visual text.trade-loss {
+  fill: var(--trade-red);
+  stroke: none;
 }
-.order-book span {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--lp-border);
+.trading-card-visual .trade-gold {
+  fill: var(--trade-gold);
 }
-.order-book i {
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
-  background: var(--lp-green);
+.trading-card-visual .trade-play {
+  fill: var(--trade-gold);
+  stroke: none;
 }
-.order-book span:last-child i {
-  background: #ea3943;
+.trading-card-visual .trade-hindi {
+  fill: var(--foreground);
+  font:
+    500 27px/1.2 "Nirmala UI",
+    "Noto Sans Devanagari",
+    sans-serif;
+}
+.trading-card-visual .trade-zone-gain {
+  fill: color-mix(in srgb, var(--trade-green) 17%, transparent);
+  stroke: color-mix(in srgb, var(--trade-green) 45%, transparent);
+}
+.trading-card-visual .trade-zone-loss {
+  fill: color-mix(in srgb, var(--trade-red) 17%, transparent);
+  stroke: color-mix(in srgb, var(--trade-red) 45%, transparent);
+}
+.trading-card-visual .trade-zone-gold {
+  fill: color-mix(in srgb, var(--trade-gold) 10%, transparent);
+  stroke: none;
+}
+.trading-card-visual .trade-ring {
+  stroke: var(--trade-gold);
+  stroke-width: 2;
+}
+.trading-card-visual .trade-point {
+  fill: var(--trade-green);
+  stroke: var(--lp-card);
+}
+.trading-card-visual .trade-unit {
+  fill: color-mix(in srgb, var(--muted) 12%, transparent);
+  stroke: var(--lp-border);
+}
+.trading-card-visual .trade-unit-risk {
+  fill: var(--trade-gold);
+  stroke: none;
+}
+.trading-card-visual .trade-ratio {
+  fill: var(--foreground);
+  font: 500 26px var(--mono);
+  letter-spacing: -0.08em;
+}
+.trading-card-visual .trade-paper {
+  fill: var(--lp-card);
+  stroke: var(--lp-border);
 }
 .logo-strip {
   padding: 34px 20px 96px;
@@ -873,13 +983,13 @@ body:has(.landing-page) {
     padding-top: 70px;
   }
   .marquee-card {
-    width: 190px;
-    height: 180px;
+    width: 210px;
+    height: 238px;
   }
   .marquee-mask,
   .marquee-track {
-    min-height: 226px;
-    height: 226px;
+    min-height: 310px;
+    height: 310px;
   }
   .landing-page .course-card {
     padding: 12px;
@@ -895,6 +1005,36 @@ body:has(.landing-page) {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .marquee-pause {
+    display: none;
+  }
+  .marquee-mask {
+    overflow-x: auto;
+    mask-image: none;
+    scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+  }
+  .marquee-track {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-inline: 20px;
+    transform-style: flat;
+  }
+  .marquee-card {
+    position: relative;
+    flex: 0 0 232px;
+    top: auto;
+    left: auto;
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    will-change: auto;
+    scroll-snap-align: center;
+  }
+  .marquee-card[aria-hidden="true"] {
+    display: none;
+  }
   .landing-page * {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
