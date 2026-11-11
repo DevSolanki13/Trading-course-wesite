@@ -7,7 +7,6 @@ import { DiwaliDecor, DiwaliGreeting } from "../components/hero/DiwaliDecor";
 import { CourseCard } from "../components/course-card";
 import { FloatingCardMarquee } from "../components/floating-card-marquee";
 import { ProgressCandlestickChart } from "../components/progress-candlestick-chart";
-import { RiskExercise } from "../components/risk-exercise";
 import { Faq } from "../components/faq";
 import { ArrowUpRight, ShieldCheck } from "../components/icons";
 import { EnrollButton } from "../components/enroll-button";
@@ -260,29 +259,6 @@ export default function HomePage({
               <ArrowUpRight size={18} />
             </article>
           ))}
-        </div>
-      </section>
-      <section className="landing-risk-section" aria-labelledby="risk-heading">
-        <div className="container risk-modern">
-          <div>
-            <div className="eyebrow">PUT IT INTO PRACTICE</div>
-            <h2 id="risk-heading">
-              Risk gets
-              <br />
-              <span>the first word.</span>
-            </h2>
-            <p>
-              Before asking what a trade could make, understand what a hypothetical risk budget
-              means.
-            </p>
-            <Link
-              href={`/courses/${courses.find((course) => course.slug === "risk-psychology" || course.slug === "risk-and-psychology")?.slug ?? "risk-and-psychology"}`}
-              className="text-link"
-            >
-              Explore risk & psychology <ArrowUpRight size={18} />
-            </Link>
-          </div>
-          <RiskExercise />
         </div>
       </section>
       {content?.genuineTestimonialsConfirmed && content.testimonials.length > 0 && (
