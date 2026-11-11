@@ -447,41 +447,69 @@ main {
     background 0.25s;
 }
 .site-header-spacer {
-  height: 88px;
+  height: 56px;
   width: 100%;
   pointer-events: none;
 }
 @media (max-width: 768px) {
   .site-header-spacer {
-    height: 71px;
+    height: 56px;
   }
 }
 body:has(.admin-page) .site-header-spacer {
   display: none;
 }
 body:has(.landing-page) .site-header-spacer {
-  height: 56px;
+  height: 52px;
 }
 @media (max-width: 768px) {
   body:has(.landing-page) .site-header-spacer {
-    height: 56px;
+    height: 52px;
   }
 }
-.header-inner {
+.site-header .header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 88px;
+  height: 56px;
   gap: 32px;
 }
 .site-header-landing .header-inner,
 body:has(.landing-page) .site-header .header-inner {
-  height: 56px;
+  height: 52px;
 }
 .site-header-landing .theme-toggle,
 body:has(.landing-page) .site-header .theme-toggle {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
+}
+.site-header .theme-toggle {
+  width: 44px;
+  height: 44px;
+}
+.page-back-navigation {
+  padding-top: 16px;
+}
+.page-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 13px;
+}
+.page-back-link:focus-visible {
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .page-back-link:hover {
+    color: var(--foreground);
+    border-color: var(--muted);
+  }
 }
 /* Theme-aware Brand Logo & Mark Switching */
 .brand-mark-wrap,
@@ -3268,11 +3296,11 @@ h3 {
   transition: height 0.25s;
 }
 .site-header.is-scrolled .header-inner {
-  height: 68px;
+  height: 52px;
 }
 .site-header.site-header-landing.is-scrolled .header-inner,
 body:has(.landing-page) .site-header.is-scrolled .header-inner {
-  height: 50px;
+  height: 48px;
 }
 .desktop-nav a[aria-current="page"] {
   color: var(--foreground);

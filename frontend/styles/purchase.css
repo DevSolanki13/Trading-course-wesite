@@ -53,7 +53,7 @@
 }
 .site-header.site-header-checkout .header-inner,
 body:has(.site-header-checkout) .site-header-spacer {
-  height: 64px;
+  height: 56px;
 }
 @media (max-width: 768px) {
   .site-header.site-header-checkout .header-inner,

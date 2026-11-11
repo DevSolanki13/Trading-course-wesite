@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowUpRight,
+  ArrowLeft,
   List,
   X,
   User as UserIcon,
@@ -17,8 +18,6 @@ import {
 } from "@phosphor-icons/react";
 import { BullMark } from "./bull-mark";
 import { useAuth } from "./auth-provider";
-
-const baseLinks = [{ href: "/dashboard?view=explore", label: "Courses" }];
 
 import { ThemeToggle } from "./theme-toggle";
 export { ThemeToggle };
@@ -34,7 +33,7 @@ export function Brand({
 }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const height = footer ? 38 : isLanding || compact ? 34 : 46;
+  const height = footer ? 38 : isLanding || compact ? 30 : 34;
   return (
     <Link
       href={isAdmin ? "/admin" : "/"}
@@ -43,6 +42,29 @@ export function Brand({
     >
       <BullMark className="brand-bull-mark" height={height} />
     </Link>
+  );
+}
+
+function isWorkspacePath(pathname: string) {
+  return (
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname.startsWith("/learn/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/")
+  );
+}
+
+export function PageBackLink() {
+  const pathname = usePathname();
+  if (pathname === "/" || isWorkspacePath(pathname)) return null;
+  return (
+    <div className="container page-back-navigation">
+      <Link href="/" className="page-back-link">
+        <ArrowLeft size={17} aria-hidden="true" />
+        Back to home
+      </Link>
+    </div>
   );
 }
 
@@ -124,18 +146,10 @@ export function SiteHeader() {
     signedIn && role === "admin"
       ? [{ href: "/admin", label: "Admin workspace" }]
       : signedIn
-        ? [
-            { href: "/dashboard?view=explore", label: "Courses" },
-            { href: "/dashboard", label: "My classroom" },
-          ]
-        : baseLinks;
+        ? [{ href: "/dashboard", label: "My classroom" }]
+        : [];
 
-  const isWorkspace =
-    pathname === "/dashboard" ||
-    pathname.startsWith("/dashboard/") ||
-    pathname.startsWith("/learn/") ||
-    pathname === "/admin" ||
-    pathname.startsWith("/admin/");
+  const isWorkspace = isWorkspacePath(pathname);
 
   if (isWorkspace) {
     return null;
@@ -150,8 +164,8 @@ export function SiteHeader() {
         className={`site-header ${isLanding ? "site-header-landing" : ""} ${isCheckout ? "site-header-checkout" : ""} ${scrolled ? "is-scrolled" : ""}`}
       >
         <div className="container header-inner">
-          <Brand isLanding={isLanding} compact={isCheckout} />
-          {!isLanding && !isCheckout && (
+          <Brand isLanding={isLanding} compact />
+          {!isLanding && !isCheckout && navLinks.length > 0 && (
             <nav className="desktop-nav" aria-label="Main navigation">
               {navLinks.map((link) => (
                 <Link
@@ -253,12 +267,8 @@ export function SiteHeader() {
                       </div>
                     )}
                   </div>
-                ) : (
-                  <Link className="login-link" href="/login">
-                    Log in <ArrowUpRight size={15} />
-                  </Link>
-                )}
-                {!isCheckout && (
+                ) : null}
+                {signedIn && !isCheckout && (
                   <Dialog.Root open={open} onOpenChange={setOpen}>
                     <Dialog.Trigger asChild>
                       <button
@@ -281,20 +291,7 @@ export function SiteHeader() {
                           Choose a page to visit.
                         </Dialog.Description>
                         <nav aria-label="Mobile navigation">
-                          {(signedIn && role === "admin"
-                            ? [{ href: "/admin", label: "Admin workspace" }]
-                            : [
-                                ...navLinks,
-                                ...(signedIn
-                                  ? [
-                                      {
-                                        href: "/dashboard",
-                                        label: "My courses",
-                                      },
-                                    ]
-                                  : [{ href: "/login", label: "Log in" }]),
-                              ]
-                          ).map((link) => (
+                          {navLinks.map((link) => (
                             <Dialog.Close key={link.href} asChild>
                               <Link
                                 href={link.href}

@@ -48,10 +48,6 @@ function StatsGrid({ content }: { content?: SiteDocument | null }) {
           <br />
           <span>Stronger habits</span> tomorrow.
         </h2>
-        <p>
-          You don’t need to know it all to begin. Start with curiosity, build with practice, and
-          give yourself room to grow.
-        </p>
       </div>
       <div className="stats-grid">
         <article className="stat-large">
@@ -176,9 +172,17 @@ export default function HomePage({
         </HeroAnnotations>
         <div className="eyebrow">INDIANXTRADE · TRADING EDUCATION</div>
         <h1 id="landing-title" className={headlineFont.variable}>
-          {content?.heroTitle || "Learn to trade with"} <em>{content?.heroAccent || "clarity"}</em>
-          <br />
-          {content?.heroTitle ? "" : "and confidence."}
+          {content?.heroTitle ? (
+            <>
+              {content.heroTitle} <em>{content.heroAccent}</em>
+            </>
+          ) : (
+            <>
+              Take your first step.
+              <br />
+              <em>Learn to trade.</em>
+            </>
+          )}
         </h1>
         <p className="hero-lede">
           {content?.heroDescription ||
@@ -186,16 +190,9 @@ export default function HomePage({
         </p>
         <div className="hero-actions">
           <EnrollButton initialLoggedIn={user} />
-          <Link
-            href={
-              courses[0]?.previewLessonId
-                ? `/learn/${courses[0].slug}?lesson=${courses[0].previewLessonId}`
-                : "/dashboard?view=explore"
-            }
-            className="button button-secondary"
-          >
+          <a href="#courses" className="button button-secondary">
             View syllabus
-          </Link>
+          </a>
         </div>
         <div className="trust-line">A structured, risk-aware place to start learning.</div>
         <FloatingCardMarquee />
@@ -211,9 +208,6 @@ export default function HomePage({
               <span>Two ways to begin.</span>
             </h2>
           </div>
-          <p>
-            Focused courses for wherever you are in your learning journey. No noise, no shortcuts.
-          </p>
         </div>
         <div className="course-grid">
           {courses.slice(0, 3).map((course) => (
