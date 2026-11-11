@@ -6,6 +6,7 @@ import { HeroAnnotations } from "../components/hero/HeroAnnotations";
 import { DiwaliDecor, DiwaliGreeting } from "../components/hero/DiwaliDecor";
 import { CourseCard } from "../components/course-card";
 import { FloatingCardMarquee } from "../components/floating-card-marquee";
+import { ProgressCandlestickChart } from "../components/progress-candlestick-chart";
 import { RiskExercise } from "../components/risk-exercise";
 import { Faq } from "../components/faq";
 import { ArrowUpRight, ShieldCheck } from "../components/icons";
@@ -44,57 +45,77 @@ function StatsGrid({ content }: { content?: SiteDocument | null }) {
       <div className="eyebrow">• ABOUT US</div>
       <div className="about-heading">
         <h2 id="about-heading">
-          A trading education built for <span>disciplined,</span> consistent practice.
+          Small steps today.
+          <br />
+          <span>Stronger habits</span> tomorrow.
         </h2>
         <p>
-          Less noise. More context. A structured way to build the habits that last beyond a single
-          setup.
+          You don’t need to know it all to begin. Start with curiosity, build with practice, and
+          give yourself room to grow.
         </p>
       </div>
       <div className="stats-grid">
         <article className="stat-large">
           <div>
-            <span className="card-label">THE CURRICULUM</span>
-            <h3>{content?.teachingTitle || "A considered trading education"}</h3>
+            <span className="card-label">START WHERE YOU ARE</span>
+            <h3>{content?.teachingTitle || "Every expert was once a beginner."}</h3>
             <p>
               {content?.teachingDescription ||
-                "From market foundations to risk and psychology, learn at a pace that respects your process."}
+                "One lesson. One chart. One better decision. Build the skills your future self will thank you for."}
             </p>
           </div>
-          <div className="stat-chart" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
+          <ProgressCandlestickChart />
         </article>
         <article className="stat-practical">
-          <span className="card-label">THE APPROACH</span>
+          <span className="card-label">MAKE IT A HABIT</span>
           <h3>
-            Process-led
+            Consistency
             <br />
-            learning
+            beats intensity.
           </h3>
-          <blockquote>Practical learning, careful review, and no promises of returns.</blockquote>
+          <p>Learn a little. Practice with purpose. Repeat tomorrow.</p>
+          <div className="mindset-rhythm" aria-hidden="true">
+            <span>Learn</span>
+            <i />
+            <span>Practice</span>
+            <i />
+            <span>Repeat</span>
+          </div>
         </article>
         <article className="stat-green">
-          <span className="card-label">THE WORK</span>
-          <strong>Review</strong>
+          <span className="card-label">TRUST THE PROCESS</span>
           <h3>
-            Decisions analyzed
+            Keep
             <br />
-            in context.
+            showing up.
           </h3>
-          <span className="card-arrow">↗</span>
+          <p>
+            Small steps. Stronger habits.
+            <br />
+            Your pace. Your progress.
+          </p>
+          <span className="card-arrow" aria-hidden="true">
+            ↗
+          </span>
         </article>
         <article className="stat-dark">
-          <span className="card-label">THE SCOPE</span>
-          <strong>Multiple</strong>
-          <h3>Markets covered</h3>
-          <p>Stocks · Forex · Crypto · Options</p>
-          <div className="dark-wave" aria-hidden="true" />
+          <span className="card-label">GROW THROUGH THE PROCESS</span>
+          <h3>
+            A setback can be
+            <br />a step forward.
+          </h3>
+          <p>
+            A difficult session can still teach you something. Reflect, reset, and come back with a
+            clearer plan.
+          </p>
+          <div className="mindset-return" aria-hidden="true">
+            <span>Reflect</span>
+            <i />
+            <span>Reset</span>
+            <i />
+            <span>Return</span>
+            <ArrowUpRight size={20} />
+          </div>
         </article>
       </div>
     </section>
